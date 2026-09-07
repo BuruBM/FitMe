@@ -1,0 +1,16 @@
+{
+  "name": "FitMe - Seguimiento de salud",
+  "short_name": "FitMe",
+  "description": "Alimentación, entrenamiento, descanso y agua en un solo lugar.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f4ee",
+  "theme_color": "#3f7d5c",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" }
+  ]
+}

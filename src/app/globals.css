@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f6f4ee;
+  --foreground: #23322b;
+  --card: #ffffff;
+  --card-border: #e6e1d3;
+  --primary: #3f7d5c;
+  --primary-foreground: #ffffff;
+  --accent: #d98e5b;
+  --accent-foreground: #ffffff;
+  --muted: #8a8d7f;
+  --danger: #c1553f;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-border: var(--card-border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-sans);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1a1f1c;
+    --foreground: #ecebe4;
+    --card: #232922;
+    --card-border: #333b30;
+    --primary: #6fbf94;
+    --primary-foreground: #10241a;
+    --accent: #e2a06e;
+    --accent-foreground: #2a1a0a;
+    --muted: #a2a596;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 1rem;
+}
