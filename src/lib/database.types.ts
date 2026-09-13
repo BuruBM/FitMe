@@ -93,6 +93,7 @@ export interface SleepLog {
   hours: number;
   quality: number | null;
   bedtime: string | null;
+  wake_ups: number;
   notes: string | null;
 }
 
@@ -115,6 +116,10 @@ export interface SymptomLog {
   tobacco_used: boolean;
   cloud_cover_pct: number | null;
   weather_condition: string | null;
+  social_media_minutes: number | null;
+  social_contact: number | null;
+  movement_level: number | null;
+  notes_valence: number | null;
   notes: string | null;
 }
 

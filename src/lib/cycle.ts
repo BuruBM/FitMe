@@ -42,3 +42,13 @@ export const PHASE_LABELS: Record<CyclePhase, string> = {
   ovulación: "Ovulación",
   lútea: "Lútea",
 };
+
+// Plain-language, non-diagnostic notes on what each phase commonly brings —
+// shown so a low-energy or irritable day has context instead of feeling
+// random. Real hormone swings, kept general on purpose.
+export const PHASE_MOOD_INFO: Record<CyclePhase, string> = {
+  menstrual: "Es común más cansancio y necesitar más descanso; el ánimo puede estar más sensible.",
+  folicular: "El estrógeno empieza a subir: suele venir con más energía y mejor ánimo. Buen momento para lo que exige más esfuerzo.",
+  ovulación: "Pico de energía, ánimo y ganas de socializar para muchas personas.",
+  lútea: "Progesterona alta y en baja al final: es la fase donde el síndrome premenstrual es más común — irritabilidad, ansiedad, antojos y cansancio, más aún con SOP.",
+};

@@ -2,7 +2,10 @@ import { Sun } from "lucide-react";
 
 export function BeachCountdown({ days }: { days: number }) {
   return (
-    <section className="card p-4 bg-gradient-to-br from-accent/15 to-primary/10">
+    <section
+      className="card p-4"
+      style={{ background: "linear-gradient(135deg, var(--accent-tint), var(--primary-tint))" }}
+    >
       <div className="flex items-center gap-2">
         <Sun size={18} className="text-accent" />
         <p className="text-sm font-medium">

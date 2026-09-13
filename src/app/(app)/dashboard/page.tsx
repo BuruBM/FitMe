@@ -2,13 +2,14 @@ import Link from "next/link";
 import {
   getCurrentWeatherForUser,
   getCycleSummary,
+  getDashboardInsights,
   getProfile,
   getTodayPetCare,
   getTodaySummary,
 } from "@/lib/queries";
 import { daysUntil } from "@/lib/nutrition";
 import { challengeOfTheWeek } from "@/data/challenges";
-import { MacroBar } from "@/components/MacroBar";
+import { MacroTrio } from "@/components/MacroTrio";
 import { WaterQuickAdd } from "@/components/WaterQuickAdd";
 import { SleepQuickLog } from "@/components/SleepQuickLog";
 import { BeachCountdown } from "@/components/BeachCountdown";
@@ -16,14 +17,16 @@ import { TipOfTheDay } from "@/components/TipOfTheDay";
 import { CycleCard } from "@/components/CycleCard";
 import { WeatherCard } from "@/components/WeatherCard";
 import { PetCareQuickLog } from "@/components/PetCareQuickLog";
+import { InsightsBanner } from "@/components/InsightsBanner";
 
 export default async function DashboardPage() {
-  const [profile, summary, cycleSummary, weatherInfo, petCare] = await Promise.all([
+  const [profile, summary, cycleSummary, weatherInfo, petCare, insights] = await Promise.all([
     getProfile(),
     getTodaySummary(),
     getCycleSummary(),
     getCurrentWeatherForUser(),
     getTodayPetCare(),
+    getDashboardInsights(),
   ]);
 
   if (!profile) return null;
@@ -43,17 +46,23 @@ export default async function DashboardPage() {
     <div className="space-y-4">
       {trip !== null && trip >= 0 && <BeachCountdown days={trip} />}
 
-      <section className="card p-4">
+      <InsightsBanner insights={insights} />
+
+      <section className="card p-4" style={{ background: "var(--primary-tint)" }}>
         <div className="flex items-baseline justify-between">
           <h2 className="font-semibold">Hoy</h2>
           <span className="text-sm text-muted">
             {Math.round(summary.totalCalories)} / {calorieTarget} kcal
           </span>
         </div>
-        <div className="mt-3 space-y-2.5">
-          <MacroBar label="Proteína" value={summary.totalProtein} target={proteinTarget} unit="g" color="var(--primary)" />
-          <MacroBar label="Carbohidratos" value={summary.totalCarbs} target={carbTarget} unit="g" color="var(--accent)" />
-          <MacroBar label="Grasas" value={summary.totalFat} target={fatTarget} unit="g" color="#8a8d7f" />
+        <div className="mt-3">
+          <MacroTrio
+            macros={[
+              { label: "Proteína", value: summary.totalProtein, target: proteinTarget, unit: "g", color: "var(--primary)" },
+              { label: "Carbs", value: summary.totalCarbs, target: carbTarget, unit: "g", color: "var(--accent)" },
+              { label: "Grasas", value: summary.totalFat, target: fatTarget, unit: "g", color: "var(--icon-sleep)" },
+            ]}
+          />
         </div>
         <div className="mt-3 pt-3 border-t border-card-border grid grid-cols-2 gap-3 text-xs">
           <div>
@@ -80,6 +89,7 @@ export default async function DashboardPage() {
           currentHours={summary.sleepHours}
           targetHours={profile.sleep_target_hours}
           currentBedtime={summary.sleepBedtime}
+          currentWakeUps={summary.sleepWakeUps}
         />
       </section>
 
@@ -89,7 +99,7 @@ export default async function DashboardPage() {
 
       <PetCareQuickLog today={petCare} />
 
-      <section className="card p-4">
+      <section className="card p-4" style={{ background: "var(--accent-tint)" }}>
         <p className="text-xs font-medium text-accent uppercase tracking-wide">Desafío de la semana</p>
         <h3 className="font-semibold mt-1">{challenge.title}</h3>
         <p className="text-sm text-muted mt-1">{challenge.description}</p>

@@ -11,7 +11,7 @@ function WeatherIcon({ cloudCoverPct }: { cloudCoverPct: number }) {
 export function WeatherCard({ weather, city }: { weather: CurrentWeather | null; city: string | null }) {
   if (!city) {
     return (
-      <section className="card p-4">
+      <section className="card p-4" style={{ background: "var(--tint-weather)" }}>
         <p className="text-sm font-medium">Clima</p>
         <p className="text-xs text-muted mt-1">
           Configurá tu ciudad en el Perfil para ver el clima y cruzarlo con tu ánimo.
@@ -25,7 +25,7 @@ export function WeatherCard({ weather, city }: { weather: CurrentWeather | null;
 
   if (!weather) {
     return (
-      <section className="card p-4">
+      <section className="card p-4" style={{ background: "var(--tint-weather)" }}>
         <p className="text-sm font-medium">Clima</p>
         <p className="text-xs text-muted mt-1">No pudimos obtener el clima de {city} ahora.</p>
       </section>
@@ -33,7 +33,7 @@ export function WeatherCard({ weather, city }: { weather: CurrentWeather | null;
   }
 
   return (
-    <section className="card p-4">
+    <section className="card p-4" style={{ background: "var(--tint-weather)" }}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-sm font-medium">
           <WeatherIcon cloudCoverPct={weather.cloudCoverPct} />

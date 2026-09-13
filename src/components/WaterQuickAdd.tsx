@@ -15,7 +15,7 @@ export function WaterQuickAdd({ currentMl, targetMl }: { currentMl: number; targ
   }
 
   return (
-    <div className="card p-4">
+    <div className="card p-4" style={{ background: "var(--tint-water)" }}>
       <div className="flex items-center gap-1.5 text-sm font-medium">
         <Droplet size={16} className="text-primary" />
         Agua

@@ -71,7 +71,11 @@ export function calculateNutritionTargets(input: NutritionInputs): NutritionTarg
   calorieTarget = Math.round(calorieTarget / 10) * 10;
 
   // Protein-forward split: satiety while cutting + supports bone/muscle (osteopenia).
-  const proteinPerKg = input.osteopeniaRisk ? 1.8 : 1.6;
+  // Kept moderate on purpose — a vegetarian diet built on soy/eggs/protein powder
+  // makes a high target hard to hit day to day, and an unreachable number is worse
+  // than a slightly lower one she can actually sustain. She can always raise it
+  // manually in her profile if it's working for her.
+  const proteinPerKg = input.osteopeniaRisk ? 1.4 : 1.2;
   const proteinTargetG = Math.round(weight * proteinPerKg);
   const fatTargetG = Math.round((calorieTarget * 0.28) / 9);
   const carbCalories = calorieTarget - proteinTargetG * 4 - fatTargetG * 9;

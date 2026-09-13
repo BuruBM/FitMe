@@ -266,6 +266,18 @@ function FoodResultRow({
   );
 }
 
+function SaltShortcut({ label, mg, onPick }: { label: string; mg: number; onPick: (v: string) => void }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onPick(String(mg))}
+      className="flex-1 text-[11px] rounded-md border border-card-border py-1.5 text-muted hover:border-primary"
+    >
+      {label}
+    </button>
+  );
+}
+
 function AddItemPanel({ base, onDone }: { base: Base; onDone: () => void }) {
   const [multiplier, setMultiplier] = useState(1);
   const [mealType, setMealType] = useState<MealType>(guessMealType());
@@ -412,6 +424,7 @@ function ManualTab() {
   const [protein, setProtein] = useState("");
   const [carbs, setCarbs] = useState("");
   const [fat, setFat] = useState("");
+  const [sodium, setSodium] = useState("");
   const [saveAsFavorite, setSaveAsFavorite] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -428,7 +441,7 @@ function ManualTab() {
         carbsG: Number(carbs) || 0,
         fatG: Number(fat) || 0,
         fiberG: 0,
-        sodiumMg: 0,
+        sodiumMg: Number(sodium) || 0,
         calciumMg: 0,
         source: "manual",
         saveAsFavorite,
@@ -438,6 +451,7 @@ function ManualTab() {
       setProtein("");
       setCarbs("");
       setFat("");
+      setSodium("");
     });
   }
 
@@ -471,6 +485,24 @@ function ManualTab() {
         />
         <input type="number" value={carbs} onChange={(e) => setCarbs(e.target.value)} placeholder="Carb (g)" className="input" />
         <input type="number" value={fat} onChange={(e) => setFat(e.target.value)} placeholder="Grasa (g)" className="input" />
+      </div>
+      <div>
+        <input
+          type="number"
+          value={sodium}
+          onChange={(e) => setSodium(e.target.value)}
+          placeholder="Sodio (mg) — si no lo sabés, usá un atajo"
+          className="input"
+        />
+        <div className="flex gap-1.5 mt-1.5">
+          <SaltShortcut label="Bajo en sal" mg={200} onPick={setSodium} />
+          <SaltShortcut label="Medio" mg={600} onPick={setSodium} />
+          <SaltShortcut label="Alto en sal" mg={1200} onPick={setSodium} />
+        </div>
+        <p className="text-[11px] text-muted mt-1">
+          Si no cocinaste vos (delivery, de paquete, comida de otra persona), es normal no saber el sodio exacto:
+          usá el atajo como estimación aproximada.
+        </p>
       </div>
       <select value={mealType} onChange={(e) => setMealType(e.target.value as MealType)} className="input">
         {MEAL_OPTIONS.map((m) => (

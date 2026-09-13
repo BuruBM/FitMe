@@ -1,13 +1,13 @@
 import { getGamificationSummary, getHistory, getProfile, getRecentSymptomLogs } from "@/lib/queries";
 import { BADGES } from "@/lib/gamification";
-import { WeightChart } from "@/components/WeightChart";
+import { ProgressCharts } from "@/components/ProgressCharts";
 import { WeightQuickLog } from "@/components/WeightQuickLog";
 import { SymptomQuickLog } from "@/components/SymptomQuickLog";
 import { SymptomHistory } from "@/components/SymptomHistory";
 
 export default async function ProgressPage() {
   const [history, gamification, profile, symptomLogs] = await Promise.all([
-    getHistory(21),
+    getHistory(365),
     getGamificationSummary(),
     getProfile(),
     getRecentSymptomLogs(14),
@@ -19,7 +19,7 @@ export default async function ProgressPage() {
     <div className="space-y-4">
       <h1 className="text-lg font-semibold">Progreso</h1>
 
-      <WeightChart history={history} />
+      <ProgressCharts history={history} />
       <WeightQuickLog currentWeightKg={profile?.weight_kg ?? null} />
       <SymptomQuickLog />
       <SymptomHistory logs={symptomLogs} />

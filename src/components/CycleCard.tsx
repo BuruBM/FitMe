@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { CircleDot, Pill } from "lucide-react";
 import { logPeriodStart, setPillTaken } from "@/lib/actions/cycle";
-import { PHASE_LABELS } from "@/lib/cycle";
+import { PHASE_LABELS, PHASE_MOOD_INFO } from "@/lib/cycle";
 import type { CycleSummary } from "@/lib/queries";
 
 export function CycleCard({ summary, pcos }: { summary: CycleSummary; pcos: boolean }) {
@@ -25,16 +25,19 @@ export function CycleCard({ summary, pcos }: { summary: CycleSummary; pcos: bool
   }
 
   return (
-    <section className="card p-4">
+    <section className="card p-4" style={{ background: "var(--tint-cycle)" }}>
       <div className="flex items-center gap-1.5 text-sm font-medium">
-        <CircleDot size={16} className="text-primary" />
+        <CircleDot size={16} style={{ color: "var(--icon-cycle)" }} />
         Ciclo
       </div>
 
       {summary.estimate ? (
-        <p className="text-sm mt-1">
-          Día {summary.estimate.cycleDay} · {PHASE_LABELS[summary.estimate.phase]}
-        </p>
+        <>
+          <p className="text-sm mt-1">
+            Día {summary.estimate.cycleDay} · {PHASE_LABELS[summary.estimate.phase]}
+          </p>
+          <p className="text-xs text-muted mt-1">{PHASE_MOOD_INFO[summary.estimate.phase]}</p>
+        </>
       ) : (
         <p className="text-xs text-muted mt-1">Registrá el inicio de tu último período para verlo acá.</p>
       )}

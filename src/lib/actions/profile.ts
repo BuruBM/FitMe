@@ -123,6 +123,35 @@ export async function updateProfile(input: OnboardingInput) {
   revalidatePath("/profile");
 }
 
+export interface ManualTargets {
+  calorieTarget: number;
+  proteinTargetG: number;
+  carbTargetG: number;
+  fatTargetG: number;
+}
+
+export async function updateTargetsManually(targets: ManualTargets) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("No autenticada");
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      calorie_target: targets.calorieTarget,
+      protein_target_g: targets.proteinTargetG,
+      carb_target_g: targets.carbTargetG,
+      fat_target_g: targets.fatTargetG,
+    })
+    .eq("id", user.id);
+  if (error) throw error;
+
+  revalidatePath("/dashboard");
+  revalidatePath("/profile");
+}
+
 export async function updateTripDate(tripDate: string | null) {
   const supabase = await createClient();
   const {

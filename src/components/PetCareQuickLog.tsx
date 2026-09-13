@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { PawPrint } from "lucide-react";
+import { Cat } from "lucide-react";
 import { logPetCare } from "@/lib/actions/petcare";
 import type { PetCareLog } from "@/lib/database.types";
 
@@ -24,9 +24,9 @@ export function PetCareQuickLog({ today }: { today: PetCareLog | null }) {
   }
 
   return (
-    <section className="card p-4">
+    <section className="card p-4" style={{ background: "var(--tint-pets)" }}>
       <div className="flex items-center gap-1.5 text-sm font-medium">
-        <PawPrint size={16} className="text-primary" />
+        <Cat size={17} style={{ color: "var(--icon-pets)" }} />
         Milo y Zoe
       </div>
       <div className="grid grid-cols-2 gap-3 mt-3">

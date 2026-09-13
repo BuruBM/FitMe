@@ -4,6 +4,13 @@ import { useState, useTransition } from "react";
 import { logSymptoms } from "@/lib/actions/tracking";
 
 const BLOATING_LABELS = ["Nada", "Leve", "Moderado", "Mucho"];
+const VALENCE_OPTIONS = [
+  { value: -2, emoji: "😣", label: "Muy negativo" },
+  { value: -1, emoji: "🙁", label: "Negativo" },
+  { value: 0, emoji: "😐", label: "Neutro" },
+  { value: 1, emoji: "🙂", label: "Positivo" },
+  { value: 2, emoji: "😄", label: "Muy positivo" },
+];
 
 export function SymptomQuickLog() {
   const [bloating, setBloating] = useState(0);
@@ -12,12 +19,29 @@ export function SymptomQuickLog() {
   const [irritability, setIrritability] = useState(1);
   const [alcoholUnits, setAlcoholUnits] = useState(0);
   const [tobaccoUsed, setTobaccoUsed] = useState(false);
+  const [socialMediaMinutes, setSocialMediaMinutes] = useState(60);
+  const [socialContact, setSocialContact] = useState(0);
+  const [movementLevel, setMovementLevel] = useState(3);
+  const [notes, setNotes] = useState("");
+  const [notesValence, setNotesValence] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
 
   function save() {
     startTransition(async () => {
-      await logSymptoms({ bloating, energy, mood, irritability, alcoholUnits, tobaccoUsed });
+      await logSymptoms({
+        bloating,
+        energy,
+        mood,
+        irritability,
+        alcoholUnits,
+        tobaccoUsed,
+        socialMediaMinutes,
+        socialContact,
+        movementLevel,
+        notesValence: notesValence ?? undefined,
+        notes: notes || undefined,
+      });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     });
@@ -50,16 +74,14 @@ export function SymptomQuickLog() {
       <RatingRow label="Energía" value={energy} onChange={setEnergy} />
       <RatingRow label="Ánimo" value={mood} onChange={setMood} />
       <RatingRow label="Irritabilidad" value={irritability} onChange={setIrritability} />
+      <RatingRow label="Cuánto te moviste hoy" value={movementLevel} onChange={setMovementLevel} />
+      <RatingRow label="Contacto con gente querida" value={socialContact} onChange={setSocialContact} max={5} min={0} />
 
       <div className="grid grid-cols-2 gap-2 pt-1">
         <div>
           <p className="text-xs text-muted mb-1">Tragos de alcohol</p>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setAlcoholUnits((n) => Math.max(0, n - 1))}
-              className="stepper"
-              type="button"
-            >
+            <button onClick={() => setAlcoholUnits((n) => Math.max(0, n - 1))} className="stepper" type="button">
               −
             </button>
             <span className="w-6 text-center text-sm font-medium">{alcoholUnits}</span>
@@ -79,6 +101,50 @@ export function SymptomQuickLog() {
             {tobaccoUsed ? "Fumé hoy" : "No fumé"}
           </button>
         </div>
+      </div>
+
+      <div>
+        <p className="text-xs text-muted mb-1">Minutos en redes sociales (aprox.)</p>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setSocialMediaMinutes((n) => Math.max(0, n - 15))} className="stepper" type="button">
+            −
+          </button>
+          <span className="flex-1 text-center text-sm font-medium">{socialMediaMinutes} min</span>
+          <button onClick={() => setSocialMediaMinutes((n) => n + 15)} className="stepper" type="button">
+            +
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <p className="text-xs text-muted mb-1">¿Algo para aclarar? (opcional)</p>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={2}
+          placeholder="Ej: discusión con mi jefe, mal día en el trabajo..."
+          className="w-full rounded-lg border border-card-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+        />
+        {notes && (
+          <div className="mt-2">
+            <p className="text-[11px] text-muted mb-1">¿Cómo te afectó anímicamente esa nota?</p>
+            <div className="flex gap-1.5">
+              {VALENCE_OPTIONS.map((v) => (
+                <button
+                  key={v.value}
+                  type="button"
+                  title={v.label}
+                  onClick={() => setNotesValence(v.value)}
+                  className={`flex-1 text-lg rounded-md py-1 border ${
+                    notesValence === v.value ? "bg-primary/10 border-primary" : "border-card-border"
+                  }`}
+                >
+                  {v.emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <button
@@ -103,12 +169,25 @@ export function SymptomQuickLog() {
   );
 }
 
-function RatingRow({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+function RatingRow({
+  label,
+  value,
+  onChange,
+  min = 1,
+  max = 5,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  min?: number;
+  max?: number;
+}) {
+  const options = Array.from({ length: max - min + 1 }, (_, i) => min + i);
   return (
     <div>
       <p className="text-xs text-muted mb-1">{label}</p>
       <div className="flex gap-1.5">
-        {[1, 2, 3, 4, 5].map((n) => (
+        {options.map((n) => (
           <button
             key={n}
             onClick={() => onChange(n)}

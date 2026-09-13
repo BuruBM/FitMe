@@ -34,16 +34,30 @@ export async function logWater(amountMl: number) {
 }
 
 // ---------------- sleep ----------------
-export async function logSleep(hours: number, quality: number, bedtime?: string, notes?: string) {
+export interface SleepInput {
+  hours: number;
+  quality: number;
+  bedtime?: string;
+  wakeUps?: number;
+  notes?: string;
+}
+
+export async function logSleep(input: SleepInput) {
   const { supabase, user } = await requireUser();
   const today = todayInAppTz();
 
-  const { error } = await supabase
-    .from("sleep_logs")
-    .upsert(
-      { user_id: user.id, log_date: today, hours, quality, bedtime: bedtime ?? null, notes: notes ?? null },
-      { onConflict: "user_id,log_date" },
-    );
+  const { error } = await supabase.from("sleep_logs").upsert(
+    {
+      user_id: user.id,
+      log_date: today,
+      hours: input.hours,
+      quality: input.quality,
+      bedtime: input.bedtime ?? null,
+      wake_ups: input.wakeUps ?? 0,
+      notes: input.notes ?? null,
+    },
+    { onConflict: "user_id,log_date" },
+  );
   if (error) throw error;
 
   await awardXp(supabase, user.id, XP_RULES.sleep_log);
@@ -76,6 +90,10 @@ export interface SymptomInput {
   irritability: number;
   alcoholUnits: number;
   tobaccoUsed: boolean;
+  socialMediaMinutes?: number;
+  socialContact?: number;
+  movementLevel?: number;
+  notesValence?: number;
   notes?: string;
 }
 
@@ -106,6 +124,10 @@ export async function logSymptoms(input: SymptomInput) {
       tobacco_used: input.tobaccoUsed,
       cloud_cover_pct: weather?.cloudCoverPct ?? null,
       weather_condition: weather?.condition ?? null,
+      social_media_minutes: input.socialMediaMinutes ?? null,
+      social_contact: input.socialContact ?? null,
+      movement_level: input.movementLevel ?? null,
+      notes_valence: input.notesValence ?? null,
       notes: input.notes ?? null,
     },
     { onConflict: "user_id,log_date" },
