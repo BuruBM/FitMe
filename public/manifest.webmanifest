@@ -1,6 +1,6 @@
 {
-  "name": "FitMe - Seguimiento de salud",
-  "short_name": "FitMe",
+  "name": "La Marea - Seguimiento de salud",
+  "short_name": "La Marea",
   "description": "Alimentación, entrenamiento, descanso y agua en un solo lugar.",
   "start_url": "/dashboard",
   "scope": "/",

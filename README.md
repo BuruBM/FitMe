@@ -1,4 +1,4 @@
-# FitMe
+# La Marea
 
 App personal de seguimiento de salud: alimentación, calorías/macros, agua, sueño, entrenamiento en casa y gamificación. Pensada como PWA (se instala en el celular desde el navegador, sin pasar por App Store/Play Store).
 

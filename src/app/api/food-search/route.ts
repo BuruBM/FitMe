@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const res = await fetch(url, {
-      headers: { "User-Agent": "FitMe-App - personal health tracker" },
+      headers: { "User-Agent": "LaMarea-App - personal health tracker" },
       // Open Food Facts can be slow; keep this from hanging the UI too long.
       signal: AbortSignal.timeout(8000),
     });

@@ -68,7 +68,7 @@ export const BADGES: BadgeDef[] = [
   {
     id: "streak_3",
     title: "Constancia x3",
-    description: "3 días seguidos usando FitMe.",
+    description: "3 días seguidos usando La Marea.",
     icon: "🔥",
     check: (c) => c.state.current_streak >= 3 || c.state.longest_streak >= 3,
   },
@@ -124,7 +124,7 @@ export const BADGES: BadgeDef[] = [
   {
     id: "level_5",
     title: "Nivel 5",
-    description: "Llegaste al nivel 5 en FitMe.",
+    description: "Llegaste al nivel 5 en La Marea.",
     icon: "🚀",
     check: (c) => c.state.level >= 5,
   },

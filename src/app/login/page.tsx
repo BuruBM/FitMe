@@ -14,7 +14,7 @@ export default async function LoginPage({
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="text-4xl mb-2">🌿</div>
-          <h1 className="text-2xl font-semibold text-foreground">FitMe</h1>
+          <h1 className="text-2xl font-semibold text-foreground">La Marea</h1>
           <p className="text-muted text-sm mt-1">
             Tu seguimiento personal de alimentación, entrenamiento, descanso y agua.
           </p>

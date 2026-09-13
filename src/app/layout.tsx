@@ -3,7 +3,7 @@ import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 
 export const metadata: Metadata = {
-  title: "FitMe",
+  title: "La Marea",
   description: "Seguimiento personal de alimentación, entrenamiento, descanso y agua.",
   manifest: "/manifest.webmanifest",
   icons: {
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "FitMe",
+    title: "La Marea",
   },
 };
 
