@@ -1,6 +1,7 @@
 import {
   getGamificationSummary,
   getHistory,
+  getLatestMeasurement,
   getProfile,
   getRecentSleepLogs,
   getRecentSymptomLogs,
@@ -9,22 +10,27 @@ import {
 import { BADGES } from "@/lib/gamification";
 import { ProgressCharts } from "@/components/ProgressCharts";
 import { WeightQuickLog } from "@/components/WeightQuickLog";
+import { MeasurementsQuickLog } from "@/components/MeasurementsQuickLog";
 import { SymptomQuickLog } from "@/components/SymptomQuickLog";
 import { SymptomHistory } from "@/components/SymptomHistory";
 import { SleepHistory } from "@/components/SleepHistory";
 import { WeeklyReviewCard } from "@/components/WeeklyReviewCard";
+import { FactorsPanel } from "@/components/FactorsPanel";
+import { computeFactors } from "@/lib/factors";
 
 export default async function ProgressPage() {
-  const [history, gamification, profile, symptomLogs, sleepLogs, weeklyReview] = await Promise.all([
+  const [history, gamification, profile, symptomLogs, sleepLogs, weeklyReview, measurement] = await Promise.all([
     getHistory(365),
     getGamificationSummary(),
     getProfile(),
     getRecentSymptomLogs(14),
     getRecentSleepLogs(14),
     getWeeklyReview(),
+    getLatestMeasurement(),
   ]);
 
   const earnedIds = new Set(gamification?.state.badges ?? []);
+  const factors = computeFactors(history, profile?.on_birth_control ?? false);
 
   return (
     <div className="space-y-4">
@@ -32,7 +38,9 @@ export default async function ProgressPage() {
 
       <WeeklyReviewCard review={weeklyReview} />
       <ProgressCharts history={history} />
+      <FactorsPanel factors={factors} />
       <WeightQuickLog currentWeightKg={profile?.weight_kg ?? null} />
+      <MeasurementsQuickLog currentWaistCm={measurement?.waist_cm ?? null} currentHipCm={measurement?.hip_cm ?? null} />
       <SymptomQuickLog />
       <SymptomHistory logs={symptomLogs} />
       <SleepHistory logs={sleepLogs} />

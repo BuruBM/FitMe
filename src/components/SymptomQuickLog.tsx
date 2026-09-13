@@ -17,6 +17,7 @@ export function SymptomQuickLog() {
   const [energy, setEnergy] = useState(3);
   const [mood, setMood] = useState(3);
   const [irritability, setIrritability] = useState(1);
+  const [sensitivityLevel, setSensitivityLevel] = useState(1);
   const [alcoholUnits, setAlcoholUnits] = useState(0);
   const [tobaccoUsed, setTobaccoUsed] = useState(false);
   const [socialMediaMinutes, setSocialMediaMinutes] = useState(60);
@@ -34,6 +35,7 @@ export function SymptomQuickLog() {
         energy,
         mood,
         irritability,
+        sensitivityLevel,
         alcoholUnits,
         tobaccoUsed,
         socialMediaMinutes,
@@ -74,6 +76,7 @@ export function SymptomQuickLog() {
       <RatingRow label="Energía" value={energy} onChange={setEnergy} />
       <RatingRow label="Ánimo" value={mood} onChange={setMood} />
       <RatingRow label="Irritabilidad" value={irritability} onChange={setIrritability} />
+      <RatingRow label="Sensibilidad (te afecta más de lo normal)" value={sensitivityLevel} onChange={setSensitivityLevel} />
       <RatingRow label="Estrés" value={stressLevel} onChange={setStressLevel} />
       <RatingRow label="Contacto con gente querida" value={socialContact} onChange={setSocialContact} max={5} min={0} />
 

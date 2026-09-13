@@ -27,6 +27,7 @@ export function SymptomHistory({ logs }: { logs: SymptomLog[] }) {
             <p className="text-muted mt-0.5">
               Ánimo {log.mood ?? "-"}/5 · Energía {log.energy ?? "-"}/5 · Irritabilidad {log.irritability ?? "-"}/5 ·
               Hinchazón {log.bloating != null ? BLOATING_LABELS[log.bloating] : "-"}
+              {log.sensitivity_level != null ? ` · Sensibilidad ${log.sensitivity_level}/5` : ""}
               {log.stress_level != null ? ` · Estrés ${log.stress_level}/5` : ""}
               {log.social_contact != null ? ` · Contacto social ${log.social_contact}/5` : ""}
               {log.social_media_minutes != null ? ` · ${log.social_media_minutes}min redes` : ""}

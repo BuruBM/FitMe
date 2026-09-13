@@ -17,14 +17,14 @@ export function WaterQuickAdd({ currentMl, targetMl }: { currentMl: number; targ
   return (
     <div className="card p-4" style={{ background: "var(--tint-water)" }}>
       <div className="flex items-center gap-1.5 text-sm font-medium">
-        <Droplet size={16} className="text-primary" />
+        <Droplet size={16} style={{ color: "var(--icon-water)" }} />
         Agua
       </div>
       <p className="text-xs text-muted mt-1">
         {(currentMl / 1000).toFixed(1)}L / {(targetMl / 1000).toFixed(1)}L ({pct}%)
       </p>
       <div className="h-2 rounded-full bg-card-border overflow-hidden mt-2">
-        <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--icon-water)" }} />
       </div>
       <div className="flex gap-1.5 mt-3">
         {[250, 500].map((ml) => (

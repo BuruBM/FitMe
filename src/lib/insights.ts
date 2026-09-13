@@ -9,17 +9,21 @@ export interface Insight {
 export interface InsightInputs {
   phase: CyclePhase | null;
   onBirthControl: boolean;
+  daysSincePillStart: number | null; // null = unknown/not tracked
   pcos: boolean;
   isWeekend: boolean;
   avgProteinPct3d: number | null; // % of protein target hit, avg of last 3 logged days
   avgSleepHours3d: number | null;
   avgIrritability3d: number | null;
+  avgSensitivity3d: number | null;
   avgSocialMediaMin3d: number | null;
   avgMood3d: number | null;
   daysSinceSocialContact: number | null; // null = no data at all yet
   todayCloudCoverPct: number | null;
   todayMood: number | null;
 }
+
+const PILL_ADJUSTMENT_WINDOW_DAYS = 90;
 
 /**
  * Cross-references what's already logged into a handful of short, honest
@@ -62,16 +66,32 @@ export function computeInsights(input: InsightInputs): Insight[] {
     });
   }
 
-  if (
-    !input.onBirthControl &&
-    (input.phase === "lútea" || input.phase === "menstrual") &&
-    input.avgIrritability3d != null &&
-    input.avgIrritability3d >= 4
-  ) {
+  const highIrritabilityOrSensitivity =
+    (input.avgIrritability3d != null && input.avgIrritability3d >= 4) ||
+    (input.avgSensitivity3d != null && input.avgSensitivity3d >= 4);
+
+  if (!input.onBirthControl && (input.phase === "lútea" || input.phase === "menstrual") && highIrritabilityOrSensitivity) {
     insights.push({
       id: "phase-irritability",
       tone: "info",
-      text: `Tu irritabilidad viene alta y coincide con tu fase ${input.phase}. Es un patrón hormonal conocido, no falta de paciencia.`,
+      text: `Tu irritabilidad o sensibilidad vienen altas y coinciden con tu fase ${input.phase}. Es un patrón hormonal conocido, no falta de paciencia.`,
+    });
+  } else if (
+    input.onBirthControl &&
+    input.daysSincePillStart != null &&
+    input.daysSincePillStart < PILL_ADJUSTMENT_WINDOW_DAYS &&
+    highIrritabilityOrSensitivity
+  ) {
+    insights.push({
+      id: "pill-adjustment-irritability",
+      tone: "info",
+      text: `Estás en las primeras semanas de la pastilla (el cuerpo suele tardar hasta unos 3 meses en acomodarse) y tu irritabilidad o sensibilidad vienen altas. Es esperable en este período de ajuste, no necesariamente algo que estés haciendo mal.`,
+    });
+  } else if (input.onBirthControl && highIrritabilityOrSensitivity) {
+    insights.push({
+      id: "pill-irritability-general",
+      tone: "info",
+      text: "Tu irritabilidad o sensibilidad vienen altas. Con anticonceptivos el patrón no sigue el ciclo espontáneo, pero las hormonas de la pastilla igual pueden influir en el ánimo — si se sostiene, vale la pena comentarlo con tu ginecóloga/o.",
     });
   }
 

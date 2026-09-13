@@ -10,13 +10,18 @@ export interface CycleEstimate {
  * average cycle length. With PCOS cycles are often irregular, so this is only
  * ever shown with a caveat — it's a pattern-spotting aid, not a prediction.
  */
-export function estimateCycle(lastPeriodStart: string | null, avgCycleLength: number): CycleEstimate | null {
+export function estimateCycle(
+  lastPeriodStart: string | null,
+  avgCycleLength: number,
+  referenceDate: Date = new Date(),
+): CycleEstimate | null {
   if (!lastPeriodStart) return null;
 
   const start = new Date(lastPeriodStart + "T00:00:00");
-  const now = new Date();
+  const now = new Date(referenceDate);
   now.setHours(0, 0, 0, 0);
   const diffDays = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) return null;
 
   const cycleLength = avgCycleLength > 0 ? avgCycleLength : 28;
   const cycleDay = (diffDays % cycleLength) + 1;
@@ -34,6 +39,22 @@ export function estimateCycle(lastPeriodStart: string | null, avgCycleLength: nu
   }
 
   return { cycleDay, phase };
+}
+
+/**
+ * Same estimate, but anchored to an arbitrary historical date instead of
+ * today — used to reconstruct "what phase was she probably in on day X" for
+ * charts and correlations. Picks whichever logged period start was the most
+ * recent one on or before that date.
+ */
+export function estimateCycleForDate(
+  dateStr: string,
+  periodStarts: string[],
+  avgCycleLength: number,
+): CycleEstimate | null {
+  const applicable = periodStarts.filter((p) => p <= dateStr).sort().at(-1) ?? null;
+  if (!applicable) return null;
+  return estimateCycle(applicable, avgCycleLength, new Date(dateStr + "T00:00:00"));
 }
 
 /** Days from today until the next period is expected to start, given the pattern so far. */

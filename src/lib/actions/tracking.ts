@@ -82,12 +82,30 @@ export async function logWeight(weightKg: number) {
   revalidatePath("/progress");
 }
 
+// ---------------- body measurements ----------------
+export async function logMeasurements(waistCm: number | null, hipCm: number | null) {
+  const { supabase, user } = await requireUser();
+  const today = todayInAppTz();
+
+  const { error } = await supabase
+    .from("body_measurements")
+    .upsert(
+      { user_id: user.id, log_date: today, waist_cm: waistCm, hip_cm: hipCm },
+      { onConflict: "user_id,log_date" },
+    );
+  if (error) throw error;
+
+  await awardXp(supabase, user.id, XP_RULES.weight_log);
+  revalidatePath("/progress");
+}
+
 // ---------------- symptoms ----------------
 export interface SymptomInput {
   bloating: number;
   energy: number;
   mood: number;
   irritability: number;
+  sensitivityLevel: number;
   alcoholUnits: number;
   tobaccoUsed: boolean;
   socialMediaMinutes?: number;
@@ -120,6 +138,7 @@ export async function logSymptoms(input: SymptomInput) {
       energy: input.energy,
       mood: input.mood,
       irritability: input.irritability,
+      sensitivity_level: input.sensitivityLevel,
       alcohol_units: input.alcoholUnits,
       tobacco_used: input.tobaccoUsed,
       cloud_cover_pct: weather?.cloudCoverPct ?? null,

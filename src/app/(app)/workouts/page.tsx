@@ -1,7 +1,11 @@
 import { WorkoutBrowser } from "@/components/WorkoutBrowser";
 import { WalkQuickLog } from "@/components/WalkQuickLog";
+import { WorkoutHistory } from "@/components/WorkoutHistory";
+import { getRecentWorkoutLogs } from "@/lib/queries";
 
-export default function WorkoutsPage() {
+export default async function WorkoutsPage() {
+  const history = await getRecentWorkoutLogs(21);
+
   return (
     <div className="space-y-4">
       <div>
@@ -13,6 +17,7 @@ export default function WorkoutsPage() {
       </div>
       <WalkQuickLog />
       <WorkoutBrowser />
+      <WorkoutHistory logs={history} />
     </div>
   );
 }

@@ -42,12 +42,16 @@ export async function setPillTaken(taken: boolean) {
   revalidatePath("/dashboard");
 }
 
-export async function updateCycleSettings(avgCycleLength: number, onBirthControl: boolean) {
+export async function updateCycleSettings(avgCycleLength: number, onBirthControl: boolean, pillStartedOn: string | null) {
   const { supabase, user } = await requireUser();
 
   const { error } = await supabase
     .from("profiles")
-    .update({ avg_cycle_length: avgCycleLength, on_birth_control: onBirthControl })
+    .update({
+      avg_cycle_length: avgCycleLength,
+      on_birth_control: onBirthControl,
+      pill_started_on: onBirthControl ? pillStartedOn : null,
+    })
     .eq("id", user.id);
   if (error) throw error;
 

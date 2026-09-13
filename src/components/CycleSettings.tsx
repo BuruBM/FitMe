@@ -6,18 +6,21 @@ import { updateCycleSettings } from "@/lib/actions/cycle";
 export function CycleSettings({
   avgCycleLength,
   onBirthControl,
+  pillStartedOn,
 }: {
   avgCycleLength: number;
   onBirthControl: boolean;
+  pillStartedOn: string | null;
 }) {
   const [length, setLength] = useState(avgCycleLength);
   const [pill, setPill] = useState(onBirthControl);
+  const [startedOn, setStartedOn] = useState(pillStartedOn ?? "");
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
 
   function save() {
     startTransition(async () => {
-      await updateCycleSettings(length, pill);
+      await updateCycleSettings(length, pill, startedOn || null);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     });
@@ -42,6 +45,21 @@ export function CycleSettings({
           <input type="checkbox" checked={pill} onChange={(e) => setPill(e.target.checked)} />
           Estoy tomando pastillas anticonceptivas
         </label>
+        {pill && (
+          <div>
+            <label className="text-xs text-muted">¿Desde cuándo la retomaste/empezaste?</label>
+            <input
+              type="date"
+              value={startedOn}
+              onChange={(e) => setStartedOn(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-card-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+            />
+            <p className="text-[11px] text-muted mt-1">
+              Así podemos avisarte que los cambios de ánimo son más esperables mientras el cuerpo se acomoda (hasta
+              ~3 meses), sin dejar de registrar irritabilidad o sensibilidad después de eso.
+            </p>
+          </div>
+        )}
         <button
           onClick={save}
           disabled={isPending}

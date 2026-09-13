@@ -33,6 +33,7 @@ export interface Profile {
   sleep_target_hours: number;
   avg_cycle_length: number;
   on_birth_control: boolean;
+  pill_started_on: string | null;
   pcos: boolean;
   city: string | null;
   latitude: number | null;
@@ -113,6 +114,7 @@ export interface SymptomLog {
   energy: number | null;
   mood: number | null;
   irritability: number | null;
+  sensitivity_level: number | null;
   alcohol_units: number;
   tobacco_used: boolean;
   cloud_cover_pct: number | null;
@@ -137,6 +139,14 @@ export interface PillLog {
   user_id: string;
   log_date: string;
   taken: boolean;
+}
+
+export interface BodyMeasurement {
+  id: string;
+  user_id: string;
+  log_date: string;
+  waist_cm: number | null;
+  hip_cm: number | null;
 }
 
 export interface PetCareLog {
@@ -185,6 +195,7 @@ export interface Database {
       cycle_logs: { Row: CycleLog; Insert: Partial<CycleLog>; Update: Partial<CycleLog> };
       pill_logs: { Row: PillLog; Insert: Partial<PillLog>; Update: Partial<PillLog> };
       pet_care_logs: { Row: PetCareLog; Insert: Partial<PetCareLog>; Update: Partial<PetCareLog> };
+      body_measurements: { Row: BodyMeasurement; Insert: Partial<BodyMeasurement>; Update: Partial<BodyMeasurement> };
       gamification_state: {
         Row: GamificationState;
         Insert: Partial<GamificationState> & { user_id: string };

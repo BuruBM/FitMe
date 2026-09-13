@@ -1,11 +1,26 @@
 import { createClient } from "@/lib/supabase/server";
 import { shiftDateStr, todayInAppTz } from "@/lib/date";
 import { evaluateNewBadges, type BadgeContext } from "@/lib/gamification";
-import { daysUntilNextPeriod, estimateCycle, type CycleEstimate } from "@/lib/cycle";
+import {
+  daysUntilNextPeriod,
+  estimateCycle,
+  estimateCycleForDate,
+  type CycleEstimate,
+  type CyclePhase,
+} from "@/lib/cycle";
 import { fetchCurrentWeather, type CurrentWeather } from "@/lib/weather";
 import { computeInsights, type Insight } from "@/lib/insights";
 import { buildWeeklyReview, type WeeklyReview } from "@/lib/weeklyReview";
-import type { FoodLog, GamificationState, PetCareLog, Profile, SleepLog, SymptomLog } from "@/lib/database.types";
+import type {
+  BodyMeasurement,
+  FoodLog,
+  GamificationState,
+  PetCareLog,
+  Profile,
+  SleepLog,
+  SymptomLog,
+  WorkoutLog,
+} from "@/lib/database.types";
 
 export async function getProfile(): Promise<Profile | null> {
   const supabase = await createClient();
@@ -189,6 +204,7 @@ export interface CycleSummary {
   avgCycleLength: number;
   pillTakenToday: boolean;
   daysUntilNextPeriod: number | null;
+  daysSincePillStart: number | null;
 }
 
 export async function getCycleSummary(): Promise<CycleSummary | null> {
@@ -201,7 +217,7 @@ export async function getCycleSummary(): Promise<CycleSummary | null> {
   const today = todayInAppTz();
 
   const [{ data: profile }, { data: lastPeriod }, { data: pillLog }] = await Promise.all([
-    supabase.from("profiles").select("avg_cycle_length, on_birth_control").eq("id", user.id).single(),
+    supabase.from("profiles").select("avg_cycle_length, on_birth_control, pill_started_on").eq("id", user.id).single(),
     supabase
       .from("cycle_logs")
       .select("period_start_date")
@@ -214,6 +230,9 @@ export async function getCycleSummary(): Promise<CycleSummary | null> {
 
   const avgCycleLength = profile?.avg_cycle_length ?? 28;
   const lastPeriodStart = lastPeriod?.period_start_date ?? null;
+  const daysSincePillStart = profile?.pill_started_on
+    ? Math.round((new Date(today).getTime() - new Date(profile.pill_started_on).getTime()) / 86400000)
+    : null;
 
   return {
     estimate: estimateCycle(lastPeriodStart, avgCycleLength),
@@ -222,6 +241,7 @@ export async function getCycleSummary(): Promise<CycleSummary | null> {
     avgCycleLength,
     pillTakenToday: pillLog?.taken ?? false,
     daysUntilNextPeriod: daysUntilNextPeriod(lastPeriodStart, avgCycleLength),
+    daysSincePillStart,
   };
 }
 
@@ -303,6 +323,42 @@ export async function getRecentSleepLogs(days = 14): Promise<SleepLog[]> {
   return data ?? [];
 }
 
+export async function getLatestMeasurement(): Promise<BodyMeasurement | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data } = await supabase
+    .from("body_measurements")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("log_date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return data ?? null;
+}
+
+export async function getRecentWorkoutLogs(days = 21): Promise<WorkoutLog[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const since = shiftDateStr(todayInAppTz(), -(days - 1));
+  const { data } = await supabase
+    .from("workout_logs")
+    .select("*")
+    .eq("user_id", user.id)
+    .gte("log_date", since)
+    .order("completed_at", { ascending: false });
+
+  return data ?? [];
+}
+
 export async function getRecentSymptomLogs(days = 14): Promise<SymptomLog[]> {
   const supabase = await createClient();
   const {
@@ -334,10 +390,10 @@ export async function getDashboardInsights(): Promise<Insight[]> {
 
   const [{ data: profile }, { data: symptomLogs }, { data: foodLogs }, { data: sleepLogs }, cycleSummary] =
     await Promise.all([
-      supabase.from("profiles").select("protein_target_g, pcos").eq("id", user.id).single(),
+      supabase.from("profiles").select("protein_target_g, pcos, pill_started_on").eq("id", user.id).single(),
       supabase
         .from("symptom_logs")
-        .select("log_date, mood, irritability, social_media_minutes, social_contact, cloud_cover_pct")
+        .select("log_date, mood, irritability, sensitivity_level, social_media_minutes, social_contact, cloud_cover_pct")
         .eq("user_id", user.id)
         .gte("log_date", since14)
         .order("log_date", { ascending: false }),
@@ -351,6 +407,7 @@ export async function getDashboardInsights(): Promise<Insight[]> {
   const avg = (nums: number[]) => (nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : null);
 
   const avgIrritability3d = avg(last3.map((l) => l.irritability).filter((v): v is number => v != null));
+  const avgSensitivity3d = avg(last3.map((l) => l.sensitivity_level).filter((v): v is number => v != null));
   const avgSocialMediaMin3d = avg(last3.map((l) => l.social_media_minutes).filter((v): v is number => v != null));
   const avgMood3d = avg(last3.map((l) => l.mood).filter((v): v is number => v != null));
   const avgSleepHours3d = avg((sleepLogs ?? []).map((s) => s.hours));
@@ -377,14 +434,20 @@ export async function getDashboardInsights(): Promise<Insight[]> {
   const weekday = new Date(today + "T00:00:00").getDay();
   const isWeekend = weekday === 0 || weekday === 6;
 
+  const daysSincePillStart = profile?.pill_started_on
+    ? Math.round((new Date(today).getTime() - new Date(profile.pill_started_on).getTime()) / 86400000)
+    : null;
+
   return computeInsights({
     phase: cycleSummary?.estimate?.phase ?? null,
     onBirthControl: cycleSummary?.onBirthControl ?? false,
+    daysSincePillStart,
     pcos: profile?.pcos ?? false,
     isWeekend,
     avgProteinPct3d,
     avgSleepHours3d,
     avgIrritability3d,
+    avgSensitivity3d,
     avgSocialMediaMin3d,
     avgMood3d,
     daysSinceSocialContact,
@@ -398,13 +461,28 @@ export interface HistoryPoint {
   weightKg: number | null;
   waterMl: number;
   sleepHours: number | null;
+  sleepQuality: number | null;
+  sleepBedtime: string | null;
+  sleepWakeUps: number | null;
   calories: number;
   proteinG: number;
   mood: number | null;
   energy: number | null;
   irritability: number | null;
+  sensitivityLevel: number | null;
   stressLevel: number | null;
+  bloating: number | null;
+  alcoholUnits: number | null;
+  tobaccoUsed: boolean | null;
+  socialMediaMinutes: number | null;
+  socialContact: number | null;
+  cloudCoverPct: number | null;
+  weatherCondition: string | null;
+  notes: string | null;
+  notesValence: number | null;
+  cyclePhase: CyclePhase | null;
   movedToday: boolean;
+  workoutNames: string[];
   petCareDone: boolean | null;
   /** 0-100 composite of whatever metrics were logged that day; null if too little data. */
   wellness: number | null;
@@ -428,31 +506,51 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
   const today = todayInAppTz();
   const since = shiftDateStr(today, -(days - 1));
 
-  const [{ data: profile }, { data: weights }, { data: water }, { data: sleep }, { data: food }, { data: symptoms }, { data: petCare }, { data: workouts }] =
-    await Promise.all([
-      supabase.from("profiles").select("sleep_target_hours, water_target_ml, protein_target_g").eq("id", user.id).single(),
-      supabase.from("weight_logs").select("log_date, weight_kg").eq("user_id", user.id).gte("log_date", since),
-      supabase.from("water_logs").select("log_date, amount_ml").eq("user_id", user.id).gte("log_date", since),
-      supabase.from("sleep_logs").select("log_date, hours").eq("user_id", user.id).gte("log_date", since),
-      supabase.from("food_logs").select("log_date, calories, protein_g").eq("user_id", user.id).gte("log_date", since),
-      supabase
-        .from("symptom_logs")
-        .select("log_date, mood, energy, irritability, stress_level")
-        .eq("user_id", user.id)
-        .gte("log_date", since),
-      supabase
-        .from("pet_care_logs")
-        .select("log_date, milo_medication, milo_supplement, zoe_medication, zoe_supplement")
-        .eq("user_id", user.id)
-        .gte("log_date", since),
-      supabase.from("workout_logs").select("log_date").eq("user_id", user.id).gte("log_date", since),
-    ]);
+  const [
+    { data: profile },
+    { data: weights },
+    { data: water },
+    { data: sleep },
+    { data: food },
+    { data: symptoms },
+    { data: petCare },
+    { data: workouts },
+    { data: periodLogs },
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("sleep_target_hours, water_target_ml, protein_target_g, avg_cycle_length, on_birth_control")
+      .eq("id", user.id)
+      .single(),
+    supabase.from("weight_logs").select("log_date, weight_kg").eq("user_id", user.id).gte("log_date", since),
+    supabase.from("water_logs").select("log_date, amount_ml").eq("user_id", user.id).gte("log_date", since),
+    supabase.from("sleep_logs").select("log_date, hours, quality, bedtime, wake_ups").eq("user_id", user.id).gte("log_date", since),
+    supabase.from("food_logs").select("log_date, calories, protein_g").eq("user_id", user.id).gte("log_date", since),
+    supabase.from("symptom_logs").select("*").eq("user_id", user.id).gte("log_date", since),
+    supabase
+      .from("pet_care_logs")
+      .select("log_date, milo_medication, milo_supplement, zoe_medication, zoe_supplement")
+      .eq("user_id", user.id)
+      .gte("log_date", since),
+    supabase.from("workout_logs").select("log_date, workout_name").eq("user_id", user.id).gte("log_date", since),
+    // full history, not just this window: an old period start can still be the
+    // applicable one for the early days of the window.
+    supabase.from("cycle_logs").select("period_start_date").eq("user_id", user.id).lte("period_start_date", today),
+  ]);
 
   const weightByDay = new Map((weights ?? []).map((w) => [w.log_date, w.weight_kg]));
-  const sleepByDay = new Map((sleep ?? []).map((s) => [s.log_date, s.hours]));
+  const sleepByDay = new Map((sleep ?? []).map((s) => [s.log_date, s]));
   const symptomByDay = new Map((symptoms ?? []).map((s) => [s.log_date, s]));
   const petCareByDay = new Map((petCare ?? []).map((p) => [p.log_date, p]));
   const movedDaySet = new Set((workouts ?? []).map((w) => w.log_date));
+  const workoutNamesByDay = new Map<string, string[]>();
+  for (const w of workouts ?? []) {
+    if (!workoutNamesByDay.has(w.log_date)) workoutNamesByDay.set(w.log_date, []);
+    workoutNamesByDay.get(w.log_date)!.push(w.workout_name);
+  }
+  const periodStarts = (periodLogs ?? []).map((p) => p.period_start_date);
+  const avgCycleLength = profile?.avg_cycle_length ?? 28;
+  const onBirthControl = profile?.on_birth_control ?? false;
 
   const waterByDay = new Map<string, number>();
   for (const w of water ?? []) waterByDay.set(w.log_date, (waterByDay.get(w.log_date) ?? 0) + w.amount_ml);
@@ -472,12 +570,16 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
   for (let i = days - 1; i >= 0; i--) {
     const date = shiftDateStr(today, -i);
     const symptom = symptomByDay.get(date);
+    const sleep = sleepByDay.get(date);
     const waterMl = waterByDay.get(date) ?? 0;
-    const sleepHours = sleepByDay.get(date) ?? null;
+    const sleepHours = sleep?.hours ?? null;
     const proteinG = proteinByDay.get(date) ?? 0;
     const pet = petCareByDay.get(date);
     const petCareDone = pet ? pet.milo_medication && pet.milo_supplement && pet.zoe_medication && pet.zoe_supplement : null;
     const movedToday = movedDaySet.has(date);
+    const cyclePhase = onBirthControl
+      ? null
+      : (estimateCycleForDate(date, periodStarts, avgCycleLength)?.phase ?? null);
 
     const wellnessInputs: number[] = [];
     if (symptom?.mood != null) wellnessInputs.push(scale1to5(symptom.mood));
@@ -500,13 +602,28 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
       weightKg: weightByDay.get(date) ?? null,
       waterMl,
       sleepHours,
+      sleepQuality: sleep?.quality ?? null,
+      sleepBedtime: sleep?.bedtime ?? null,
+      sleepWakeUps: sleep?.wake_ups ?? null,
       calories: caloriesByDay.get(date) ?? 0,
       proteinG,
       mood: symptom?.mood ?? null,
       energy: symptom?.energy ?? null,
       irritability: symptom?.irritability ?? null,
+      sensitivityLevel: symptom?.sensitivity_level ?? null,
       stressLevel: symptom?.stress_level ?? null,
+      bloating: symptom?.bloating ?? null,
+      alcoholUnits: symptom?.alcohol_units ?? null,
+      tobaccoUsed: symptom?.tobacco_used ?? null,
+      socialMediaMinutes: symptom?.social_media_minutes ?? null,
+      socialContact: symptom?.social_contact ?? null,
+      cloudCoverPct: symptom?.cloud_cover_pct ?? null,
+      weatherCondition: symptom?.weather_condition ?? null,
+      notes: symptom?.notes ?? null,
+      notesValence: symptom?.notes_valence ?? null,
+      cyclePhase,
       movedToday,
+      workoutNames: workoutNamesByDay.get(date) ?? [],
       petCareDone,
       wellness,
     });

@@ -51,9 +51,9 @@ export function PetCareQuickLog({ today, pausedUntil }: { today: PetCareLog | nu
         {!isPaused && !settingPause && (
           <button
             onClick={() => setSettingPause(true)}
-            className="flex items-center gap-1 text-[11px] text-muted"
+            className="flex items-center gap-1 rounded-full bg-card border border-card-border px-2.5 py-1 text-[11px] font-medium text-foreground shadow-sm"
           >
-            <Plane size={12} />
+            <Plane size={12} style={{ color: "var(--icon-pets)" }} />
             Voy de viaje
           </button>
         )}

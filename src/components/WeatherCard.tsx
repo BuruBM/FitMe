@@ -3,9 +3,10 @@ import { Cloud, CloudSun, Sun } from "lucide-react";
 import type { CurrentWeather } from "@/lib/weather";
 
 function WeatherIcon({ cloudCoverPct }: { cloudCoverPct: number }) {
-  if (cloudCoverPct < 30) return <Sun size={18} className="text-accent" />;
-  if (cloudCoverPct < 70) return <CloudSun size={18} className="text-accent" />;
-  return <Cloud size={18} className="text-muted" />;
+  const style = { color: "var(--icon-weather)" };
+  if (cloudCoverPct < 30) return <Sun size={18} style={style} />;
+  if (cloudCoverPct < 70) return <CloudSun size={18} style={style} />;
+  return <Cloud size={18} style={style} />;
 }
 
 export function WeatherCard({ weather, city }: { weather: CurrentWeather | null; city: string | null }) {

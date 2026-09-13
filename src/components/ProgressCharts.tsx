@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { format, parseISO, getISOWeek } from "date-fns";
 import { es } from "date-fns/locale";
 import type { HistoryPoint } from "@/lib/queries";
+import { DayDetailPanel } from "@/components/DayDetailPanel";
 
 type Period = "semana" | "mes" | "trimestre" | "año";
 
@@ -13,23 +14,23 @@ const PERIOD_LABELS: Record<Period, string> = { semana: "Semana", mes: "Mes", tr
 
 interface Bucket {
   label: string;
+  date: string | null; // set only for daily (non-aggregated) buckets, so points are tappable
   weightKg: number | null;
-  mood: number | null;
   wellness: number | null;
 }
 
 function average(nums: (number | null)[]): number | null {
   const valid = nums.filter((n): n is number => n != null);
   if (valid.length === 0) return null;
-  return valid.reduce((a, b) => a + b, 0) / valid.length;
+  return Math.round((valid.reduce((a, b) => a + b, 0) / valid.length) * 10) / 10;
 }
 
 function bucketize(points: HistoryPoint[], period: Period): Bucket[] {
   if (period === "semana" || period === "mes") {
     return points.map((p) => ({
       label: format(parseISO(p.date), "d/M"),
+      date: p.date,
       weightKg: p.weightKg,
-      mood: p.mood,
       wellness: p.wellness,
     }));
   }
@@ -47,8 +48,8 @@ function bucketize(points: HistoryPoint[], period: Period): Bucket[] {
     const label = period === "trimestre" ? format(firstDate, "d/M") : format(firstDate, "MMM", { locale: es });
     return {
       label,
+      date: null,
       weightKg: average(pts.map((p) => p.weightKg)),
-      mood: average(pts.map((p) => p.mood)),
       wellness: average(pts.map((p) => p.wellness)),
     };
   });
@@ -56,12 +57,22 @@ function bucketize(points: HistoryPoint[], period: Period): Bucket[] {
 
 export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
   const [period, setPeriod] = useState<Period>("mes");
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const sliced = useMemo(() => history.slice(-PERIOD_DAYS[period]), [history, period]);
   const buckets = useMemo(() => bucketize(sliced, period), [sliced, period]);
+  const isDaily = period === "semana" || period === "mes";
 
   const hasWeight = buckets.some((b) => b.weightKg != null);
-  const hasMoodOrWellness = buckets.some((b) => b.mood != null || b.wellness != null);
+  const hasWellness = buckets.some((b) => b.wellness != null);
+
+  const selectedPoint = selectedDate ? sliced.find((p) => p.date === selectedDate) ?? null : null;
+
+  function handleChartClick(e: unknown) {
+    if (!isDaily) return;
+    const payload = (e as { activePayload?: { payload: Bucket }[] } | null)?.activePayload?.[0]?.payload;
+    if (payload?.date) setSelectedDate(payload.date === selectedDate ? null : payload.date);
+  }
 
   return (
     <div className="space-y-4">
@@ -69,7 +80,10 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
         {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
           <button
             key={p}
-            onClick={() => setPeriod(p)}
+            onClick={() => {
+              setPeriod(p);
+              setSelectedDate(null);
+            }}
             className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium border ${
               period === p ? "bg-primary text-primary-foreground border-primary" : "border-card-border text-muted"
             }`}
@@ -99,24 +113,30 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
       </section>
 
       <section className="card p-4">
-        <h2 className="font-semibold mb-1">Ánimo y bienestar general</h2>
+        <h2 className="font-semibold mb-1">Bienestar general</h2>
         <p className="text-xs text-muted mb-2">
-          Ánimo es lo que registrás vos (1-5), sin mezclar nada más. Bienestar general combina ánimo, energía,
-          irritabilidad, estrés, sueño, agua, proteína y si te moviste (entrenamiento o caminata) — es una
-          referencia, no reemplaza a tu propia sensación.
+          Combina ánimo, energía, irritabilidad, estrés, sueño, agua, proteína y si te moviste — es una referencia,
+          no reemplaza a tu propia sensación.
+          {isDaily && " Tocá un punto para ver el detalle completo de ese día."}
         </p>
-        {hasMoodOrWellness ? (
+        {hasWellness ? (
           <div className="h-44 -ml-4">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={buckets}>
+              <LineChart data={buckets} onClick={handleChartClick} style={{ cursor: isDaily ? "pointer" : "default" }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="var(--muted)" />
-                <YAxis yAxisId="mood" domain={[1, 5]} tick={{ fontSize: 11 }} stroke="var(--muted)" width={26} />
-                <YAxis yAxisId="wellness" orientation="right" domain={[0, 100]} tick={{ fontSize: 11 }} stroke="var(--muted)" width={30} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} stroke="var(--muted)" width={30} />
                 <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Line yAxisId="mood" type="monotone" dataKey="mood" name="Ánimo (1-5)" stroke="var(--icon-cycle)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-                <Line yAxisId="wellness" type="monotone" dataKey="wellness" name="Bienestar (0-100)" stroke="var(--primary)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line
+                  type="monotone"
+                  dataKey="wellness"
+                  name="Bienestar (0-100)"
+                  stroke="var(--primary)"
+                  strokeWidth={2.5}
+                  dot={{ r: 4, cursor: isDaily ? "pointer" : "default" }}
+                  activeDot={{ r: 6 }}
+                  connectNulls
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -125,6 +145,7 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
             Todavía no hay suficientes registros de &quot;¿Cómo te sentís hoy?&quot; en este período.
           </p>
         )}
+        {selectedPoint && <DayDetailPanel point={selectedPoint} onClose={() => setSelectedDate(null)} />}
       </section>
     </div>
   );

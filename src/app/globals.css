@@ -1,26 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f6f4ee;
-  --foreground: #23322b;
+  --background: #faf7ef;
+  --foreground: #1c2a20;
   --card: #ffffff;
-  --card-border: #e6e1d3;
-  --primary: #3f7d5c;
+  --card-border: #e3ddc7;
+  --primary: #1f9d55;
   --primary-foreground: #ffffff;
-  --accent: #d98e5b;
+  --accent: #ff7a3d;
   --accent-foreground: #ffffff;
-  --muted: #8a8d7f;
-  --danger: #c1553f;
-  --primary-tint: #e8f0ea;
-  --accent-tint: #fbeee1;
-  --tint-water: #e2f1f4;
-  --tint-sleep: #ece8f8;
-  --tint-weather: #fdf3e0;
-  --tint-cycle: #fbe8ee;
-  --tint-pets: #fdece0;
-  --icon-sleep: #8b7fd6;
-  --icon-cycle: #d1637e;
-  --icon-pets: #d98e5b;
+  --muted: #74796a;
+  --danger: #e0503a;
+  --primary-tint: #d7f2e2;
+  --accent-tint: #ffe3cf;
+  --tint-water: #cceef6;
+  --tint-sleep: #e3daf9;
+  --tint-weather: #fef0bf;
+  --tint-cycle: #fcd9e6;
+  --tint-pets: #fbe3bd;
+  --icon-water: #0c86a8;
+  --icon-sleep: #7c3aed;
+  --icon-weather: #c9820a;
+  --icon-cycle: #db2777;
+  --icon-pets: #a8690f;
 }
 
 @theme inline {
@@ -46,25 +48,27 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #1a1f1c;
-    --foreground: #ecebe4;
-    --card: #232922;
-    --card-border: #333b30;
-    --primary: #6fbf94;
-    --primary-foreground: #10241a;
-    --accent: #e2a06e;
-    --accent-foreground: #2a1a0a;
-    --muted: #a2a596;
-    --primary-tint: #1e3327;
-    --accent-tint: #362819;
-    --tint-water: #1c2e33;
-    --tint-sleep: #262038;
-    --tint-weather: #332a13;
-    --tint-cycle: #34212a;
-    --tint-pets: #33230f;
-    --icon-sleep: #a79bf0;
-    --icon-cycle: #e893a8;
-    --icon-pets: #e2a06e;
+    --background: #161d19;
+    --foreground: #edf1ea;
+    --card: #202822;
+    --card-border: #32402f;
+    --primary: #34d399;
+    --primary-foreground: #0b2016;
+    --accent: #ff9466;
+    --accent-foreground: #2a1607;
+    --muted: #a3a996;
+    --primary-tint: #1d3a2b;
+    --accent-tint: #402a18;
+    --tint-water: #133540;
+    --tint-sleep: #2c2245;
+    --tint-weather: #3a2e0e;
+    --tint-cycle: #3d2130;
+    --tint-pets: #3a2a10;
+    --icon-water: #4dd8f2;
+    --icon-sleep: #b09aff;
+    --icon-weather: #fbc02d;
+    --icon-cycle: #f472b6;
+    --icon-pets: #f2b23d;
   }
 }
 
