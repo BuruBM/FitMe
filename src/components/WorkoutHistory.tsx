@@ -20,7 +20,7 @@ export function WorkoutHistory({ logs }: { logs: WorkoutLog[] }) {
           <div key={log.id} className="flex justify-between text-xs border-b border-card-border pb-2 last:border-0 last:pb-0">
             <div>
               <p className="font-medium text-foreground/80">{log.workout_name}</p>
-              <p className="text-muted mt-0.5">
+              <p className="text-muted mt-0.5 capitalize">
                 {new Date(log.log_date + "T00:00:00").toLocaleDateString("es-AR", {
                   weekday: "short",
                   day: "numeric",

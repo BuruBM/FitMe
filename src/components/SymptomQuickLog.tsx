@@ -52,9 +52,6 @@ export function SymptomQuickLog() {
   return (
     <section className="card p-4 space-y-3">
       <h2 className="font-semibold text-sm">¿Cómo te sentís hoy?</h2>
-      <p className="text-xs text-muted -mt-2">
-        Sin juicio, es solo para que vos puedas ver el patrón con el tiempo.
-      </p>
 
       <div>
         <p className="text-xs text-muted mb-1">Hinchazón</p>

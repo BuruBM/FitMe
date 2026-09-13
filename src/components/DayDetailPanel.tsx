@@ -13,7 +13,10 @@ export function DayDetailPanel({ point, onClose }: { point: HistoryPoint; onClos
   });
 
   return (
-    <div className="rounded-xl border border-card-border bg-background p-3.5 mt-3">
+    <div
+      className="rounded-xl border p-3.5 mt-3"
+      style={{ background: "var(--primary-tint)", borderColor: "var(--primary)" }}
+    >
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold capitalize">{dateLabel}</p>
         <button onClick={onClose} className="text-muted p-1" aria-label="Cerrar">

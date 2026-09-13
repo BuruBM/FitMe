@@ -6,33 +6,76 @@ import { format, parseISO, getISOWeek } from "date-fns";
 import { es } from "date-fns/locale";
 import type { HistoryPoint } from "@/lib/queries";
 import { DayDetailPanel } from "@/components/DayDetailPanel";
+import { PHASE_LABELS, type CyclePhase } from "@/lib/cycle";
 
 type Period = "semana" | "mes" | "trimestre" | "año";
+type MetricKey = "wellness" | "weightKg" | "mood" | "irritability" | "sleepHours" | "calories" | "cyclePhase";
 
 const PERIOD_DAYS: Record<Period, number> = { semana: 7, mes: 30, trimestre: 90, año: 365 };
 const PERIOD_LABELS: Record<Period, string> = { semana: "Semana", mes: "Mes", trimestre: "Trimestre", año: "Año" };
+const PHASE_ORDER: CyclePhase[] = ["menstrual", "folicular", "ovulación", "lútea"];
+
+interface MetricDef {
+  key: MetricKey;
+  label: string;
+  domain: [number | string, number | string];
+  color: string;
+  width: number;
+  tickFormatter?: (v: number) => string;
+  formatValue: (v: number) => string;
+}
+
+const METRICS: MetricDef[] = [
+  { key: "wellness", label: "Bienestar", domain: [0, 100], color: "var(--primary)", width: 30, formatValue: (v) => `${Math.round(v)}/100` },
+  { key: "weightKg", label: "Peso", domain: ["auto", "auto"], color: "var(--primary)", width: 38, formatValue: (v) => `${v}kg` },
+  { key: "mood", label: "Ánimo", domain: [1, 5], color: "var(--primary)", width: 28, formatValue: (v) => `${v}/5` },
+  { key: "irritability", label: "Irritabilidad", domain: [1, 5], color: "var(--danger)", width: 28, formatValue: (v) => `${v}/5` },
+  { key: "sleepHours", label: "Sueño", domain: ["auto", "auto"], color: "var(--icon-sleep)", width: 32, formatValue: (v) => `${v}h` },
+  { key: "calories", label: "Calorías", domain: ["auto", "auto"], color: "var(--accent)", width: 42, formatValue: (v) => `${Math.round(v)} kcal` },
+  {
+    key: "cyclePhase",
+    label: "Ciclo",
+    domain: [0, 3],
+    color: "var(--icon-cycle)",
+    width: 46,
+    tickFormatter: (v) => PHASE_LABELS[PHASE_ORDER[Math.round(v)]]?.slice(0, 4) ?? "",
+    formatValue: (v) => PHASE_LABELS[PHASE_ORDER[Math.round(v)]] ?? "-",
+  },
+];
+
+function metricValue(p: HistoryPoint, key: MetricKey): number | null {
+  switch (key) {
+    case "wellness":
+      return p.wellness;
+    case "weightKg":
+      return p.weightKg;
+    case "mood":
+      return p.mood;
+    case "irritability":
+      return p.irritability;
+    case "sleepHours":
+      return p.sleepHours;
+    case "calories":
+      return p.calories > 0 ? p.calories : null;
+    case "cyclePhase":
+      return p.cyclePhase ? PHASE_ORDER.indexOf(p.cyclePhase) : null;
+  }
+}
 
 interface Bucket {
   label: string;
   date: string | null; // set only for daily (non-aggregated) buckets, so points are tappable
-  weightKg: number | null;
-  wellness: number | null;
+  value: number | null;
 }
 
-function average(nums: (number | null)[]): number | null {
-  const valid = nums.filter((n): n is number => n != null);
-  if (valid.length === 0) return null;
-  return Math.round((valid.reduce((a, b) => a + b, 0) / valid.length) * 10) / 10;
+function average(nums: number[]): number | null {
+  if (nums.length === 0) return null;
+  return Math.round((nums.reduce((a, b) => a + b, 0) / nums.length) * 10) / 10;
 }
 
-function bucketize(points: HistoryPoint[], period: Period): Bucket[] {
+function bucketize(points: HistoryPoint[], period: Period, metricKey: MetricKey): Bucket[] {
   if (period === "semana" || period === "mes") {
-    return points.map((p) => ({
-      label: format(parseISO(p.date), "d/M"),
-      date: p.date,
-      weightKg: p.weightKg,
-      wellness: p.wellness,
-    }));
+    return points.map((p) => ({ label: format(parseISO(p.date), "d/M"), date: p.date, value: metricValue(p, metricKey) }));
   }
 
   const groups = new Map<string, HistoryPoint[]>();
@@ -46,25 +89,26 @@ function bucketize(points: HistoryPoint[], period: Period): Bucket[] {
   return [...groups.entries()].map(([, pts]) => {
     const firstDate = parseISO(pts[0].date);
     const label = period === "trimestre" ? format(firstDate, "d/M") : format(firstDate, "MMM", { locale: es });
-    return {
-      label,
-      date: null,
-      weightKg: average(pts.map((p) => p.weightKg)),
-      wellness: average(pts.map((p) => p.wellness)),
-    };
+    const values = pts.map((p) => metricValue(p, metricKey)).filter((v): v is number => v != null);
+    return { label, date: null, value: average(values) };
   });
 }
 
 export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
   const [period, setPeriod] = useState<Period>("mes");
+  const [metricKey, setMetricKey] = useState<MetricKey>("wellness");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-  const sliced = useMemo(() => history.slice(-PERIOD_DAYS[period]), [history, period]);
-  const buckets = useMemo(() => bucketize(sliced, period), [sliced, period]);
+  const metric = METRICS.find((m) => m.key === metricKey)!;
   const isDaily = period === "semana" || period === "mes";
+  const cycleUnavailable = metricKey === "cyclePhase" && !isDaily;
 
-  const hasWeight = buckets.some((b) => b.weightKg != null);
-  const hasWellness = buckets.some((b) => b.wellness != null);
+  const sliced = useMemo(() => history.slice(-PERIOD_DAYS[period]), [history, period]);
+  const buckets = useMemo(
+    () => (cycleUnavailable ? [] : bucketize(sliced, period, metricKey)),
+    [sliced, period, metricKey, cycleUnavailable],
+  );
+  const hasData = buckets.some((b) => b.value != null);
 
   const selectedPoint = selectedDate ? sliced.find((p) => p.date === selectedDate) ?? null : null;
 
@@ -94,44 +138,54 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
       </div>
 
       <section className="card p-4">
-        <h2 className="font-semibold mb-1">Peso</h2>
-        {hasWeight ? (
-          <div className="h-44 -ml-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={buckets}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="var(--muted)" />
-                <YAxis domain={["auto", "auto"]} tick={{ fontSize: 11 }} stroke="var(--muted)" width={38} />
-                <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
-                <Line type="monotone" dataKey="weightKg" name="Peso (kg)" stroke="var(--primary)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <p className="text-sm text-muted">Sin datos de peso en este período.</p>
-        )}
-      </section>
+        <h2 className="font-semibold mb-2">Progreso</h2>
+        <div className="chip-row-scroll flex gap-1.5 overflow-x-auto pb-2">
+          {METRICS.map((m) => (
+            <button
+              key={m.key}
+              onClick={() => {
+                setMetricKey(m.key);
+                setSelectedDate(null);
+              }}
+              className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium border ${
+                metricKey === m.key ? "bg-primary text-primary-foreground border-primary" : "border-card-border text-muted"
+              }`}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
 
-      <section className="card p-4">
-        <h2 className="font-semibold mb-1">Bienestar general</h2>
-        <p className="text-xs text-muted mb-2">
-          Combina ánimo, energía, irritabilidad, estrés, sueño, agua, proteína y si te moviste — es una referencia,
-          no reemplaza a tu propia sensación.
-          {isDaily && " Tocá un punto para ver el detalle completo de ese día."}
-        </p>
-        {hasWellness ? (
+        {metricKey === "wellness" && (
+          <p className="text-xs text-muted mb-2">
+            Combina ánimo, energía, irritabilidad, estrés, sueño, agua, proteína y si te moviste.
+          </p>
+        )}
+
+        {cycleUnavailable ? (
+          <p className="text-sm text-muted">Elegí Semana o Mes para ver el ciclo día a día.</p>
+        ) : hasData ? (
           <div className="h-44 -ml-4">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={buckets} onClick={handleChartClick} style={{ cursor: isDaily ? "pointer" : "default" }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="var(--muted)" />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} stroke="var(--muted)" width={30} />
-                <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+                <YAxis
+                  domain={metric.domain}
+                  tick={{ fontSize: 11 }}
+                  stroke="var(--muted)"
+                  width={metric.width}
+                  tickFormatter={metric.tickFormatter}
+                />
+                <Tooltip
+                  contentStyle={{ fontSize: 12, borderRadius: 8 }}
+                  formatter={(v: unknown) => [metric.formatValue(Number(v)), metric.label]}
+                />
                 <Line
                   type="monotone"
-                  dataKey="wellness"
-                  name="Bienestar (0-100)"
-                  stroke="var(--primary)"
+                  dataKey="value"
+                  name={metric.label}
+                  stroke={metric.color}
                   strokeWidth={2.5}
                   dot={{ r: 4, cursor: isDaily ? "pointer" : "default" }}
                   activeDot={{ r: 6 }}
@@ -141,9 +195,7 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
             </ResponsiveContainer>
           </div>
         ) : (
-          <p className="text-sm text-muted">
-            Todavía no hay suficientes registros de &quot;¿Cómo te sentís hoy?&quot; en este período.
-          </p>
+          <p className="text-sm text-muted">Todavía no hay suficientes registros en este período.</p>
         )}
         {selectedPoint && <DayDetailPanel point={selectedPoint} onClose={() => setSelectedDate(null)} />}
       </section>

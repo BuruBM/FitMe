@@ -18,7 +18,6 @@ import type {
   PetCareLog,
   Profile,
   SleepLog,
-  SymptomLog,
   WorkoutLog,
 } from "@/lib/database.types";
 
@@ -323,22 +322,26 @@ export async function getRecentSleepLogs(days = 14): Promise<SleepLog[]> {
   return data ?? [];
 }
 
-export async function getLatestMeasurement(): Promise<BodyMeasurement | null> {
+export interface MeasurementTrend {
+  latest: BodyMeasurement | null;
+  previous: BodyMeasurement | null;
+}
+
+export async function getMeasurementTrend(): Promise<MeasurementTrend> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return null;
+  if (!user) return { latest: null, previous: null };
 
   const { data } = await supabase
     .from("body_measurements")
     .select("*")
     .eq("user_id", user.id)
     .order("log_date", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(2);
 
-  return data ?? null;
+  return { latest: data?.[0] ?? null, previous: data?.[1] ?? null };
 }
 
 export async function getRecentWorkoutLogs(days = 21): Promise<WorkoutLog[]> {
@@ -355,24 +358,6 @@ export async function getRecentWorkoutLogs(days = 21): Promise<WorkoutLog[]> {
     .eq("user_id", user.id)
     .gte("log_date", since)
     .order("completed_at", { ascending: false });
-
-  return data ?? [];
-}
-
-export async function getRecentSymptomLogs(days = 14): Promise<SymptomLog[]> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return [];
-
-  const since = shiftDateStr(todayInAppTz(), -(days - 1));
-  const { data } = await supabase
-    .from("symptom_logs")
-    .select("*")
-    .eq("user_id", user.id)
-    .gte("log_date", since)
-    .order("log_date", { ascending: false });
 
   return data ?? [];
 }

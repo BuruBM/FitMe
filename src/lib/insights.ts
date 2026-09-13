@@ -62,7 +62,7 @@ export function computeInsights(input: InsightInputs): Insight[] {
     insights.push({
       id: "cloudy-low-mood",
       tone: "info",
-      text: "Hoy está bien nublado y anotaste un ánimo bajo — podría estar relacionado. No necesariamente es algo tuyo.",
+      text: "Hoy está bien nublado y anotaste un ánimo bajo — podría estar relacionado.",
     });
   }
 

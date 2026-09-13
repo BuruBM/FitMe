@@ -16,7 +16,7 @@ export function SleepHistory({ logs }: { logs: SleepLog[] }) {
       <div className="space-y-2 max-h-60 overflow-y-auto">
         {logs.map((log) => (
           <div key={log.id} className="flex justify-between text-xs border-b border-card-border pb-2 last:border-0 last:pb-0">
-            <span className="font-medium text-foreground/80">
+            <span className="font-medium text-foreground/80 capitalize">
               {new Date(log.log_date + "T00:00:00").toLocaleDateString("es-AR", {
                 weekday: "short",
                 day: "numeric",

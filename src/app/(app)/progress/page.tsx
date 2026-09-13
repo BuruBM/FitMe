@@ -1,10 +1,9 @@
 import {
   getGamificationSummary,
   getHistory,
-  getLatestMeasurement,
+  getMeasurementTrend,
   getProfile,
   getRecentSleepLogs,
-  getRecentSymptomLogs,
   getWeeklyReview,
 } from "@/lib/queries";
 import { BADGES } from "@/lib/gamification";
@@ -12,21 +11,19 @@ import { ProgressCharts } from "@/components/ProgressCharts";
 import { WeightQuickLog } from "@/components/WeightQuickLog";
 import { MeasurementsQuickLog } from "@/components/MeasurementsQuickLog";
 import { SymptomQuickLog } from "@/components/SymptomQuickLog";
-import { SymptomHistory } from "@/components/SymptomHistory";
 import { SleepHistory } from "@/components/SleepHistory";
 import { WeeklyReviewCard } from "@/components/WeeklyReviewCard";
 import { FactorsPanel } from "@/components/FactorsPanel";
 import { computeFactors } from "@/lib/factors";
 
 export default async function ProgressPage() {
-  const [history, gamification, profile, symptomLogs, sleepLogs, weeklyReview, measurement] = await Promise.all([
+  const [history, gamification, profile, sleepLogs, weeklyReview, measurementTrend] = await Promise.all([
     getHistory(365),
     getGamificationSummary(),
     getProfile(),
-    getRecentSymptomLogs(14),
     getRecentSleepLogs(14),
     getWeeklyReview(),
-    getLatestMeasurement(),
+    getMeasurementTrend(),
   ]);
 
   const earnedIds = new Set(gamification?.state.badges ?? []);
@@ -39,10 +36,9 @@ export default async function ProgressPage() {
       <WeeklyReviewCard review={weeklyReview} />
       <ProgressCharts history={history} />
       <FactorsPanel factors={factors} />
-      <WeightQuickLog currentWeightKg={profile?.weight_kg ?? null} />
-      <MeasurementsQuickLog currentWaistCm={measurement?.waist_cm ?? null} currentHipCm={measurement?.hip_cm ?? null} />
       <SymptomQuickLog />
-      <SymptomHistory logs={symptomLogs} />
+      <WeightQuickLog currentWeightKg={profile?.weight_kg ?? null} />
+      <MeasurementsQuickLog latest={measurementTrend.latest} previous={measurementTrend.previous} />
       <SleepHistory logs={sleepLogs} />
 
       <section className="card p-4">

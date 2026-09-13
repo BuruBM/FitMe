@@ -68,8 +68,9 @@ export function PetCareQuickLog({ today, pausedUntil }: { today: PetCareLog | nu
           <button
             onClick={endPause}
             disabled={isPending}
-            className="mt-2 text-xs font-medium text-primary disabled:opacity-50"
+            className="mt-2 flex items-center gap-1 rounded-full bg-card border border-card-border px-2.5 py-1 text-[11px] font-medium text-foreground shadow-sm disabled:opacity-50"
           >
+            <Plane size={12} style={{ color: "var(--icon-pets)", transform: "scaleX(-1)" }} />
             Ya volví, reactivar
           </button>
         </div>

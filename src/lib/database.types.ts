@@ -147,6 +147,8 @@ export interface BodyMeasurement {
   log_date: string;
   waist_cm: number | null;
   hip_cm: number | null;
+  thigh_cm: number | null;
+  arm_cm: number | null;
 }
 
 export interface PetCareLog {

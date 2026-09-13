@@ -55,7 +55,7 @@ export function FoodHistory({ logs }: { logs: FoodLog[] }) {
                 onClick={() => setOpenDate(open ? null : day.date)}
                 className="w-full flex items-center justify-between py-2.5 text-left"
               >
-                <span className="text-sm font-medium">
+                <span className="text-sm font-medium capitalize">
                   {new Date(day.date + "T00:00:00").toLocaleDateString("es-AR", {
                     weekday: "short",
                     day: "numeric",

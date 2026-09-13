@@ -93,7 +93,7 @@ export const TIPS: Tip[] = [
   {
     id: "hormonas-rebote-pastilla",
     category: "hormonas",
-    title: "Dejar la pastilla puede afectar el ánimo, no sos vos",
+    title: "Dejar la pastilla puede afectar el ánimo",
     body: "Al discontinuar el anticonceptivo, el cuerpo vuelve a mostrar el desbalance hormonal de base (en SOP, sobre todo andrógenos e insulina), y eso puede traer más irritabilidad, ansiedad o ganas de auto-regularte con alcohol o tabaco. Es real y es hormonal, no falta de voluntad.",
   },
   {

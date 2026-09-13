@@ -25,10 +25,7 @@ export function FactorsPanel({ factors }: { factors: FactorComparison[] }) {
         <Compass size={16} className="text-primary" />
         Factores que afectan tu bienestar
       </div>
-      <p className="text-xs text-muted mt-1 mb-3">
-        Comparamos tu ánimo promedio (1-5) según lo que pasaba ese día. Es un patrón de tus propios datos, no una
-        causa comprobada.
-      </p>
+      <p className="text-[11px] text-muted mt-1 mb-3">Ánimo promedio (escala 1 a 5) · entre paréntesis, días comparados</p>
       <div className="space-y-3.5">
         {factors.map((f) => (
           <FactorRow key={f.id} factor={f} />
@@ -66,8 +63,8 @@ function BarRow({ label, value, n, lower }: { label: string; value: number; n: n
           style={{ width: `${pct}%`, background: lower ? "var(--danger)" : "var(--primary)" }}
         />
       </div>
-      <span className="text-[11px] font-medium w-16 text-right shrink-0">
-        {value.toFixed(1)} <span className="text-muted">(n={n})</span>
+      <span className="text-[11px] font-medium w-20 text-right shrink-0">
+        {value.toFixed(1)}/5 <span className="text-muted">({n}d)</span>
       </span>
     </div>
   );

@@ -10,10 +10,7 @@ export default async function WorkoutsPage() {
     <div className="space-y-4">
       <div>
         <h1 className="text-lg font-semibold">Entrenamiento en casa</h1>
-        <p className="text-sm text-muted mt-1">
-          Sin gimnasio. Con tus mancuernas, tobilleras, soga y bandas TRX, o sin nada. Elegí según cuánta
-          energía tengas hoy.
-        </p>
+        <p className="text-sm text-muted mt-1">Elegí según cuánta energía tengas hoy.</p>
       </div>
       <WalkQuickLog />
       <WorkoutBrowser />
