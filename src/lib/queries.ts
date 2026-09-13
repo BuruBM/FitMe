@@ -1,10 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { shiftDateStr, todayInAppTz } from "@/lib/date";
 import { evaluateNewBadges, type BadgeContext } from "@/lib/gamification";
-import { estimateCycle, type CycleEstimate } from "@/lib/cycle";
+import { daysUntilNextPeriod, estimateCycle, type CycleEstimate } from "@/lib/cycle";
 import { fetchCurrentWeather, type CurrentWeather } from "@/lib/weather";
 import { computeInsights, type Insight } from "@/lib/insights";
-import type { FoodLog, GamificationState, PetCareLog, Profile, SymptomLog } from "@/lib/database.types";
+import { buildWeeklyReview, type WeeklyReview } from "@/lib/weeklyReview";
+import type { FoodLog, GamificationState, PetCareLog, Profile, SleepLog, SymptomLog } from "@/lib/database.types";
 
 export async function getProfile(): Promise<Profile | null> {
   const supabase = await createClient();
@@ -113,13 +114,21 @@ export async function getGamificationSummary(): Promise<GamificationSummary | nu
 
   const since = shiftDateStr(todayInAppTz(), -60);
 
-  const [{ count: totalFoodLogs }, { count: totalWorkouts }, { data: waterRows }, { count: totalSleepLogs }] =
+  const [{ count: totalFoodLogs }, { count: totalWorkouts }, { data: waterRows }, { count: totalSleepLogs }, { data: petCareRows }] =
     await Promise.all([
       supabase.from("food_logs").select("id", { count: "exact", head: true }).eq("user_id", user.id),
       supabase.from("workout_logs").select("id", { count: "exact", head: true }).eq("user_id", user.id),
       supabase.from("water_logs").select("log_date, amount_ml").eq("user_id", user.id).gte("log_date", since),
       supabase.from("sleep_logs").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+      supabase
+        .from("pet_care_logs")
+        .select("milo_medication, milo_supplement, zoe_medication, zoe_supplement")
+        .eq("user_id", user.id),
     ]);
+
+  const totalPetCareDaysComplete = (petCareRows ?? []).filter(
+    (p) => p.milo_medication && p.milo_supplement && p.zoe_medication && p.zoe_supplement,
+  ).length;
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -160,6 +169,7 @@ export async function getGamificationSummary(): Promise<GamificationSummary | nu
     totalWaterGoalDays,
     totalSleepLogs: totalSleepLogs ?? 0,
     daysWithFullLog,
+    totalPetCareDaysComplete,
   };
 
   const newlyEarned = evaluateNewBadges(ctx);
@@ -178,6 +188,7 @@ export interface CycleSummary {
   onBirthControl: boolean;
   avgCycleLength: number;
   pillTakenToday: boolean;
+  daysUntilNextPeriod: number | null;
 }
 
 export async function getCycleSummary(): Promise<CycleSummary | null> {
@@ -210,6 +221,7 @@ export async function getCycleSummary(): Promise<CycleSummary | null> {
     onBirthControl: profile?.on_birth_control ?? false,
     avgCycleLength,
     pillTakenToday: pillLog?.taken ?? false,
+    daysUntilNextPeriod: daysUntilNextPeriod(lastPeriodStart, avgCycleLength),
   };
 }
 
@@ -250,6 +262,45 @@ export async function getTodayPetCare(): Promise<PetCareLog | null> {
     .maybeSingle();
 
   return data ?? null;
+}
+
+export async function getRecentFoodLogs(days = 14): Promise<FoodLog[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const today = todayInAppTz();
+  const since = shiftDateStr(today, -(days - 1));
+  const { data } = await supabase
+    .from("food_logs")
+    .select("*")
+    .eq("user_id", user.id)
+    .gte("log_date", since)
+    .lt("log_date", today)
+    .order("log_date", { ascending: false })
+    .order("logged_at", { ascending: true });
+
+  return data ?? [];
+}
+
+export async function getRecentSleepLogs(days = 14): Promise<SleepLog[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const since = shiftDateStr(todayInAppTz(), -(days - 1));
+  const { data } = await supabase
+    .from("sleep_logs")
+    .select("*")
+    .eq("user_id", user.id)
+    .gte("log_date", since)
+    .order("log_date", { ascending: false });
+
+  return data ?? [];
 }
 
 export async function getRecentSymptomLogs(days = 14): Promise<SymptomLog[]> {
@@ -323,9 +374,14 @@ export async function getDashboardInsights(): Promise<Insight[]> {
       ? 14
       : null;
 
+  const weekday = new Date(today + "T00:00:00").getDay();
+  const isWeekend = weekday === 0 || weekday === 6;
+
   return computeInsights({
     phase: cycleSummary?.estimate?.phase ?? null,
+    onBirthControl: cycleSummary?.onBirthControl ?? false,
     pcos: profile?.pcos ?? false,
+    isWeekend,
     avgProteinPct3d,
     avgSleepHours3d,
     avgIrritability3d,
@@ -347,7 +403,8 @@ export interface HistoryPoint {
   mood: number | null;
   energy: number | null;
   irritability: number | null;
-  movementLevel: number | null;
+  stressLevel: number | null;
+  movedToday: boolean;
   petCareDone: boolean | null;
   /** 0-100 composite of whatever metrics were logged that day; null if too little data. */
   wellness: number | null;
@@ -371,7 +428,7 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
   const today = todayInAppTz();
   const since = shiftDateStr(today, -(days - 1));
 
-  const [{ data: profile }, { data: weights }, { data: water }, { data: sleep }, { data: food }, { data: symptoms }, { data: petCare }] =
+  const [{ data: profile }, { data: weights }, { data: water }, { data: sleep }, { data: food }, { data: symptoms }, { data: petCare }, { data: workouts }] =
     await Promise.all([
       supabase.from("profiles").select("sleep_target_hours, water_target_ml, protein_target_g").eq("id", user.id).single(),
       supabase.from("weight_logs").select("log_date, weight_kg").eq("user_id", user.id).gte("log_date", since),
@@ -380,7 +437,7 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
       supabase.from("food_logs").select("log_date, calories, protein_g").eq("user_id", user.id).gte("log_date", since),
       supabase
         .from("symptom_logs")
-        .select("log_date, mood, energy, irritability, movement_level")
+        .select("log_date, mood, energy, irritability, stress_level")
         .eq("user_id", user.id)
         .gte("log_date", since),
       supabase
@@ -388,12 +445,14 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
         .select("log_date, milo_medication, milo_supplement, zoe_medication, zoe_supplement")
         .eq("user_id", user.id)
         .gte("log_date", since),
+      supabase.from("workout_logs").select("log_date").eq("user_id", user.id).gte("log_date", since),
     ]);
 
   const weightByDay = new Map((weights ?? []).map((w) => [w.log_date, w.weight_kg]));
   const sleepByDay = new Map((sleep ?? []).map((s) => [s.log_date, s.hours]));
   const symptomByDay = new Map((symptoms ?? []).map((s) => [s.log_date, s]));
   const petCareByDay = new Map((petCare ?? []).map((p) => [p.log_date, p]));
+  const movedDaySet = new Set((workouts ?? []).map((w) => w.log_date));
 
   const waterByDay = new Map<string, number>();
   for (const w of water ?? []) waterByDay.set(w.log_date, (waterByDay.get(w.log_date) ?? 0) + w.amount_ml);
@@ -418,15 +477,18 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
     const proteinG = proteinByDay.get(date) ?? 0;
     const pet = petCareByDay.get(date);
     const petCareDone = pet ? pet.milo_medication && pet.milo_supplement && pet.zoe_medication && pet.zoe_supplement : null;
+    const movedToday = movedDaySet.has(date);
 
     const wellnessInputs: number[] = [];
     if (symptom?.mood != null) wellnessInputs.push(scale1to5(symptom.mood));
     if (symptom?.energy != null) wellnessInputs.push(scale1to5(symptom.energy));
     if (symptom?.irritability != null) wellnessInputs.push(100 - scale1to5(symptom.irritability));
-    if (symptom?.movement_level != null) wellnessInputs.push(scale1to5(symptom.movement_level));
+    if (symptom?.stress_level != null) wellnessInputs.push(100 - scale1to5(symptom.stress_level));
     if (sleepHours != null) wellnessInputs.push(pct(sleepHours, sleepTarget));
     if (waterMl > 0) wellnessInputs.push(pct(waterMl, waterTarget));
     if (proteinG > 0) wellnessInputs.push(pct(proteinG, proteinTarget));
+    // Movement isn't self-rated here — it's the real signal from Entreno (workouts/walks).
+    wellnessInputs.push(movedToday ? 100 : 0);
 
     const wellness =
       wellnessInputs.length >= 2
@@ -443,10 +505,44 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
       mood: symptom?.mood ?? null,
       energy: symptom?.energy ?? null,
       irritability: symptom?.irritability ?? null,
-      movementLevel: symptom?.movement_level ?? null,
+      stressLevel: symptom?.stress_level ?? null,
+      movedToday,
       petCareDone,
       wellness,
     });
   }
   return points;
+}
+
+export async function getWeeklyReview(): Promise<WeeklyReview | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const [{ data: profile }, history] = await Promise.all([
+    supabase.from("profiles").select("protein_target_g, water_target_ml, sleep_target_hours").eq("id", user.id).single(),
+    getHistory(7),
+  ]);
+
+  const proteinTarget = profile?.protein_target_g ?? 90;
+  const waterTarget = profile?.water_target_ml ?? 2000;
+  const sleepTarget = profile?.sleep_target_hours ?? 7.5;
+
+  const days = history.map((h) => {
+    const weekday = new Date(h.date + "T00:00:00").getDay();
+    return {
+      date: h.date,
+      isWeekend: weekday === 0 || weekday === 6,
+      proteinPct: h.proteinG > 0 ? pct(h.proteinG, proteinTarget) : null,
+      sleepHours: h.sleepHours,
+      waterPct: h.waterMl > 0 ? pct(h.waterMl, waterTarget) : null,
+      mood: h.mood,
+      hasWorkout: h.movedToday,
+      hasAnyLog: h.proteinG > 0 || h.waterMl > 0 || h.sleepHours != null || h.mood != null || h.movedToday,
+    };
+  });
+
+  return buildWeeklyReview({ days, sleepTargetHours: sleepTarget });
 }

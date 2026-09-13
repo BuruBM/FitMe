@@ -1,16 +1,22 @@
 import { getFavoriteFoods } from "@/lib/actions/food";
-import { getTodaySummary } from "@/lib/queries";
+import { getRecentFoodLogs, getTodaySummary } from "@/lib/queries";
 import { FoodLogger } from "@/components/FoodLogger";
 import { TodayFoodList } from "@/components/TodayFoodList";
+import { FoodHistory } from "@/components/FoodHistory";
 
 export default async function FoodPage() {
-  const [favorites, summary] = await Promise.all([getFavoriteFoods(), getTodaySummary()]);
+  const [favorites, summary, history] = await Promise.all([
+    getFavoriteFoods(),
+    getTodaySummary(),
+    getRecentFoodLogs(14),
+  ]);
 
   return (
     <div className="space-y-4">
       <h1 className="text-lg font-semibold">Comida</h1>
       <FoodLogger favorites={favorites} />
       <TodayFoodList logs={summary.foodLogs} />
+      <FoodHistory logs={history} />
     </div>
   );
 }

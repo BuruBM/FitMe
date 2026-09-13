@@ -1,4 +1,5 @@
 import { WorkoutBrowser } from "@/components/WorkoutBrowser";
+import { WalkQuickLog } from "@/components/WalkQuickLog";
 
 export default function WorkoutsPage() {
   return (
@@ -10,6 +11,7 @@ export default function WorkoutsPage() {
           energía tengas hoy.
         </p>
       </div>
+      <WalkQuickLog />
       <WorkoutBrowser />
     </div>
   );

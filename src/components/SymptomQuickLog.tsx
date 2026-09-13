@@ -21,7 +21,7 @@ export function SymptomQuickLog() {
   const [tobaccoUsed, setTobaccoUsed] = useState(false);
   const [socialMediaMinutes, setSocialMediaMinutes] = useState(60);
   const [socialContact, setSocialContact] = useState(0);
-  const [movementLevel, setMovementLevel] = useState(3);
+  const [stressLevel, setStressLevel] = useState(3);
   const [notes, setNotes] = useState("");
   const [notesValence, setNotesValence] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -38,7 +38,7 @@ export function SymptomQuickLog() {
         tobaccoUsed,
         socialMediaMinutes,
         socialContact,
-        movementLevel,
+        stressLevel,
         notesValence: notesValence ?? undefined,
         notes: notes || undefined,
       });
@@ -74,7 +74,7 @@ export function SymptomQuickLog() {
       <RatingRow label="Energía" value={energy} onChange={setEnergy} />
       <RatingRow label="Ánimo" value={mood} onChange={setMood} />
       <RatingRow label="Irritabilidad" value={irritability} onChange={setIrritability} />
-      <RatingRow label="Cuánto te moviste hoy" value={movementLevel} onChange={setMovementLevel} />
+      <RatingRow label="Estrés" value={stressLevel} onChange={setStressLevel} />
       <RatingRow label="Contacto con gente querida" value={socialContact} onChange={setSocialContact} max={5} min={0} />
 
       <div className="grid grid-cols-2 gap-2 pt-1">

@@ -7,6 +7,7 @@ export const XP_RULES = {
   weight_log: 5,
   workout_done: 20,
   symptom_log: 5,
+  pet_care_done: 10,
 } as const;
 
 export function xpForLevel(level: number): number {
@@ -53,6 +54,7 @@ export interface BadgeContext {
   totalWaterGoalDays: number;
   totalSleepLogs: number;
   daysWithFullLog: number;
+  totalPetCareDaysComplete: number;
 }
 
 export const BADGES: BadgeDef[] = [
@@ -125,6 +127,13 @@ export const BADGES: BadgeDef[] = [
     description: "Llegaste al nivel 5 en FitMe.",
     icon: "🚀",
     check: (c) => c.state.level >= 5,
+  },
+  {
+    id: "cat_care_10",
+    title: "Buena mamá de gatos",
+    description: "10 días cuidando por completo a Milo y Zoe.",
+    icon: "🐱",
+    check: (c) => c.totalPetCareDaysComplete >= 10,
   },
 ];
 

@@ -12,6 +12,7 @@ const CATEGORIES: { value: Tip["category"]; label: string }[] = [
   { value: "energía", label: "Energía" },
   { value: "sueño", label: "Sueño" },
   { value: "hormonas", label: "Hormonas" },
+  { value: "hábitos", label: "Hábitos" },
 ];
 
 export function RecommendationsPanel() {

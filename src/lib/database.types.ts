@@ -37,6 +37,7 @@ export interface Profile {
   city: string | null;
   latitude: number | null;
   longitude: number | null;
+  pet_care_paused_until: string | null;
   onboarded: boolean;
   created_at: string;
 }
@@ -118,7 +119,7 @@ export interface SymptomLog {
   weather_condition: string | null;
   social_media_minutes: number | null;
   social_contact: number | null;
-  movement_level: number | null;
+  stress_level: number | null;
   notes_valence: number | null;
   notes: string | null;
 }

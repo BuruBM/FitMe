@@ -8,7 +8,9 @@ export interface Insight {
 
 export interface InsightInputs {
   phase: CyclePhase | null;
+  onBirthControl: boolean;
   pcos: boolean;
+  isWeekend: boolean;
   avgProteinPct3d: number | null; // % of protein target hit, avg of last 3 logged days
   avgSleepHours3d: number | null;
   avgIrritability3d: number | null;
@@ -29,6 +31,8 @@ export function computeInsights(input: InsightInputs): Insight[] {
   const insights: Insight[] = [];
 
   if (
+    !input.onBirthControl &&
+    !input.isWeekend &&
     input.phase === "lútea" &&
     input.avgProteinPct3d != null &&
     input.avgProteinPct3d < 70 &&
@@ -59,6 +63,7 @@ export function computeInsights(input: InsightInputs): Insight[] {
   }
 
   if (
+    !input.onBirthControl &&
     (input.phase === "lútea" || input.phase === "menstrual") &&
     input.avgIrritability3d != null &&
     input.avgIrritability3d >= 4

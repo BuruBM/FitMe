@@ -92,7 +92,7 @@ export interface SymptomInput {
   tobaccoUsed: boolean;
   socialMediaMinutes?: number;
   socialContact?: number;
-  movementLevel?: number;
+  stressLevel?: number;
   notesValence?: number;
   notes?: string;
 }
@@ -126,7 +126,7 @@ export async function logSymptoms(input: SymptomInput) {
       weather_condition: weather?.condition ?? null,
       social_media_minutes: input.socialMediaMinutes ?? null,
       social_contact: input.socialContact ?? null,
-      movement_level: input.movementLevel ?? null,
+      stress_level: input.stressLevel ?? null,
       notes_valence: input.notesValence ?? null,
       notes: input.notes ?? null,
     },

@@ -36,6 +36,14 @@ export function estimateCycle(lastPeriodStart: string | null, avgCycleLength: nu
   return { cycleDay, phase };
 }
 
+/** Days from today until the next period is expected to start, given the pattern so far. */
+export function daysUntilNextPeriod(lastPeriodStart: string | null, avgCycleLength: number): number | null {
+  const estimate = estimateCycle(lastPeriodStart, avgCycleLength);
+  if (!estimate) return null;
+  const cycleLength = avgCycleLength > 0 ? avgCycleLength : 28;
+  return cycleLength - (estimate.cycleDay - 1);
+}
+
 export const PHASE_LABELS: Record<CyclePhase, string> = {
   menstrual: "Menstrual",
   folicular: "Folicular",

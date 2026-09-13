@@ -97,7 +97,7 @@ export default async function DashboardPage() {
 
       {cycleSummary && <CycleCard summary={cycleSummary} pcos={profile.pcos} />}
 
-      <PetCareQuickLog today={petCare} />
+      <PetCareQuickLog today={petCare} pausedUntil={profile.pet_care_paused_until} />
 
       <section className="card p-4" style={{ background: "var(--accent-tint)" }}>
         <p className="text-xs font-medium text-accent uppercase tracking-wide">Desafío de la semana</p>

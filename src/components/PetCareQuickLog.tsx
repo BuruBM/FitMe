@@ -1,16 +1,22 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Cat } from "lucide-react";
-import { logPetCare } from "@/lib/actions/petcare";
+import { Cat, Plane } from "lucide-react";
+import { logPetCare, setPetCarePause } from "@/lib/actions/petcare";
+import { todayInAppTz } from "@/lib/date";
 import type { PetCareLog } from "@/lib/database.types";
 
-export function PetCareQuickLog({ today }: { today: PetCareLog | null }) {
+export function PetCareQuickLog({ today, pausedUntil }: { today: PetCareLog | null; pausedUntil: string | null }) {
   const [miloMedication, setMiloMedication] = useState(today?.milo_medication ?? false);
   const [miloSupplement, setMiloSupplement] = useState(today?.milo_supplement ?? false);
   const [zoeMedication, setZoeMedication] = useState(today?.zoe_medication ?? false);
   const [zoeSupplement, setZoeSupplement] = useState(today?.zoe_supplement ?? false);
+  const [pauseUntil, setPauseUntil] = useState(pausedUntil);
+  const [settingPause, setSettingPause] = useState(false);
+  const [pauseDateInput, setPauseDateInput] = useState("");
   const [isPending, startTransition] = useTransition();
+
+  const isPaused = pauseUntil != null && pauseUntil >= todayInAppTz();
 
   function toggle(current: boolean, setter: (v: boolean) => void, field: keyof ReturnType<typeof snapshot>) {
     const next = !current;
@@ -23,30 +29,85 @@ export function PetCareQuickLog({ today }: { today: PetCareLog | null }) {
     return { miloMedication, miloSupplement, zoeMedication, zoeSupplement };
   }
 
+  function confirmPause() {
+    if (!pauseDateInput) return;
+    setPauseUntil(pauseDateInput);
+    setSettingPause(false);
+    startTransition(() => setPetCarePause(pauseDateInput));
+  }
+
+  function endPause() {
+    setPauseUntil(null);
+    startTransition(() => setPetCarePause(null));
+  }
+
   return (
     <section className="card p-4" style={{ background: "var(--tint-pets)" }}>
-      <div className="flex items-center gap-1.5 text-sm font-medium">
-        <Cat size={17} style={{ color: "var(--icon-pets)" }} />
-        Milo y Zoe
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5 text-sm font-medium">
+          <Cat size={17} style={{ color: "var(--icon-pets)" }} />
+          Milo y Zoe
+        </div>
+        {!isPaused && !settingPause && (
+          <button
+            onClick={() => setSettingPause(true)}
+            className="flex items-center gap-1 text-[11px] text-muted"
+          >
+            <Plane size={12} />
+            Voy de viaje
+          </button>
+        )}
       </div>
-      <div className="grid grid-cols-2 gap-3 mt-3">
-        <PetColumn
-          name="Milo"
-          medication={miloMedication}
-          supplement={miloSupplement}
-          onToggleMedication={() => toggle(miloMedication, setMiloMedication, "miloMedication")}
-          onToggleSupplement={() => toggle(miloSupplement, setMiloSupplement, "miloSupplement")}
-          disabled={isPending}
-        />
-        <PetColumn
-          name="Zoe"
-          medication={zoeMedication}
-          supplement={zoeSupplement}
-          onToggleMedication={() => toggle(zoeMedication, setZoeMedication, "zoeMedication")}
-          onToggleSupplement={() => toggle(zoeSupplement, setZoeSupplement, "zoeSupplement")}
-          disabled={isPending}
-        />
-      </div>
+
+      {isPaused ? (
+        <div className="mt-2">
+          <p className="text-xs text-muted">
+            En pausa por viaje hasta el {new Date(pauseUntil! + "T00:00:00").toLocaleDateString("es-AR")}. No cuenta
+            en contra tuyo.
+          </p>
+          <button
+            onClick={endPause}
+            disabled={isPending}
+            className="mt-2 text-xs font-medium text-primary disabled:opacity-50"
+          >
+            Ya volví, reactivar
+          </button>
+        </div>
+      ) : settingPause ? (
+        <div className="mt-2 flex items-center gap-2">
+          <input
+            type="date"
+            value={pauseDateInput}
+            onChange={(e) => setPauseDateInput(e.target.value)}
+            className="flex-1 rounded-lg border border-card-border bg-background px-2 py-1.5 text-xs outline-none focus:border-primary"
+          />
+          <button onClick={confirmPause} className="text-xs font-medium text-primary">
+            Listo
+          </button>
+          <button onClick={() => setSettingPause(false)} className="text-xs text-muted">
+            Cancelar
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 mt-3">
+          <PetColumn
+            name="Milo"
+            medication={miloMedication}
+            supplement={miloSupplement}
+            onToggleMedication={() => toggle(miloMedication, setMiloMedication, "miloMedication")}
+            onToggleSupplement={() => toggle(miloSupplement, setMiloSupplement, "miloSupplement")}
+            disabled={isPending}
+          />
+          <PetColumn
+            name="Zoe"
+            medication={zoeMedication}
+            supplement={zoeSupplement}
+            onToggleMedication={() => toggle(zoeMedication, setZoeMedication, "zoeMedication")}
+            onToggleSupplement={() => toggle(zoeSupplement, setZoeSupplement, "zoeSupplement")}
+            disabled={isPending}
+          />
+        </div>
+      )}
     </section>
   );
 }

@@ -10,7 +10,7 @@ export function TipOfTheDay({
   osteopeniaRisk: boolean;
   pcos: boolean;
 }) {
-  const relevantCategories: Tip["category"][] = ["proteína", "trabajo", "social", "energía", "sueño"];
+  const relevantCategories: Tip["category"][] = ["proteína", "trabajo", "social", "energía", "sueño", "hábitos", "hábitos"];
   if (bloatingProne) relevantCategories.push("hinchazón", "hinchazón");
   if (osteopeniaRisk) relevantCategories.push("huesos", "huesos");
   if (pcos) relevantCategories.push("hormonas", "hormonas");

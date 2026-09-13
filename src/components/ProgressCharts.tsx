@@ -101,8 +101,9 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
       <section className="card p-4">
         <h2 className="font-semibold mb-1">Ánimo y bienestar general</h2>
         <p className="text-xs text-muted mb-2">
-          Ánimo es lo que registrás vos (1-5). Bienestar general combina ánimo, energía, irritabilidad, sueño, agua,
-          proteína y movimiento del día — es una referencia, no reemplaza a tu propia sensación.
+          Ánimo es lo que registrás vos (1-5), sin mezclar nada más. Bienestar general combina ánimo, energía,
+          irritabilidad, estrés, sueño, agua, proteína y si te moviste (entrenamiento o caminata) — es una
+          referencia, no reemplaza a tu propia sensación.
         </p>
         {hasMoodOrWellness ? (
           <div className="h-44 -ml-4">

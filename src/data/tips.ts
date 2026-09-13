@@ -1,6 +1,6 @@
 export interface Tip {
   id: string;
-  category: "proteína" | "hinchazón" | "huesos" | "trabajo" | "social" | "energía" | "sueño" | "hormonas";
+  category: "proteína" | "hinchazón" | "huesos" | "trabajo" | "social" | "energía" | "sueño" | "hormonas" | "hábitos";
   title: string;
   body: string;
 }
@@ -113,6 +113,42 @@ export const TIPS: Tip[] = [
     category: "hormonas",
     title: "Los antojos también pueden ser hormonales",
     body: "Más ganas de dulce o de alcohol en este período no es falta de disciplina: la fluctuación hormonal afecta directamente el apetito y los antojos. Tenerlo en cuenta ayuda a no exigirte de más justo ahora.",
+  },
+  {
+    id: "habitos-minimo-viable",
+    category: "hábitos",
+    title: "La versión mínima cuenta",
+    body: "Si un día no da para la rutina completa, hacé la versión de 2 minutos: 5 sentadillas, un vaso de agua, anotar una comida. Sostener el hábito en su versión mínima es lo que evita el 'total abandono' — mañana podés volver a la versión completa.",
+  },
+  {
+    id: "habitos-encadenar",
+    category: "hábitos",
+    title: "Enganchá el hábito nuevo a uno que ya tenés",
+    body: "En vez de 'tengo que acordarme de tomar agua', probá 'después de cada mate, un vaso de agua'. Atar el hábito nuevo a algo que ya hacés todos los días (el mate, lavarte los dientes, llegar al trabajo) hace que dependa menos de la fuerza de voluntad.",
+  },
+  {
+    id: "habitos-recaida",
+    category: "hábitos",
+    title: "Un día salteado no borra el progreso",
+    body: "La regla que más sostiene hábitos a largo plazo no es 'nunca fallar', es 'nunca fallar dos veces seguidas'. Si ayer no registraste nada, hoy es el día de volver — no hace falta esperar al lunes.",
+  },
+  {
+    id: "habitos-fin-de-semana",
+    category: "hábitos",
+    title: "El fin de semana no tiene que ser igual de estricto",
+    body: "Comer distinto, dormir horarios distintos o tomar una copa de más el sábado no es un fracaso del plan — es parte de tener vida social. Lo que importa es el promedio de la semana, no cada día calcado al anterior.",
+  },
+  {
+    id: "habitos-friccion",
+    category: "hábitos",
+    title: "Bajale la fricción a lo que querés sostener",
+    body: "Dejar la ropa de entrenar a la vista, tener la proteína en polvo en la mesada, guardar comidas favoritas ya cargadas: cuanto menos pasos necesite un hábito bueno, más fácil se sostiene en un día con poca energía.",
+  },
+  {
+    id: "habitos-celebrar",
+    category: "hábitos",
+    title: "Notá lo que sí sostuviste, no solo lo que faltó",
+    body: "Es fácil enfocarse en lo que no se hizo. Mirá tu racha y tus logros en Progreso como termómetro real: si veniste registrando seguido, eso ya es sostener un hábito, más allá de si cada objetivo se cumplió al 100%.",
   },
 ];
 

@@ -36,12 +36,27 @@ export function CycleCard({ summary, pcos }: { summary: CycleSummary; pcos: bool
           <p className="text-sm mt-1">
             Día {summary.estimate.cycleDay} · {PHASE_LABELS[summary.estimate.phase]}
           </p>
-          <p className="text-xs text-muted mt-1">{PHASE_MOOD_INFO[summary.estimate.phase]}</p>
+          {summary.onBirthControl ? (
+            <p className="text-xs text-muted mt-1">
+              Con anticonceptivos el ciclo hormonal natural está regulado por la pastilla, así que las fases de
+              ánimo típicas del ciclo espontáneo no aplican igual. Igual vale registrar cómo te sentís — vamos a
+              ver el patrón real con la pastilla.
+            </p>
+          ) : (
+            <p className="text-xs text-muted mt-1">{PHASE_MOOD_INFO[summary.estimate.phase]}</p>
+          )}
+          {summary.daysUntilNextPeriod != null && summary.daysUntilNextPeriod <= 3 && (
+            <p className="text-xs font-medium mt-1.5" style={{ color: "var(--icon-cycle)" }}>
+              {summary.daysUntilNextPeriod <= 0
+                ? "Tu período podría empezar hoy o ya haberse retrasado."
+                : `Tu período podría empezar en los próximos ${summary.daysUntilNextPeriod} día${summary.daysUntilNextPeriod === 1 ? "" : "s"}.`}
+            </p>
+          )}
         </>
       ) : (
         <p className="text-xs text-muted mt-1">Registrá el inicio de tu último período para verlo acá.</p>
       )}
-      {pcos && (
+      {pcos && !summary.onBirthControl && (
         <p className="text-[11px] text-muted mt-0.5">Es una estimación: con SOP el ciclo puede variar bastante.</p>
       )}
 
