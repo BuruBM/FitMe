@@ -36,14 +36,12 @@ export function CycleCard({ summary, pcos }: { summary: CycleSummary; pcos: bool
           <p className="text-sm mt-1">
             Día {summary.estimate.cycleDay} · {PHASE_LABELS[summary.estimate.phase]}
           </p>
-          {summary.onBirthControl ? (
+          <p className="text-xs text-muted mt-1">{PHASE_MOOD_INFO[summary.estimate.phase]}</p>
+          {summary.onBirthControl && summary.daysSincePillStart != null && summary.daysSincePillStart < 90 && (
             <p className="text-xs text-muted mt-1">
-              {summary.daysSincePillStart != null && summary.daysSincePillStart < 90
-                ? "Recién retomaste la pastilla — el cuerpo puede tardar hasta 3 meses en acomodarse, así que los cambios de ánimo son esperables mientras tanto."
-                : `Con anticonceptivos las fases no siguen el ciclo espontáneo.${pcos ? " Con SOP, la pastilla no siempre saca los síntomas del todo." : ""}`}
+              Recién retomaste la pastilla — el cuerpo puede tardar hasta 3 meses en acomodarse, así que los
+              cambios de ánimo son esperables mientras tanto.
             </p>
-          ) : (
-            <p className="text-xs text-muted mt-1">{PHASE_MOOD_INFO[summary.estimate.phase]}</p>
           )}
           {summary.daysUntilNextPeriod != null && summary.daysUntilNextPeriod <= 3 && (
             <p className="text-xs font-medium mt-1.5" style={{ color: "var(--icon-cycle)" }}>
@@ -56,7 +54,7 @@ export function CycleCard({ summary, pcos }: { summary: CycleSummary; pcos: bool
       ) : (
         <p className="text-xs text-muted mt-1">Registrá el inicio de tu último período para verlo acá.</p>
       )}
-      {pcos && !summary.onBirthControl && (
+      {pcos && (
         <p className="text-[11px] text-muted mt-0.5">Es una estimación: con SOP el ciclo puede variar bastante.</p>
       )}
 

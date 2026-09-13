@@ -1,43 +1,61 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Compass, ChevronDown } from "lucide-react";
-import type { FactorComparison, FactorDay } from "@/lib/factors";
+import { computeFactors, type FactorComparison, type FactorDay } from "@/lib/factors";
+import type { HistoryPoint } from "@/lib/queries";
 
 const MOOD_MAX = 5;
-const MAX_DAYS_SHOWN = 8;
+const MAX_DAYS_SHOWN = 10;
 
-export function FactorsPanel({ factors }: { factors: FactorComparison[] }) {
-  if (factors.length === 0) {
-    return (
-      <section className="card p-4">
+type Period = "semana" | "mes";
+const PERIOD_DAYS: Record<Period, number> = { semana: 7, mes: 30 };
+const PERIOD_LABELS: Record<Period, string> = { semana: "Semana", mes: "Mes" };
+
+export function FactorsPanel({ history }: { history: HistoryPoint[] }) {
+  const [period, setPeriod] = useState<Period>("semana");
+
+  const factors = useMemo(() => computeFactors(history.slice(-PERIOD_DAYS[period])), [history, period]);
+
+  return (
+    <section className="card p-4">
+      <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 text-sm font-medium">
           <Compass size={16} className="text-primary" />
           Factores que afectan tu bienestar
         </div>
-        <p className="text-xs text-muted mt-1">
-          Todavía no hay suficientes días registrados para comparar. Con más check-ins de &quot;¿Cómo te sentís
-          hoy?&quot; esto se va a ir llenando.
-        </p>
-      </section>
-    );
-  }
+        <div className="flex gap-1 shrink-0">
+          {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              className={`rounded-full px-2.5 py-1 text-[11px] font-medium border ${
+                period === p ? "bg-primary text-primary-foreground border-primary" : "border-card-border text-muted"
+              }`}
+            >
+              {PERIOD_LABELS[p]}
+            </button>
+          ))}
+        </div>
+      </div>
 
-  return (
-    <section className="card p-4">
-      <div className="flex items-center gap-1.5 text-sm font-medium">
-        <Compass size={16} className="text-primary" />
-        Factores que afectan tu bienestar
-      </div>
-      <p className="text-[11px] text-muted mt-1 mb-3">
-        Ánimo promedio (escala 1 a 5) según lo que pasaba ese día. Los días por grupo no tienen por qué coincidir
-        entre categorías — cada uno cuenta lo que realmente pasó. Tocá una para ver los días.
-      </p>
-      <div className="space-y-3.5">
-        {factors.map((f) => (
-          <FactorRow key={f.id} factor={f} />
-        ))}
-      </div>
+      {factors.length === 0 ? (
+        <p className="text-xs text-muted mt-2">
+          No hay suficientes check-ins de &quot;¿Cómo te sentís hoy?&quot; en {period === "semana" ? "esta semana" : "este mes"} para comparar.
+        </p>
+      ) : (
+        <>
+          <p className="text-[11px] text-muted mt-1 mb-3">
+            Ánimo promedio (escala 1 a 5) de {period === "semana" ? "los últimos 7 días" : "los últimos 30 días"},
+            agrupado por lo que pasaba ese día. Tocá una categoría para ver los días.
+          </p>
+          <div className="space-y-3.5">
+            {factors.map((f) => (
+              <FactorRow key={f.id} factor={f} />
+            ))}
+          </div>
+        </>
+      )}
     </section>
   );
 }

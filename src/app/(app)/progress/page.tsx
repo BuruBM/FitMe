@@ -14,7 +14,6 @@ import { SymptomQuickLog } from "@/components/SymptomQuickLog";
 import { SleepHistory } from "@/components/SleepHistory";
 import { WeeklyReviewCard } from "@/components/WeeklyReviewCard";
 import { FactorsPanel } from "@/components/FactorsPanel";
-import { computeFactors } from "@/lib/factors";
 
 export default async function ProgressPage() {
   const [history, gamification, profile, sleepLogs, weeklyReview, measurementTrend] = await Promise.all([
@@ -27,7 +26,6 @@ export default async function ProgressPage() {
   ]);
 
   const earnedIds = new Set(gamification?.state.badges ?? []);
-  const factors = computeFactors(history, profile?.on_birth_control ?? false);
 
   return (
     <div className="space-y-4">
@@ -35,7 +33,7 @@ export default async function ProgressPage() {
 
       <WeeklyReviewCard review={weeklyReview} />
       <ProgressCharts history={history} />
-      <FactorsPanel factors={factors} />
+      <FactorsPanel history={history} />
       <SymptomQuickLog />
       <WeightQuickLog currentWeightKg={profile?.weight_kg ?? null} />
       <MeasurementsQuickLog latest={measurementTrend.latest} previous={measurementTrend.previous} />

@@ -31,7 +31,12 @@ export function TodayFoodList({ logs }: { logs: FoodLog[] }) {
     <div className="space-y-4">
       {grouped.map(({ meal, items }) => (
         <div key={meal}>
-          <h3 className="text-xs font-medium text-muted uppercase tracking-wide mb-1.5">{MEAL_LABELS[meal]}</h3>
+          <h3
+            className="text-xs font-semibold uppercase tracking-wide mb-1.5"
+            style={{ color: "var(--icon-food)" }}
+          >
+            {MEAL_LABELS[meal]}
+          </h3>
           <div className="card divide-y divide-card-border">
             {items.map((log) => (
               <div key={log.id} className="flex items-center justify-between px-3 py-2.5 text-sm">

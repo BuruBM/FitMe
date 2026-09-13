@@ -91,7 +91,7 @@ export function FoodLogger({ favorites }: { favorites: CustomFood[] }) {
   const [tab, setTab] = useState<Tab>("buscar");
 
   return (
-    <div className="card p-3">
+    <div className="card p-3" style={{ background: "var(--tint-food)" }}>
       <div className="flex items-center gap-1.5 text-sm font-semibold mb-3 px-0.5">
         <UtensilsCrossed size={15} style={{ color: "var(--icon-food)" }} />
         Registrar comida

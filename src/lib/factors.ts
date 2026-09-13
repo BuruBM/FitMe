@@ -18,7 +18,7 @@ export interface FactorComparison {
   note?: string;
 }
 
-const MIN_DAYS_PER_GROUP = 3;
+const MIN_DAYS_PER_GROUP = 2;
 const MOOD_SCALE_MAX = 5;
 
 function avg(days: FactorDay[]): number {
@@ -42,15 +42,17 @@ function splitBy(
 }
 
 /**
- * Bucketed averages of mood by other logged variables — "does X actually
- * track with how you feel". Only rule-based comparison of her own numbers,
- * never a causal claim; each row is a description, not a diagnosis. Day
- * counts per group are whatever naturally occurred (e.g. more cloudy days
- * than clear ones some months) — they aren't meant to match across groups.
- * Returns the factors with the biggest observed gap first, capped so it
- * reads as a highlight reel rather than a wall of stats.
+ * Bucketed averages of mood by other logged variables, all within the same
+ * recent window (the caller slices `points` to a week or a month) — "of
+ * these same days, how did mood split by X". Anchoring every factor to the
+ * same window is what makes them comparable to each other; day counts can
+ * still differ between the two groups of one factor (more cloudy days than
+ * clear ones that week, say) and between factors when a field wasn't logged
+ * some days, but they all describe the same period. Only a rule-based
+ * comparison of her own numbers, never a causal claim. Returns the biggest
+ * observed gaps first, capped so it reads as a highlight reel.
  */
-export function computeFactors(points: HistoryPoint[], onBirthControl: boolean): FactorComparison[] {
+export function computeFactors(points: HistoryPoint[]): FactorComparison[] {
   const results: FactorComparison[] = [];
   const moodOf = (p: HistoryPoint) => p.mood;
 
@@ -139,53 +141,35 @@ export function computeFactors(points: HistoryPoint[], onBirthControl: boolean):
     });
   }
 
-  if (onBirthControl) {
-    const pill = splitBy(points, (p) => p.pillTaken, moodOf);
-    if (pill.a.length >= MIN_DAYS_PER_GROUP && pill.b.length >= MIN_DAYS_PER_GROUP) {
+  const byPhase = new Map<CyclePhase, FactorDay[]>();
+  for (const p of points) {
+    if (p.cyclePhase == null || p.mood == null) continue;
+    if (!byPhase.has(p.cyclePhase)) byPhase.set(p.cyclePhase, []);
+    byPhase.get(p.cyclePhase)!.push({ date: p.date, value: p.mood });
+  }
+  const phaseAverages = [...byPhase.entries()]
+    .filter(([, days]) => days.length >= MIN_DAYS_PER_GROUP)
+    .map(([phase, days]) => ({ phase, avgMood: avg(days), days }));
+
+  if (phaseAverages.length >= 2) {
+    phaseAverages.sort((a, b) => a.avgMood - b.avgMood);
+    const lowest = phaseAverages[0];
+    const highest = phaseAverages[phaseAverages.length - 1];
+    if (highest.avgMood - lowest.avgMood >= 0.3) {
       results.push({
-        id: "pill",
-        label: "Pastilla",
-        groupALabel: "Días que la tomaste",
-        groupBLabel: "Días que no",
-        avgA: avg(pill.a),
-        avgB: avg(pill.b),
-        daysA: pill.a,
-        daysB: pill.b,
+        id: "cycle",
+        label: "Ciclo hormonal",
+        groupALabel: `Fase ${PHASE_LABELS[lowest.phase]}`,
+        groupBLabel: `Fase ${PHASE_LABELS[highest.phase]}`,
+        avgA: lowest.avgMood,
+        avgB: highest.avgMood,
+        daysA: lowest.days,
+        daysB: highest.days,
       });
     }
   }
 
-  if (!onBirthControl) {
-    const byPhase = new Map<CyclePhase, FactorDay[]>();
-    for (const p of points) {
-      if (p.cyclePhase == null || p.mood == null) continue;
-      if (!byPhase.has(p.cyclePhase)) byPhase.set(p.cyclePhase, []);
-      byPhase.get(p.cyclePhase)!.push({ date: p.date, value: p.mood });
-    }
-    const phaseAverages = [...byPhase.entries()]
-      .filter(([, days]) => days.length >= MIN_DAYS_PER_GROUP)
-      .map(([phase, days]) => ({ phase, avgMood: avg(days), days }));
-
-    if (phaseAverages.length >= 2) {
-      phaseAverages.sort((a, b) => a.avgMood - b.avgMood);
-      const lowest = phaseAverages[0];
-      const highest = phaseAverages[phaseAverages.length - 1];
-      if (highest.avgMood - lowest.avgMood >= 0.3) {
-        results.push({
-          id: "cycle",
-          label: "Ciclo hormonal",
-          groupALabel: `Fase ${PHASE_LABELS[lowest.phase]}`,
-          groupBLabel: `Fase ${PHASE_LABELS[highest.phase]}`,
-          avgA: lowest.avgMood,
-          avgB: highest.avgMood,
-          daysA: lowest.days,
-          daysB: highest.days,
-        });
-      }
-    }
-  }
-
-  return [...results].sort((a, b) => Math.abs(b.avgA - b.avgB) - Math.abs(a.avgA - a.avgB)).slice(0, 5);
+  return [...results].sort((a, b) => Math.abs(b.avgA - b.avgB) - Math.abs(a.avgA - a.avgB)).slice(0, 6);
 }
 
 export { MOOD_SCALE_MAX };

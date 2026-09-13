@@ -566,9 +566,10 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
     const pet = petCareByDay.get(date);
     const petCareDone = pet ? pet.milo_medication && pet.milo_supplement && pet.zoe_medication && pet.zoe_supplement : null;
     const movedToday = movedDaySet.has(date);
-    const cyclePhase = onBirthControl
-      ? null
-      : (estimateCycleForDate(date, periodStarts, avgCycleLength)?.phase ?? null);
+    // Tracked regardless of birth control: exogenous hormones don't
+    // necessarily override her own cycle, especially with PCOS, so the
+    // phase estimate stays useful to cross-reference against mood.
+    const cyclePhase = estimateCycleForDate(date, periodStarts, avgCycleLength)?.phase ?? null;
 
     const wellnessInputs: number[] = [];
     if (symptom?.mood != null) wellnessInputs.push(scale1to5(symptom.mood));
