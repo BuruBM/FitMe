@@ -31,6 +31,12 @@ export interface Profile {
   sodium_limit_mg: number | null;
   water_target_ml: number;
   sleep_target_hours: number;
+  avg_cycle_length: number;
+  on_birth_control: boolean;
+  pcos: boolean;
+  city: string | null;
+  latitude: number | null;
+  longitude: number | null;
   onboarded: boolean;
   created_at: string;
 }
@@ -86,6 +92,7 @@ export interface SleepLog {
   log_date: string;
   hours: number;
   quality: number | null;
+  bedtime: string | null;
   notes: string | null;
 }
 
@@ -103,7 +110,37 @@ export interface SymptomLog {
   bloating: number | null;
   energy: number | null;
   mood: number | null;
+  irritability: number | null;
+  alcohol_units: number;
+  tobacco_used: boolean;
+  cloud_cover_pct: number | null;
+  weather_condition: string | null;
   notes: string | null;
+}
+
+export interface CycleLog {
+  id: string;
+  user_id: string;
+  period_start_date: string;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface PillLog {
+  id: string;
+  user_id: string;
+  log_date: string;
+  taken: boolean;
+}
+
+export interface PetCareLog {
+  id: string;
+  user_id: string;
+  log_date: string;
+  milo_medication: boolean;
+  milo_supplement: boolean;
+  zoe_medication: boolean;
+  zoe_supplement: boolean;
 }
 
 export interface WorkoutLog {
@@ -139,6 +176,9 @@ export interface Database {
       weight_logs: { Row: WeightLog; Insert: Partial<WeightLog>; Update: Partial<WeightLog> };
       symptom_logs: { Row: SymptomLog; Insert: Partial<SymptomLog>; Update: Partial<SymptomLog> };
       workout_logs: { Row: WorkoutLog; Insert: Partial<WorkoutLog>; Update: Partial<WorkoutLog> };
+      cycle_logs: { Row: CycleLog; Insert: Partial<CycleLog>; Update: Partial<CycleLog> };
+      pill_logs: { Row: PillLog; Insert: Partial<PillLog>; Update: Partial<PillLog> };
+      pet_care_logs: { Row: PetCareLog; Insert: Partial<PetCareLog>; Update: Partial<PetCareLog> };
       gamification_state: {
         Row: GamificationState;
         Insert: Partial<GamificationState> & { user_id: string };

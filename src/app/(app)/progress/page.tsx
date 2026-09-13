@@ -1,14 +1,16 @@
-import { getGamificationSummary, getHistory, getProfile } from "@/lib/queries";
+import { getGamificationSummary, getHistory, getProfile, getRecentSymptomLogs } from "@/lib/queries";
 import { BADGES } from "@/lib/gamification";
 import { WeightChart } from "@/components/WeightChart";
 import { WeightQuickLog } from "@/components/WeightQuickLog";
 import { SymptomQuickLog } from "@/components/SymptomQuickLog";
+import { SymptomHistory } from "@/components/SymptomHistory";
 
 export default async function ProgressPage() {
-  const [history, gamification, profile] = await Promise.all([
+  const [history, gamification, profile, symptomLogs] = await Promise.all([
     getHistory(21),
     getGamificationSummary(),
     getProfile(),
+    getRecentSymptomLogs(14),
   ]);
 
   const earnedIds = new Set(gamification?.state.badges ?? []);
@@ -20,6 +22,7 @@ export default async function ProgressPage() {
       <WeightChart history={history} />
       <WeightQuickLog currentWeightKg={profile?.weight_kg ?? null} />
       <SymptomQuickLog />
+      <SymptomHistory logs={symptomLogs} />
 
       <section className="card p-4">
         <h2 className="font-semibold mb-3">Logros</h2>

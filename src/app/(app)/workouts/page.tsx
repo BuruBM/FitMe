@@ -6,7 +6,8 @@ export default function WorkoutsPage() {
       <div>
         <h1 className="text-lg font-semibold">Entrenamiento en casa</h1>
         <p className="text-sm text-muted mt-1">
-          Sin gimnasio, sin equipamiento. Elegí según cuánta energía tengas hoy.
+          Sin gimnasio. Con tus mancuernas, tobilleras, soga y bandas TRX, o sin nada. Elegí según cuánta
+          energía tengas hoy.
         </p>
       </div>
       <WorkoutBrowser />

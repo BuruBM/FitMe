@@ -4,12 +4,15 @@ App personal de seguimiento de salud: alimentación, calorías/macros, agua, sue
 
 ## Qué incluye
 
-- **Comida**: buscador con base de datos curada de alimentos vegetarianos (con foco en soja, huevo y proteína en polvo), búsqueda en Open Food Facts como respaldo, entrada de texto libre ("milanesa de soja con ensalada y arroz") y carga manual.
+- **Comida**: buscador con base de datos curada de alimentos vegetarianos argentinos (con foco en soja, huevo y proteína en polvo, más clásicos como facturas, dulce de leche, tarta de verdura, provoleta), búsqueda en Open Food Facts como respaldo, entrada de texto libre ("milanesa de soja con ensalada y arroz") y carga manual.
 - **Calorías y macros**: objetivos calculados automáticamente (Mifflin-St Jeor + déficit conservador) según altura, peso, edad, actividad y objetivo, con foco en proteína, calcio (osteopenia) y sodio (hinchazón).
-- **Agua, sueño, peso y síntomas** (hinchazón/energía/ánimo): carga rápida desde el dashboard y la pantalla de progreso, con gráfico de tendencia de peso.
-- **Entrenamiento en casa**: rutinas sin equipamiento, filtrables por nivel de energía, con foco en ejercicios de fuerza que ayudan a la densidad ósea.
+- **Agua, sueño (con hora de acostarse), peso y síntomas** (hinchazón/energía/ánimo/irritabilidad/alcohol/tabaco): carga rápida desde el dashboard y la pantalla de progreso, con gráfico de tendencia de peso e historial reciente para ver patrones.
+- **Entrenamiento en casa**: rutinas sin equipamiento y con mancuernas de 2kg, tobilleras de 2kg, soga de saltar y bandas TRX, filtrables por equipo y por nivel de energía, con foco en ejercicios de fuerza que ayudan a la densidad ósea.
+- **Ciclo hormonal**: registro de inicio de período, día/fase estimados del ciclo (con aviso de que es solo estimativo dado el SOP), y check diario de toma de pastilla cuando esté en tratamiento anticonceptivo.
+- **Clima**: clima actual de tu ciudad en el dashboard, y se guarda automáticamente junto con cada registro de ánimo para poder ver si los días nublados realmente influyen.
+- **Milo y Zoe**: checklist diario de medicación y suplemento para cada gato.
 - **Gamificación**: XP, niveles, racha diaria, logros y un desafío distinto cada semana.
-- **Recomendaciones personalizadas**: tips por categoría (proteína, hinchazón, huesos, trabajo, social, energía, sueño).
+- **Recomendaciones personalizadas**: tips por categoría (proteína, hinchazón, huesos, trabajo, social, energía, sueño, hormonas — incluye orientación sobre el período post-pastilla).
 - **Cuenta regresiva** para el viaje a la playa.
 
 ## Stack
@@ -17,6 +20,7 @@ App personal de seguimiento de salud: alimentación, calorías/macros, agua, sue
 - Next.js 16 (App Router) + TypeScript + Tailwind CSS 4
 - Supabase (Postgres + Auth) — cada usuaria tiene sus propios datos protegidos por Row Level Security
 - Open Food Facts (API pública, sin key) como respaldo de búsqueda de alimentos
+- Open-Meteo (API pública, sin key) para clima y geocodificación de ciudad
 - PWA con manifest + service worker para instalar en el celular
 
 No usa reconocimiento de fotos por IA todavía: la carga de comida es por búsqueda/texto/manual. La arquitectura ya está lista para sumarlo más adelante (ver "Próximos pasos").
@@ -26,7 +30,7 @@ No usa reconocimiento de fotos por IA todavía: la carga de comida es por búsqu
 ### 1. Crear el proyecto de Supabase
 
 1. Entrá a [supabase.com](https://supabase.com) y creá un proyecto nuevo (el plan gratuito alcanza).
-2. En el SQL Editor del proyecto, pegá y ejecutá el contenido de [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql). Esto crea todas las tablas, la seguridad por usuaria (RLS) y el trigger que arma tu perfil automáticamente al registrarte.
+2. En el SQL Editor del proyecto, pegá y ejecutá **en orden** el contenido de los tres archivos en [`supabase/migrations/`](supabase/migrations/): `0001_init.sql`, `0002_cycle_tracking.sql` y `0003_weather_bedtime_petcare.sql`. Entre los tres crean todas las tablas, la seguridad por usuaria (RLS) y el trigger que arma tu perfil automáticamente al registrarte.
 3. En **Project Settings → API**, copiá la **Project URL** y la **anon public key**.
 4. En **Authentication → Providers**, dejá habilitado "Email" (viene por defecto). Si no querés que pida confirmación por mail para empezar más rápido, podés desactivar "Confirm email" en Authentication → Settings.
 

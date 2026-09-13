@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { getProfile, getTodaySummary } from "@/lib/queries";
+import {
+  getCurrentWeatherForUser,
+  getCycleSummary,
+  getProfile,
+  getTodayPetCare,
+  getTodaySummary,
+} from "@/lib/queries";
 import { daysUntil } from "@/lib/nutrition";
 import { challengeOfTheWeek } from "@/data/challenges";
 import { MacroBar } from "@/components/MacroBar";
@@ -7,9 +13,18 @@ import { WaterQuickAdd } from "@/components/WaterQuickAdd";
 import { SleepQuickLog } from "@/components/SleepQuickLog";
 import { BeachCountdown } from "@/components/BeachCountdown";
 import { TipOfTheDay } from "@/components/TipOfTheDay";
+import { CycleCard } from "@/components/CycleCard";
+import { WeatherCard } from "@/components/WeatherCard";
+import { PetCareQuickLog } from "@/components/PetCareQuickLog";
 
 export default async function DashboardPage() {
-  const [profile, summary] = await Promise.all([getProfile(), getTodaySummary()]);
+  const [profile, summary, cycleSummary, weatherInfo, petCare] = await Promise.all([
+    getProfile(),
+    getTodaySummary(),
+    getCycleSummary(),
+    getCurrentWeatherForUser(),
+    getTodayPetCare(),
+  ]);
 
   if (!profile) return null;
 
@@ -61,8 +76,18 @@ export default async function DashboardPage() {
 
       <section className="grid grid-cols-2 gap-3">
         <WaterQuickAdd currentMl={summary.waterMl} targetMl={waterTarget} />
-        <SleepQuickLog currentHours={summary.sleepHours} targetHours={profile.sleep_target_hours} />
+        <SleepQuickLog
+          currentHours={summary.sleepHours}
+          targetHours={profile.sleep_target_hours}
+          currentBedtime={summary.sleepBedtime}
+        />
       </section>
+
+      <WeatherCard weather={weatherInfo.weather} city={weatherInfo.city} />
+
+      {cycleSummary && <CycleCard summary={cycleSummary} pcos={profile.pcos} />}
+
+      <PetCareQuickLog today={petCare} />
 
       <section className="card p-4">
         <p className="text-xs font-medium text-accent uppercase tracking-wide">Desafío de la semana</p>
@@ -70,7 +95,11 @@ export default async function DashboardPage() {
         <p className="text-sm text-muted mt-1">{challenge.description}</p>
       </section>
 
-      <TipOfTheDay bloatingProne={profile.bloating_prone} osteopeniaRisk={profile.osteopenia_risk} />
+      <TipOfTheDay
+        bloatingProne={profile.bloating_prone}
+        osteopeniaRisk={profile.osteopenia_risk}
+        pcos={profile.pcos}
+      />
     </div>
   );
 }

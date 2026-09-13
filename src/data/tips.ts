@@ -1,6 +1,6 @@
 export interface Tip {
   id: string;
-  category: "proteína" | "hinchazón" | "huesos" | "trabajo" | "social" | "energía" | "sueño";
+  category: "proteína" | "hinchazón" | "huesos" | "trabajo" | "social" | "energía" | "sueño" | "hormonas";
   title: string;
   body: string;
 }
@@ -89,6 +89,30 @@ export const TIPS: Tip[] = [
     category: "sueño",
     title: "Organizá la rutina de los gatos antes de dormir",
     body: "Dejar la comida/arena de los gatos lista temprano en la noche (no justo antes de acostarte) te da más margen para tu propia rutina de descanso.",
+  },
+  {
+    id: "hormonas-rebote-pastilla",
+    category: "hormonas",
+    title: "Dejar la pastilla puede afectar el ánimo, no sos vos",
+    body: "Al discontinuar el anticonceptivo, el cuerpo vuelve a mostrar el desbalance hormonal de base (en SOP, sobre todo andrógenos e insulina), y eso puede traer más irritabilidad, ansiedad o ganas de auto-regularte con alcohol o tabaco. Es real y es hormonal, no falta de voluntad.",
+  },
+  {
+    id: "hormonas-consulta",
+    category: "hormonas",
+    title: "Contale este patrón a tu ginecóloga/o",
+    body: "Cuando retomes la pastilla, mencioná específicamente la irritabilidad y el aumento de consumo de alcohol de estas semanas, no solo que la retomás. Si se siente muy intenso o no mejora, sumar apoyo de salud mental también ayuda.",
+  },
+  {
+    id: "hormonas-registro",
+    category: "hormonas",
+    title: "Registrar el día a día te da un mapa, no una condena",
+    body: "Anotar ánimo, irritabilidad, alcohol y tabaco en la pestaña Progreso no es para juzgarte: es para que vos (y quien te acompañe médicamente) puedan ver el patrón real de estas semanas, en vez de depender de la memoria.",
+  },
+  {
+    id: "hormonas-antojos",
+    category: "hormonas",
+    title: "Los antojos también pueden ser hormonales",
+    body: "Más ganas de dulce o de alcohol en este período no es falta de disciplina: la fluctuación hormonal afecta directamente el apetito y los antojos. Tenerlo en cuenta ayuda a no exigirte de más justo ahora.",
   },
 ];
 

@@ -5,6 +5,7 @@ import { todayInAppTz } from "@/lib/date";
 import { createClient } from "@/lib/supabase/server";
 import { awardXp } from "@/lib/actions/gamification-helpers";
 import { XP_RULES } from "@/lib/gamification";
+import { fetchCurrentWeather } from "@/lib/weather";
 
 async function requireUser() {
   const supabase = await createClient();
@@ -33,14 +34,14 @@ export async function logWater(amountMl: number) {
 }
 
 // ---------------- sleep ----------------
-export async function logSleep(hours: number, quality: number, notes?: string) {
+export async function logSleep(hours: number, quality: number, bedtime?: string, notes?: string) {
   const { supabase, user } = await requireUser();
   const today = todayInAppTz();
 
   const { error } = await supabase
     .from("sleep_logs")
     .upsert(
-      { user_id: user.id, log_date: today, hours, quality, notes: notes ?? null },
+      { user_id: user.id, log_date: today, hours, quality, bedtime: bedtime ?? null, notes: notes ?? null },
       { onConflict: "user_id,log_date" },
     );
   if (error) throw error;
@@ -68,12 +69,45 @@ export async function logWeight(weightKg: number) {
 }
 
 // ---------------- symptoms ----------------
-export async function logSymptoms(bloating: number, energy: number, mood: number, notes?: string) {
+export interface SymptomInput {
+  bloating: number;
+  energy: number;
+  mood: number;
+  irritability: number;
+  alcoholUnits: number;
+  tobaccoUsed: boolean;
+  notes?: string;
+}
+
+export async function logSymptoms(input: SymptomInput) {
   const { supabase, user } = await requireUser();
   const today = todayInAppTz();
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("latitude, longitude")
+    .eq("id", user.id)
+    .single();
+
+  const weather =
+    profile?.latitude != null && profile?.longitude != null
+      ? await fetchCurrentWeather(profile.latitude, profile.longitude)
+      : null;
+
   const { error } = await supabase.from("symptom_logs").upsert(
-    { user_id: user.id, log_date: today, bloating, energy, mood, notes: notes ?? null },
+    {
+      user_id: user.id,
+      log_date: today,
+      bloating: input.bloating,
+      energy: input.energy,
+      mood: input.mood,
+      irritability: input.irritability,
+      alcohol_units: input.alcoholUnits,
+      tobacco_used: input.tobaccoUsed,
+      cloud_cover_pct: weather?.cloudCoverPct ?? null,
+      weather_condition: weather?.condition ?? null,
+      notes: input.notes ?? null,
+    },
     { onConflict: "user_id,log_date" },
   );
   if (error) throw error;

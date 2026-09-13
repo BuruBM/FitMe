@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { shiftDateStr, todayInAppTz } from "@/lib/date";
 import { evaluateNewBadges, type BadgeContext } from "@/lib/gamification";
-import type { FoodLog, GamificationState, Profile } from "@/lib/database.types";
+import { estimateCycle, type CycleEstimate } from "@/lib/cycle";
+import { fetchCurrentWeather, type CurrentWeather } from "@/lib/weather";
+import type { FoodLog, GamificationState, PetCareLog, Profile, SymptomLog } from "@/lib/database.types";
 
 export async function getProfile(): Promise<Profile | null> {
   const supabase = await createClient();
@@ -25,6 +27,7 @@ export interface TodaySummary {
   totalCalcium: number;
   waterMl: number;
   sleepHours: number | null;
+  sleepBedtime: string | null;
   weightKg: number | null;
 }
 
@@ -46,6 +49,7 @@ export async function getTodaySummary(): Promise<TodaySummary> {
     totalCalcium: 0,
     waterMl: 0,
     sleepHours: null,
+    sleepBedtime: null,
     weightKg: null,
   };
   if (!user) return empty;
@@ -53,7 +57,7 @@ export async function getTodaySummary(): Promise<TodaySummary> {
   const [{ data: foodLogs }, { data: waterLogs }, { data: sleepLog }, { data: weightLog }] = await Promise.all([
     supabase.from("food_logs").select("*").eq("user_id", user.id).eq("log_date", today).order("logged_at"),
     supabase.from("water_logs").select("amount_ml").eq("user_id", user.id).eq("log_date", today),
-    supabase.from("sleep_logs").select("hours").eq("user_id", user.id).eq("log_date", today).maybeSingle(),
+    supabase.from("sleep_logs").select("hours, bedtime").eq("user_id", user.id).eq("log_date", today).maybeSingle(),
     supabase.from("weight_logs").select("weight_kg").eq("user_id", user.id).eq("log_date", today).maybeSingle(),
   ]);
 
@@ -79,6 +83,7 @@ export async function getTodaySummary(): Promise<TodaySummary> {
     ...totals,
     waterMl,
     sleepHours: sleepLog?.hours ?? null,
+    sleepBedtime: sleepLog?.bedtime ?? null,
     weightKg: weightLog?.weight_kg ?? null,
   };
 }
@@ -161,6 +166,104 @@ export async function getGamificationSummary(): Promise<GamificationSummary | nu
   }
 
   return { state, newlyEarned };
+}
+
+export interface CycleSummary {
+  estimate: CycleEstimate | null;
+  lastPeriodStart: string | null;
+  onBirthControl: boolean;
+  avgCycleLength: number;
+  pillTakenToday: boolean;
+}
+
+export async function getCycleSummary(): Promise<CycleSummary | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const today = todayInAppTz();
+
+  const [{ data: profile }, { data: lastPeriod }, { data: pillLog }] = await Promise.all([
+    supabase.from("profiles").select("avg_cycle_length, on_birth_control").eq("id", user.id).single(),
+    supabase
+      .from("cycle_logs")
+      .select("period_start_date")
+      .eq("user_id", user.id)
+      .order("period_start_date", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase.from("pill_logs").select("taken").eq("user_id", user.id).eq("log_date", today).maybeSingle(),
+  ]);
+
+  const avgCycleLength = profile?.avg_cycle_length ?? 28;
+  const lastPeriodStart = lastPeriod?.period_start_date ?? null;
+
+  return {
+    estimate: estimateCycle(lastPeriodStart, avgCycleLength),
+    lastPeriodStart,
+    onBirthControl: profile?.on_birth_control ?? false,
+    avgCycleLength,
+    pillTakenToday: pillLog?.taken ?? false,
+  };
+}
+
+export async function getCurrentWeatherForUser(): Promise<{ weather: CurrentWeather | null; city: string | null }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { weather: null, city: null };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("city, latitude, longitude")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.latitude == null || profile?.longitude == null) {
+    return { weather: null, city: profile?.city ?? null };
+  }
+
+  const weather = await fetchCurrentWeather(profile.latitude, profile.longitude);
+  return { weather, city: profile.city };
+}
+
+export async function getTodayPetCare(): Promise<PetCareLog | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const today = todayInAppTz();
+  const { data } = await supabase
+    .from("pet_care_logs")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("log_date", today)
+    .maybeSingle();
+
+  return data ?? null;
+}
+
+export async function getRecentSymptomLogs(days = 14): Promise<SymptomLog[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const since = shiftDateStr(todayInAppTz(), -(days - 1));
+  const { data } = await supabase
+    .from("symptom_logs")
+    .select("*")
+    .eq("user_id", user.id)
+    .gte("log_date", since)
+    .order("log_date", { ascending: false });
+
+  return data ?? [];
 }
 
 export interface HistoryPoint {

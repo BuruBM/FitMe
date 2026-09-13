@@ -11,10 +11,11 @@ const CATEGORIES: { value: Tip["category"]; label: string }[] = [
   { value: "social", label: "Social" },
   { value: "energía", label: "Energía" },
   { value: "sueño", label: "Sueño" },
+  { value: "hormonas", label: "Hormonas" },
 ];
 
 export function RecommendationsPanel() {
-  const [category, setCategory] = useState<Tip["category"]>("proteína");
+  const [category, setCategory] = useState<Tip["category"]>("hormonas");
   const tips = TIPS.filter((t) => t.category === category);
 
   return (

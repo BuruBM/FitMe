@@ -7,17 +7,20 @@ import { logSleep } from "@/lib/actions/tracking";
 export function SleepQuickLog({
   currentHours,
   targetHours,
+  currentBedtime,
 }: {
   currentHours: number | null;
   targetHours: number;
+  currentBedtime: string | null;
 }) {
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
   const [hours, setHours] = useState(currentHours ?? 6.5);
+  const [bedtime, setBedtime] = useState(currentBedtime?.slice(0, 5) ?? "23:00");
 
   function save(quality: number) {
     startTransition(async () => {
-      await logSleep(hours, quality);
+      await logSleep(hours, quality, bedtime);
       setOpen(false);
     });
   }
@@ -30,6 +33,7 @@ export function SleepQuickLog({
       </div>
       <p className="text-xs text-muted mt-1">
         {currentHours != null ? `${currentHours}h anoche` : "Sin registrar"} · meta {targetHours}h
+        {currentBedtime ? ` · te dormiste ${currentBedtime.slice(0, 5)}` : ""}
       </p>
 
       {!open ? (
@@ -41,6 +45,15 @@ export function SleepQuickLog({
         </button>
       ) : (
         <div className="mt-3 space-y-2">
+          <div>
+            <label className="text-[11px] text-muted">¿A qué hora te dormiste (o pensás dormirte)?</label>
+            <input
+              type="time"
+              value={bedtime}
+              onChange={(e) => setBedtime(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-card-border bg-background px-2 py-1.5 text-sm outline-none focus:border-primary"
+            />
+          </div>
           <input
             type="range"
             min={3}
@@ -50,7 +63,7 @@ export function SleepQuickLog({
             onChange={(e) => setHours(Number(e.target.value))}
             className="w-full accent-[var(--primary)]"
           />
-          <p className="text-center text-sm font-medium">{hours}h</p>
+          <p className="text-center text-sm font-medium">{hours}h dormidas</p>
           <div className="flex gap-1">
             {[1, 2, 3, 4, 5].map((q) => (
               <button

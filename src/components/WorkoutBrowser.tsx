@@ -11,20 +11,46 @@ const ENERGY_LEVELS: { value: Workout["energyLevel"]; label: string }[] = [
   { value: "alto", label: "Con ganas" },
 ];
 
+type EquipmentFilter = "todos" | "sin_equipo" | "con_equipo";
+
 export function WorkoutBrowser() {
-  const [filter, setFilter] = useState<Workout["energyLevel"] | "todos">("todos");
+  const [energyFilter, setEnergyFilter] = useState<Workout["energyLevel"] | "todos">("todos");
+  const [equipmentFilter, setEquipmentFilter] = useState<EquipmentFilter>("todos");
   const [open, setOpen] = useState<Workout | null>(null);
 
-  const list = filter === "todos" ? WORKOUTS : WORKOUTS.filter((w) => w.energyLevel === filter);
+  const list = WORKOUTS.filter((w) => {
+    if (energyFilter !== "todos" && w.energyLevel !== energyFilter) return false;
+    if (equipmentFilter === "sin_equipo" && w.usesEquipment) return false;
+    if (equipmentFilter === "con_equipo" && !w.usesEquipment) return false;
+    return true;
+  });
 
   if (open) return <WorkoutDetail workout={open} onBack={() => setOpen(null)} />;
 
   return (
     <div className="space-y-3">
       <div className="flex gap-1.5 overflow-x-auto pb-1">
-        <FilterChip active={filter === "todos"} onClick={() => setFilter("todos")} label="Todos" />
+        <FilterChip active={equipmentFilter === "todos"} onClick={() => setEquipmentFilter("todos")} label="Todos" />
+        <FilterChip
+          active={equipmentFilter === "sin_equipo"}
+          onClick={() => setEquipmentFilter("sin_equipo")}
+          label="Sin equipo"
+        />
+        <FilterChip
+          active={equipmentFilter === "con_equipo"}
+          onClick={() => setEquipmentFilter("con_equipo")}
+          label="Con tu equipo"
+        />
+      </div>
+      <div className="flex gap-1.5 overflow-x-auto pb-1">
+        <FilterChip active={energyFilter === "todos"} onClick={() => setEnergyFilter("todos")} label="Cualquier energía" />
         {ENERGY_LEVELS.map((l) => (
-          <FilterChip key={l.value} active={filter === l.value} onClick={() => setFilter(l.value)} label={l.label} />
+          <FilterChip
+            key={l.value}
+            active={energyFilter === l.value}
+            onClick={() => setEnergyFilter(l.value)}
+            label={l.label}
+          />
         ))}
       </div>
 

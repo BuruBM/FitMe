@@ -4,13 +4,16 @@ import { Lightbulb } from "lucide-react";
 export function TipOfTheDay({
   bloatingProne,
   osteopeniaRisk,
+  pcos,
 }: {
   bloatingProne: boolean;
   osteopeniaRisk: boolean;
+  pcos: boolean;
 }) {
   const relevantCategories: Tip["category"][] = ["proteína", "trabajo", "social", "energía", "sueño"];
   if (bloatingProne) relevantCategories.push("hinchazón", "hinchazón");
   if (osteopeniaRisk) relevantCategories.push("huesos", "huesos");
+  if (pcos) relevantCategories.push("hormonas", "hormonas");
 
   const pool = TIPS.filter((t) => relevantCategories.includes(t.category));
   const dayIndex = new Date().getDate() + new Date().getMonth() * 31;

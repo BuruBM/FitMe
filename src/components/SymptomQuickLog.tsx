@@ -9,12 +9,15 @@ export function SymptomQuickLog() {
   const [bloating, setBloating] = useState(0);
   const [energy, setEnergy] = useState(3);
   const [mood, setMood] = useState(3);
+  const [irritability, setIrritability] = useState(1);
+  const [alcoholUnits, setAlcoholUnits] = useState(0);
+  const [tobaccoUsed, setTobaccoUsed] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
 
   function save() {
     startTransition(async () => {
-      await logSymptoms(bloating, energy, mood);
+      await logSymptoms({ bloating, energy, mood, irritability, alcoholUnits, tobaccoUsed });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     });
@@ -23,6 +26,9 @@ export function SymptomQuickLog() {
   return (
     <section className="card p-4 space-y-3">
       <h2 className="font-semibold text-sm">¿Cómo te sentís hoy?</h2>
+      <p className="text-xs text-muted -mt-2">
+        Sin juicio, es solo para que vos puedas ver el patrón con el tiempo.
+      </p>
 
       <div>
         <p className="text-xs text-muted mb-1">Hinchazón</p>
@@ -43,6 +49,37 @@ export function SymptomQuickLog() {
 
       <RatingRow label="Energía" value={energy} onChange={setEnergy} />
       <RatingRow label="Ánimo" value={mood} onChange={setMood} />
+      <RatingRow label="Irritabilidad" value={irritability} onChange={setIrritability} />
+
+      <div className="grid grid-cols-2 gap-2 pt-1">
+        <div>
+          <p className="text-xs text-muted mb-1">Tragos de alcohol</p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setAlcoholUnits((n) => Math.max(0, n - 1))}
+              className="stepper"
+              type="button"
+            >
+              −
+            </button>
+            <span className="w-6 text-center text-sm font-medium">{alcoholUnits}</span>
+            <button onClick={() => setAlcoholUnits((n) => n + 1)} className="stepper" type="button">
+              +
+            </button>
+          </div>
+        </div>
+        <div>
+          <p className="text-xs text-muted mb-1">Tabaco</p>
+          <button
+            onClick={() => setTobaccoUsed((v) => !v)}
+            className={`w-full text-xs rounded-md py-1.5 border ${
+              tobaccoUsed ? "bg-primary text-primary-foreground border-primary" : "border-card-border text-muted"
+            }`}
+          >
+            {tobaccoUsed ? "Fumé hoy" : "No fumé"}
+          </button>
+        </div>
+      </div>
 
       <button
         onClick={save}
@@ -51,6 +88,17 @@ export function SymptomQuickLog() {
       >
         {saved ? "Guardado ✓" : "Guardar"}
       </button>
+
+      <style jsx global>{`
+        .stepper {
+          width: 2rem;
+          height: 2rem;
+          border-radius: 9999px;
+          border: 1px solid var(--card-border);
+          font-size: 1.1rem;
+          line-height: 1;
+        }
+      `}</style>
     </section>
   );
 }
