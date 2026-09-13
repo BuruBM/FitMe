@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Target } from "lucide-react";
 import { EditProfileForm } from "@/components/EditProfileForm";
 import type { Profile } from "@/lib/database.types";
 
@@ -10,9 +11,12 @@ export function ProfileTargets({ profile }: { profile: Profile }) {
   if (editing) return <EditProfileForm profile={profile} onDone={() => setEditing(false)} />;
 
   return (
-    <section className="card p-4">
+    <section className="card p-4" style={{ background: "var(--primary-tint)" }}>
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold">{profile.full_name || "Tus objetivos"}</h2>
+        <h2 className="font-semibold flex items-center gap-1.5">
+          <Target size={17} className="text-primary" />
+          {profile.full_name || "Tus objetivos"}
+        </h2>
         <button onClick={() => setEditing(true)} className="text-sm text-primary font-medium">
           Editar
         </button>

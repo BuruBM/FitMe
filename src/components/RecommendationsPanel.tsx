@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Lightbulb } from "lucide-react";
 import { TIPS, type Tip } from "@/data/tips";
 
 const CATEGORIES: { value: Tip["category"]; label: string }[] = [
@@ -20,8 +21,11 @@ export function RecommendationsPanel() {
   const tips = TIPS.filter((t) => t.category === category);
 
   return (
-    <section className="card p-4">
-      <h2 className="font-semibold mb-2">Recomendaciones para vos</h2>
+    <section className="card p-4" style={{ background: "var(--accent-tint)" }}>
+      <h2 className="font-semibold mb-2 flex items-center gap-1.5">
+        <Lightbulb size={17} className="text-accent" />
+        Recomendaciones para vos
+      </h2>
       <div className="flex gap-1.5 overflow-x-auto pb-2">
         {CATEGORIES.map((c) => (
           <button

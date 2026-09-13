@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { MapPin } from "lucide-react";
 import { updateCity } from "@/lib/actions/weather";
 
 export function CitySettings({ currentCity }: { currentCity: string | null }) {
@@ -23,8 +24,11 @@ export function CitySettings({ currentCity }: { currentCity: string | null }) {
   }
 
   return (
-    <section className="card p-4">
-      <h2 className="font-semibold text-sm mb-1">Ciudad</h2>
+    <section className="card p-4" style={{ background: "var(--tint-weather)" }}>
+      <h2 className="font-semibold text-sm mb-1 flex items-center gap-1.5">
+        <MapPin size={15} style={{ color: "var(--icon-weather)" }} />
+        Ciudad
+      </h2>
       <p className="text-xs text-muted mb-2">Para mostrar el clima y ver si los días nublados afectan tu ánimo.</p>
       <div className="flex gap-2">
         <input

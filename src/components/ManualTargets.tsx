@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { SlidersHorizontal } from "lucide-react";
 import { updateTargetsManually } from "@/lib/actions/profile";
 
 export function ManualTargets({
@@ -30,8 +31,11 @@ export function ManualTargets({
   }
 
   return (
-    <section className="card p-4">
-      <h2 className="font-semibold text-sm mb-1">Ajustá tus objetivos a mano</h2>
+    <section className="card p-4" style={{ background: "var(--tint-food)" }}>
+      <h2 className="font-semibold text-sm mb-1 flex items-center gap-1.5">
+        <SlidersHorizontal size={15} style={{ color: "var(--icon-food)" }} />
+        Ajustá tus objetivos a mano
+      </h2>
       <p className="text-xs text-muted mb-3">
         Los calculamos automáticamente, pero son un punto de partida. Si un número no es realista para vos,
         cambialo acá — es tu objetivo, no el nuestro.

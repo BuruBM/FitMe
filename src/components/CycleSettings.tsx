@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { CircleDot } from "lucide-react";
 import { updateCycleSettings } from "@/lib/actions/cycle";
 
 export function CycleSettings({
@@ -27,8 +28,11 @@ export function CycleSettings({
   }
 
   return (
-    <section className="card p-4">
-      <h2 className="font-semibold text-sm mb-3">Ciclo y método anticonceptivo</h2>
+    <section className="card p-4" style={{ background: "var(--tint-cycle)" }}>
+      <h2 className="font-semibold text-sm mb-3 flex items-center gap-1.5">
+        <CircleDot size={15} style={{ color: "var(--icon-cycle)" }} />
+        Ciclo y método anticonceptivo
+      </h2>
       <div className="space-y-3">
         <div>
           <label className="text-xs text-muted">Duración promedio del ciclo (días)</label>

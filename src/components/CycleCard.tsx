@@ -33,8 +33,8 @@ export function CycleCard({ summary, pcos }: { summary: CycleSummary; pcos: bool
 
       {summary.estimate ? (
         <>
-          <p className="text-sm mt-1">
-            Día {summary.estimate.cycleDay} · {PHASE_LABELS[summary.estimate.phase]}
+          <p className="text-sm font-medium mt-1">
+            Fase {PHASE_LABELS[summary.estimate.phase]} · día {summary.estimate.cycleDay} del ciclo
           </p>
           <p className="text-xs text-muted mt-1">{PHASE_MOOD_INFO[summary.estimate.phase]}</p>
           {summary.onBirthControl && summary.daysSincePillStart != null && summary.daysSincePillStart < 90 && (

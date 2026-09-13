@@ -85,6 +85,7 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
   const [period, setPeriod] = useState<Period>("mes");
   const [metricKey, setMetricKey] = useState<MetricKey>("wellness");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [showWellnessInfo, setShowWellnessInfo] = useState(false);
 
   const metric = METRICS.find((m) => m.key === metricKey)!;
   const isDaily = period === "semana" || period === "mes";
@@ -140,9 +141,30 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
         </div>
 
         {metricKey === "wellness" && (
-          <p className="text-xs text-muted mb-2">
-            Combina ánimo, energía, irritabilidad, estrés, sueño, agua, proteína y si te moviste.
-          </p>
+          <div className="mb-2">
+            <p className="text-xs text-muted">
+              Combina ánimo, energía, irritabilidad, estrés, sueño, agua, proteína y si te moviste.{" "}
+              <button onClick={() => setShowWellnessInfo((v) => !v)} className="text-primary font-medium">
+                {showWellnessInfo ? "Ocultar" : "¿Cómo se calcula?"}
+              </button>
+            </p>
+            {showWellnessInfo && (
+              <div className="mt-2 rounded-lg border border-card-border bg-background p-2.5 text-[11px] text-muted space-y-1">
+                <p>Cada parte vale de 0 a 100, y el resultado es el promedio de las que tengas cargadas ese día (con al menos 2):</p>
+                <ul className="list-disc pl-4 space-y-0.5">
+                  <li>Ánimo y energía: más alto tu número (1-5), más puntos.</li>
+                  <li>Irritabilidad y estrés: más bajo tu número, más puntos (se invierten).</li>
+                  <li>Sueño, agua y proteína: % de tu objetivo alcanzado ese día (tope 100%).</li>
+                  <li>Movimiento: 100 si entrenaste o caminaste, 0 si no.</li>
+                </ul>
+                <p>
+                  Como es un promedio de lo que cargaste, un día con pocos datos no pesa igual que uno completo —
+                  por eso el número es una referencia, y el detalle de cada día (tocando el gráfico) es lo que
+                  cuenta la historia completa.
+                </p>
+              </div>
+            )}
+          </div>
         )}
 
         {hasData ? (

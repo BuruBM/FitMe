@@ -80,7 +80,10 @@ function FactorRow({ factor }: { factor: FactorComparison }) {
     <div>
       <button onClick={() => setOpen((v) => !v)} className="w-full flex items-center justify-between">
         <p className="text-xs font-semibold">{factor.label}</p>
-        <ChevronDown size={14} className={`text-muted transition-transform ${open ? "rotate-180" : ""}`} />
+        <span className="flex items-center gap-0.5 text-[10px] text-muted">
+          {open ? "Ocultar días" : "Ver días"}
+          <ChevronDown size={13} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+        </span>
       </button>
       <div className="mt-1.5 space-y-1">
         <BarRow label={lower.groupALabel} value={lower.avgA} n={lower.daysA.length} lower />
