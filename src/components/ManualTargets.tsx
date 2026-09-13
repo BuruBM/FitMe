@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { SlidersHorizontal } from "lucide-react";
 import { updateTargetsManually } from "@/lib/actions/profile";
+import { IconBadge } from "@/components/IconBadge";
 
 export function ManualTargets({
   calorieTarget,
@@ -31,9 +32,9 @@ export function ManualTargets({
   }
 
   return (
-    <section className="card p-4" style={{ background: "var(--tint-food)" }}>
-      <h2 className="font-semibold text-sm mb-1 flex items-center gap-1.5">
-        <SlidersHorizontal size={15} style={{ color: "var(--icon-food)" }} />
+    <section className="card p-4">
+      <h2 className="font-semibold text-sm mb-1 flex items-center gap-2">
+        <IconBadge icon={<SlidersHorizontal size={13} />} tint="var(--tint-food)" color="var(--icon-food)" size={24} />
         Ajustá tus objetivos a mano
       </h2>
       <p className="text-xs text-muted mb-3">

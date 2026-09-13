@@ -99,7 +99,7 @@ export default async function DashboardPage() {
 
       <PetCareQuickLog today={petCare} pausedUntil={profile.pet_care_paused_until} />
 
-      <section className="card p-4" style={{ background: "var(--accent-tint)" }}>
+      <section className="card p-4 border-l-4 border-l-accent">
         <p className="text-xs font-medium text-accent uppercase tracking-wide">Desafío de la semana</p>
         <h3 className="font-semibold mt-1">{challenge.title}</h3>
         <p className="text-sm text-muted mt-1">{challenge.description}</p>

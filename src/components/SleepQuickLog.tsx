@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Moon } from "lucide-react";
 import { logSleep } from "@/lib/actions/tracking";
+import { IconBadge } from "@/components/IconBadge";
 
 export function SleepQuickLog({
   currentHours,
@@ -29,9 +30,9 @@ export function SleepQuickLog({
   }
 
   return (
-    <div className="card p-4" style={{ background: "var(--tint-sleep)" }}>
-      <div className="flex items-center gap-1.5 text-sm font-medium">
-        <Moon size={16} style={{ color: "var(--icon-sleep)" }} />
+    <div className="card p-4">
+      <div className="flex items-center gap-2 text-sm font-medium">
+        <IconBadge icon={<Moon size={14} />} tint="var(--tint-sleep)" color="var(--icon-sleep)" size={26} />
         Sueño
       </div>
       <p className="text-xs text-muted mt-1">

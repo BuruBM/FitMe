@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { CircleDot } from "lucide-react";
 import { updateCycleSettings } from "@/lib/actions/cycle";
+import { IconBadge } from "@/components/IconBadge";
 
 export function CycleSettings({
   avgCycleLength,
@@ -28,9 +29,9 @@ export function CycleSettings({
   }
 
   return (
-    <section className="card p-4" style={{ background: "var(--tint-cycle)" }}>
-      <h2 className="font-semibold text-sm mb-3 flex items-center gap-1.5">
-        <CircleDot size={15} style={{ color: "var(--icon-cycle)" }} />
+    <section className="card p-4">
+      <h2 className="font-semibold text-sm mb-3 flex items-center gap-2">
+        <IconBadge icon={<CircleDot size={13} />} tint="var(--tint-cycle)" color="var(--icon-cycle)" size={24} />
         Ciclo y método anticonceptivo
       </h2>
       <div className="space-y-3">

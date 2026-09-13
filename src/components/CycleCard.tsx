@@ -5,6 +5,7 @@ import { CircleDot, Pill } from "lucide-react";
 import { logPeriodStart, setPillTaken } from "@/lib/actions/cycle";
 import { PHASE_LABELS, PHASE_MOOD_INFO } from "@/lib/cycle";
 import type { CycleSummary } from "@/lib/queries";
+import { IconBadge } from "@/components/IconBadge";
 
 export function CycleCard({ summary, pcos }: { summary: CycleSummary; pcos: boolean }) {
   const [isPending, startTransition] = useTransition();
@@ -25,9 +26,9 @@ export function CycleCard({ summary, pcos }: { summary: CycleSummary; pcos: bool
   }
 
   return (
-    <section className="card p-4" style={{ background: "var(--tint-cycle)" }}>
-      <div className="flex items-center gap-1.5 text-sm font-medium">
-        <CircleDot size={16} style={{ color: "var(--icon-cycle)" }} />
+    <section className="card p-4">
+      <div className="flex items-center gap-2 text-sm font-medium">
+        <IconBadge icon={<CircleDot size={14} />} tint="var(--tint-cycle)" color="var(--icon-cycle)" size={26} />
         Ciclo
       </div>
 

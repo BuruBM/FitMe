@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Lightbulb } from "lucide-react";
 import { TIPS, type Tip } from "@/data/tips";
+import { IconBadge } from "@/components/IconBadge";
 
 const CATEGORIES: { value: Tip["category"]; label: string }[] = [
   { value: "proteína", label: "Proteína" },
@@ -21,9 +22,9 @@ export function RecommendationsPanel() {
   const tips = TIPS.filter((t) => t.category === category);
 
   return (
-    <section className="card p-4" style={{ background: "var(--accent-tint)" }}>
-      <h2 className="font-semibold mb-2 flex items-center gap-1.5">
-        <Lightbulb size={17} className="text-accent" />
+    <section className="card p-4">
+      <h2 className="font-semibold mb-2 flex items-center gap-2">
+        <IconBadge icon={<Lightbulb size={14} />} tint="var(--accent-tint)" color="var(--accent)" size={26} />
         Recomendaciones para vos
       </h2>
       <div className="flex gap-1.5 overflow-x-auto pb-2">

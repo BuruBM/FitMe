@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { Droplet } from "lucide-react";
 import { logWater } from "@/lib/actions/tracking";
+import { IconBadge } from "@/components/IconBadge";
 
 export function WaterQuickAdd({ currentMl, targetMl }: { currentMl: number; targetMl: number }) {
   const [isPending, startTransition] = useTransition();
@@ -15,9 +16,9 @@ export function WaterQuickAdd({ currentMl, targetMl }: { currentMl: number; targ
   }
 
   return (
-    <div className="card p-4" style={{ background: "var(--tint-water)" }}>
-      <div className="flex items-center gap-1.5 text-sm font-medium">
-        <Droplet size={16} style={{ color: "var(--icon-water)" }} />
+    <div className="card p-4">
+      <div className="flex items-center gap-2 text-sm font-medium">
+        <IconBadge icon={<Droplet size={14} />} tint="var(--tint-water)" color="var(--icon-water)" size={26} />
         Agua
       </div>
       <p className="text-xs text-muted mt-1">

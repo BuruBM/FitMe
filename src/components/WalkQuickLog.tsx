@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Footprints } from "lucide-react";
 import { logWorkout } from "@/lib/actions/tracking";
+import { IconBadge } from "@/components/IconBadge";
 
 export function WalkQuickLog() {
   const [minutes, setMinutes] = useState(20);
@@ -18,9 +19,9 @@ export function WalkQuickLog() {
   }
 
   return (
-    <section className="card p-4" style={{ background: "var(--tint-workout)" }}>
-      <div className="flex items-center gap-1.5 text-sm font-medium">
-        <Footprints size={16} style={{ color: "var(--icon-workout)" }} />
+    <section className="card p-4">
+      <div className="flex items-center gap-2 text-sm font-medium">
+        <IconBadge icon={<Footprints size={14} />} tint="var(--tint-workout)" color="var(--icon-workout)" size={26} />
         Caminata
       </div>
       <p className="text-xs text-muted mt-1">

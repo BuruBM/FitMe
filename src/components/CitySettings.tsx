@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { MapPin } from "lucide-react";
 import { updateCity } from "@/lib/actions/weather";
+import { IconBadge } from "@/components/IconBadge";
 
 export function CitySettings({ currentCity }: { currentCity: string | null }) {
   const [city, setCity] = useState(currentCity ?? "");
@@ -24,9 +25,9 @@ export function CitySettings({ currentCity }: { currentCity: string | null }) {
   }
 
   return (
-    <section className="card p-4" style={{ background: "var(--tint-weather)" }}>
-      <h2 className="font-semibold text-sm mb-1 flex items-center gap-1.5">
-        <MapPin size={15} style={{ color: "var(--icon-weather)" }} />
+    <section className="card p-4">
+      <h2 className="font-semibold text-sm mb-1 flex items-center gap-2">
+        <IconBadge icon={<MapPin size={13} />} tint="var(--tint-weather)" color="var(--icon-weather)" size={24} />
         Ciudad
       </h2>
       <p className="text-xs text-muted mb-2">Para mostrar el clima y ver si los días nublados afectan tu ánimo.</p>

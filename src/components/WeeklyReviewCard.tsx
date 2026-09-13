@@ -10,7 +10,7 @@ const TREND_LABEL: Record<NonNullable<WeeklyReview["moodTrend"]>, string> = {
 export function WeeklyReviewCard({ review }: { review: WeeklyReview | null }) {
   if (!review) {
     return (
-      <section className="card p-4">
+      <section className="card p-4" style={{ background: "var(--primary-tint)" }}>
         <div className="flex items-center gap-1.5 text-sm font-medium">
           <Sparkles size={16} className="text-primary" />
           Tu semana

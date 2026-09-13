@@ -2,12 +2,9 @@ import { Sun } from "lucide-react";
 
 export function BeachCountdown({ days }: { days: number }) {
   return (
-    <section
-      className="card p-4"
-      style={{ background: "linear-gradient(135deg, var(--accent-tint), var(--primary-tint))" }}
-    >
+    <section className="card p-3.5 border-l-4 border-l-accent">
       <div className="flex items-center gap-2">
-        <Sun size={18} className="text-accent" />
+        <Sun size={17} className="text-accent shrink-0" />
         <p className="text-sm font-medium">
           {days === 0
             ? "¡Hoy es el día! Que disfrutes la playa 🏖️"

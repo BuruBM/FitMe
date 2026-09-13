@@ -5,6 +5,7 @@ import { Cat, Plane } from "lucide-react";
 import { logPetCare, setPetCarePause } from "@/lib/actions/petcare";
 import { todayInAppTz } from "@/lib/date";
 import type { PetCareLog } from "@/lib/database.types";
+import { IconBadge } from "@/components/IconBadge";
 
 export function PetCareQuickLog({ today, pausedUntil }: { today: PetCareLog | null; pausedUntil: string | null }) {
   const [miloMedication, setMiloMedication] = useState(today?.milo_medication ?? false);
@@ -42,18 +43,18 @@ export function PetCareQuickLog({ today, pausedUntil }: { today: PetCareLog | nu
   }
 
   return (
-    <section className="card p-4" style={{ background: "var(--tint-pets)" }}>
+    <section className="card p-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5 text-sm font-medium">
-          <Cat size={17} style={{ color: "var(--icon-pets)" }} />
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <IconBadge icon={<Cat size={14} />} tint="var(--tint-pets)" color="var(--icon-pets)" size={26} />
           Milo y Zoe
         </div>
         {!isPaused && !settingPause && (
           <button
             onClick={() => setSettingPause(true)}
-            className="flex items-center gap-1 rounded-full bg-card border border-card-border px-2.5 py-1 text-[11px] font-medium text-foreground shadow-sm"
+            className="flex items-center gap-1 rounded-full border border-card-border px-2.5 py-1 text-[11px] font-medium text-muted"
           >
-            <Plane size={12} style={{ color: "var(--icon-pets)" }} />
+            <Plane size={12} />
             Voy de viaje
           </button>
         )}
@@ -68,9 +69,9 @@ export function PetCareQuickLog({ today, pausedUntil }: { today: PetCareLog | nu
           <button
             onClick={endPause}
             disabled={isPending}
-            className="mt-2 flex items-center gap-1 rounded-full bg-card border border-card-border px-2.5 py-1 text-[11px] font-medium text-foreground shadow-sm disabled:opacity-50"
+            className="mt-2 flex items-center gap-1 rounded-full border border-card-border px-2.5 py-1 text-[11px] font-medium text-muted disabled:opacity-50"
           >
-            <Plane size={12} style={{ color: "var(--icon-pets)", transform: "scaleX(-1)" }} />
+            <Plane size={12} style={{ transform: "scaleX(-1)" }} />
             Ya volví, reactivar
           </button>
         </div>

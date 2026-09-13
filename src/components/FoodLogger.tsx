@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { Search, Star, Sparkles, Pencil, UtensilsCrossed } from "lucide-react";
+import { IconBadge } from "@/components/IconBadge";
 import { FOODS, searchLocalFoods, estimateFromText, type FoodItem } from "@/data/foods";
 import { logFood } from "@/lib/actions/food";
 import type { MealType, CustomFood } from "@/lib/database.types";
@@ -91,9 +92,9 @@ export function FoodLogger({ favorites }: { favorites: CustomFood[] }) {
   const [tab, setTab] = useState<Tab>("buscar");
 
   return (
-    <div className="card p-3" style={{ background: "var(--tint-food)" }}>
-      <div className="flex items-center gap-1.5 text-sm font-semibold mb-3 px-0.5">
-        <UtensilsCrossed size={15} style={{ color: "var(--icon-food)" }} />
+    <div className="card p-3">
+      <div className="flex items-center gap-2 text-sm font-semibold mb-3 px-0.5">
+        <IconBadge icon={<UtensilsCrossed size={14} />} tint="var(--tint-food)" color="var(--icon-food)" size={26} />
         Registrar comida
       </div>
       <div className="grid grid-cols-4 gap-1 mb-3">
