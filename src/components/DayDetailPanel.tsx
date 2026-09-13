@@ -52,7 +52,7 @@ export function DayDetailPanel({ point, onClose }: { point: HistoryPoint; onClos
   const stats = buildStats(point);
 
   return (
-    <div className="rounded-xl border-2 border-card-border bg-card shadow-sm p-3 mt-3">
+    <div className="rounded-xl border border-card-border border-l-4 border-l-primary bg-background p-3 mt-3">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-semibold capitalize">{dateLabel}</p>

@@ -24,9 +24,14 @@ export const viewport: Viewport = {
   themeColor: "#3f7d5c",
 };
 
+const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es" className="h-full antialiased">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col">
         {children}
         <ServiceWorkerRegister />

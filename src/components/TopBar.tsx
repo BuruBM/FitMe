@@ -1,6 +1,7 @@
 import { Flame } from "lucide-react";
 import { levelFromXp, xpProgressInLevel } from "@/lib/gamification";
 import type { GamificationState } from "@/lib/database.types";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function TopBar({ name, state }: { name: string | null; state: GamificationState | null }) {
   const xp = state?.xp ?? 0;
@@ -20,12 +21,15 @@ export function TopBar({ name, state }: { name: string | null; state: Gamificati
             </div>
           </div>
         </div>
-        {streak > 0 && (
-          <div className="flex items-center gap-1 text-accent font-medium text-sm">
-            <Flame size={18} />
-            {streak}
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {streak > 0 && (
+            <div className="flex items-center gap-1 text-accent font-medium text-sm">
+              <Flame size={18} />
+              {streak}
+            </div>
+          )}
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   );

@@ -55,7 +55,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --background: #131a19;
     --foreground: #edf3f1;
     --card: #1c2523;
@@ -65,6 +65,7 @@
     --accent: #f2a077;
     --accent-foreground: #2c1608;
     --muted: #9ea89e;
+    --danger: #e28674;
     --primary-tint: #1e3d38;
     --accent-tint: #3d2a1a;
     --tint-water: #133540;
@@ -84,6 +85,37 @@
     --factor-low: #eeab3f;
     --factor-high: #4db8ac;
   }
+}
+
+:root[data-theme="dark"] {
+  --background: #131a19;
+  --foreground: #edf3f1;
+  --card: #1c2523;
+  --card-border: #303c39;
+  --primary: #4db8ac;
+  --primary-foreground: #082220;
+  --accent: #f2a077;
+  --accent-foreground: #2c1608;
+  --muted: #9ea89e;
+  --danger: #e28674;
+  --primary-tint: #1e3d38;
+  --accent-tint: #3d2a1a;
+  --tint-water: #133540;
+  --tint-sleep: #2c2245;
+  --tint-weather: #3a2e0e;
+  --tint-cycle: #3d2130;
+  --tint-pets: #3a2a10;
+  --tint-food: #3d2a18;
+  --tint-workout: #16293b;
+  --icon-water: #4dd8f2;
+  --icon-sleep: #b09aff;
+  --icon-weather: #fbc02d;
+  --icon-cycle: #f472b6;
+  --icon-pets: #f2b23d;
+  --icon-food: #f2925a;
+  --icon-workout: #6fb0e6;
+  --factor-low: #eeab3f;
+  --factor-high: #4db8ac;
 }
 
 * {
