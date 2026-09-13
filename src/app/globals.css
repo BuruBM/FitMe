@@ -2,27 +2,33 @@
 
 :root {
   --background: #faf7ef;
-  --foreground: #1c2a20;
+  --foreground: #1c2624;
   --card: #ffffff;
   --card-border: #e3ddc7;
-  --primary: #1f9d55;
+  --primary: #2f8f86;
   --primary-foreground: #ffffff;
-  --accent: #ff7a3d;
+  --accent: #e0895f;
   --accent-foreground: #ffffff;
   --muted: #74796a;
-  --danger: #e0503a;
-  --primary-tint: #d7f2e2;
-  --accent-tint: #ffe3cf;
+  --danger: #c9634a;
+  --primary-tint: #dcf1ee;
+  --accent-tint: #fbe3d3;
   --tint-water: #cceef6;
   --tint-sleep: #e3daf9;
   --tint-weather: #fef0bf;
   --tint-cycle: #fcd9e6;
   --tint-pets: #fbe3bd;
+  --tint-food: #fbe6d2;
+  --tint-workout: #d9e9f7;
   --icon-water: #0c86a8;
   --icon-sleep: #7c3aed;
   --icon-weather: #c9820a;
   --icon-cycle: #db2777;
   --icon-pets: #a8690f;
+  --icon-food: #c1631f;
+  --icon-workout: #2b6ea8;
+  --factor-low: #c98a4b;
+  --factor-high: #2f8f86;
 }
 
 @theme inline {
@@ -43,32 +49,40 @@
   --color-tint-weather: var(--tint-weather);
   --color-tint-cycle: var(--tint-cycle);
   --color-tint-pets: var(--tint-pets);
+  --color-tint-food: var(--tint-food);
+  --color-tint-workout: var(--tint-workout);
   --font-sans: var(--font-sans);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #161d19;
-    --foreground: #edf1ea;
-    --card: #202822;
-    --card-border: #32402f;
-    --primary: #34d399;
-    --primary-foreground: #0b2016;
-    --accent: #ff9466;
-    --accent-foreground: #2a1607;
-    --muted: #a3a996;
-    --primary-tint: #1d3a2b;
-    --accent-tint: #402a18;
+    --background: #131a19;
+    --foreground: #edf3f1;
+    --card: #1c2523;
+    --card-border: #303c39;
+    --primary: #4db8ac;
+    --primary-foreground: #082220;
+    --accent: #f2a077;
+    --accent-foreground: #2c1608;
+    --muted: #9ea89e;
+    --primary-tint: #1e3d38;
+    --accent-tint: #3d2a1a;
     --tint-water: #133540;
     --tint-sleep: #2c2245;
     --tint-weather: #3a2e0e;
     --tint-cycle: #3d2130;
     --tint-pets: #3a2a10;
+    --tint-food: #3d2a18;
+    --tint-workout: #16293b;
     --icon-water: #4dd8f2;
     --icon-sleep: #b09aff;
     --icon-weather: #fbc02d;
     --icon-cycle: #f472b6;
     --icon-pets: #f2b23d;
+    --icon-food: #f2925a;
+    --icon-workout: #6fb0e6;
+    --factor-low: #d69b5e;
+    --factor-high: #4db8ac;
   }
 }
 

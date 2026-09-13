@@ -75,7 +75,10 @@ export function DayDetailPanel({ point, onClose }: { point: HistoryPoint; onClos
           label="Clima"
           value={point.weatherCondition ? `${point.weatherCondition} (${point.cloudCoverPct}% nublado)` : "-"}
         />
-        <Stat label="Ciclo" value={point.cyclePhase ? PHASE_LABELS[point.cyclePhase] : "-"} />
+        <Stat
+          label={point.pillTaken != null ? "Pastilla" : "Ciclo"}
+          value={point.pillTaken != null ? (point.pillTaken ? "Tomada" : "No tomada") : point.cyclePhase ? PHASE_LABELS[point.cyclePhase] : "-"}
+        />
       </div>
 
       {point.notes && (

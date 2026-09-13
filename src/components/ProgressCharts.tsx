@@ -6,14 +6,12 @@ import { format, parseISO, getISOWeek } from "date-fns";
 import { es } from "date-fns/locale";
 import type { HistoryPoint } from "@/lib/queries";
 import { DayDetailPanel } from "@/components/DayDetailPanel";
-import { PHASE_LABELS, type CyclePhase } from "@/lib/cycle";
 
 type Period = "semana" | "mes" | "trimestre" | "año";
-type MetricKey = "wellness" | "weightKg" | "mood" | "irritability" | "sleepHours" | "calories" | "cyclePhase";
+type MetricKey = "wellness" | "weightKg" | "mood" | "irritability" | "sleepHours" | "calories";
 
 const PERIOD_DAYS: Record<Period, number> = { semana: 7, mes: 30, trimestre: 90, año: 365 };
 const PERIOD_LABELS: Record<Period, string> = { semana: "Semana", mes: "Mes", trimestre: "Trimestre", año: "Año" };
-const PHASE_ORDER: CyclePhase[] = ["menstrual", "folicular", "ovulación", "lútea"];
 
 interface MetricDef {
   key: MetricKey;
@@ -32,15 +30,6 @@ const METRICS: MetricDef[] = [
   { key: "irritability", label: "Irritabilidad", domain: [1, 5], color: "var(--danger)", width: 28, formatValue: (v) => `${v}/5` },
   { key: "sleepHours", label: "Sueño", domain: ["auto", "auto"], color: "var(--icon-sleep)", width: 32, formatValue: (v) => `${v}h` },
   { key: "calories", label: "Calorías", domain: ["auto", "auto"], color: "var(--accent)", width: 42, formatValue: (v) => `${Math.round(v)} kcal` },
-  {
-    key: "cyclePhase",
-    label: "Ciclo",
-    domain: [0, 3],
-    color: "var(--icon-cycle)",
-    width: 46,
-    tickFormatter: (v) => PHASE_LABELS[PHASE_ORDER[Math.round(v)]]?.slice(0, 4) ?? "",
-    formatValue: (v) => PHASE_LABELS[PHASE_ORDER[Math.round(v)]] ?? "-",
-  },
 ];
 
 function metricValue(p: HistoryPoint, key: MetricKey): number | null {
@@ -57,8 +46,6 @@ function metricValue(p: HistoryPoint, key: MetricKey): number | null {
       return p.sleepHours;
     case "calories":
       return p.calories > 0 ? p.calories : null;
-    case "cyclePhase":
-      return p.cyclePhase ? PHASE_ORDER.indexOf(p.cyclePhase) : null;
   }
 }
 
@@ -101,13 +88,9 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
 
   const metric = METRICS.find((m) => m.key === metricKey)!;
   const isDaily = period === "semana" || period === "mes";
-  const cycleUnavailable = metricKey === "cyclePhase" && !isDaily;
 
   const sliced = useMemo(() => history.slice(-PERIOD_DAYS[period]), [history, period]);
-  const buckets = useMemo(
-    () => (cycleUnavailable ? [] : bucketize(sliced, period, metricKey)),
-    [sliced, period, metricKey, cycleUnavailable],
-  );
+  const buckets = useMemo(() => bucketize(sliced, period, metricKey), [sliced, period, metricKey]);
   const hasData = buckets.some((b) => b.value != null);
 
   const selectedPoint = selectedDate ? sliced.find((p) => p.date === selectedDate) ?? null : null;
@@ -162,9 +145,7 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
           </p>
         )}
 
-        {cycleUnavailable ? (
-          <p className="text-sm text-muted">Elegí Semana o Mes para ver el ciclo día a día.</p>
-        ) : hasData ? (
+        {hasData ? (
           <div className="h-44 -ml-4">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={buckets} onClick={handleChartClick} style={{ cursor: isDaily ? "pointer" : "default" }}>

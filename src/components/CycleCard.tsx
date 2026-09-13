@@ -38,11 +38,9 @@ export function CycleCard({ summary, pcos }: { summary: CycleSummary; pcos: bool
           </p>
           {summary.onBirthControl ? (
             <p className="text-xs text-muted mt-1">
-              Con anticonceptivos el ciclo hormonal natural está regulado por la pastilla, así que las fases de
-              ánimo típicas del ciclo espontáneo no aplican igual.{" "}
               {summary.daysSincePillStart != null && summary.daysSincePillStart < 90
-                ? "Igual, el cuerpo puede tardar hasta unos 3 meses en acomodarse — los cambios de ánimo todavía son esperables mientras tanto."
-                : "Igual vale registrar cómo te sentís: las hormonas de la pastilla pueden seguir influyendo en el ánimo."}
+                ? "Recién retomaste la pastilla — el cuerpo puede tardar hasta 3 meses en acomodarse, así que los cambios de ánimo son esperables mientras tanto."
+                : `Con anticonceptivos las fases no siguen el ciclo espontáneo.${pcos ? " Con SOP, la pastilla no siempre saca los síntomas del todo." : ""}`}
             </p>
           ) : (
             <p className="text-xs text-muted mt-1">{PHASE_MOOD_INFO[summary.estimate.phase]}</p>

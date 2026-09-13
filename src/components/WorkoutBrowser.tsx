@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Clock, CheckCircle2 } from "lucide-react";
+import { Clock, CheckCircle2, Dumbbell } from "lucide-react";
 import { WORKOUTS, type Workout } from "@/data/workouts";
 import { logWorkout } from "@/lib/actions/tracking";
 
@@ -60,11 +60,15 @@ export function WorkoutBrowser() {
             key={w.id}
             onClick={() => setOpen(w)}
             className="card w-full text-left p-3.5 hover:border-primary transition"
+            style={{ borderLeft: "3px solid var(--icon-workout)" }}
           >
             <div className="flex items-start justify-between">
-              <div>
-                <p className="font-medium text-sm">{w.title}</p>
-                <p className="text-xs text-muted mt-0.5">{w.focus}</p>
+              <div className="flex items-start gap-2">
+                <Dumbbell size={15} className="mt-0.5 shrink-0" style={{ color: "var(--icon-workout)" }} />
+                <div>
+                  <p className="font-medium text-sm">{w.title}</p>
+                  <p className="text-xs text-muted mt-0.5">{w.focus}</p>
+                </div>
               </div>
               <span className="flex items-center gap-1 text-xs text-muted shrink-0">
                 <Clock size={12} />
@@ -73,7 +77,7 @@ export function WorkoutBrowser() {
             </div>
             <div className="flex gap-1.5 mt-2">
               <Tag>{w.equipment}</Tag>
-              {w.boneLoading && <Tag>Fortalece huesos</Tag>}
+              {w.boneLoading && <Tag accent>Fortalece huesos</Tag>}
             </div>
           </button>
         ))}
@@ -95,8 +99,19 @@ function FilterChip({ active, onClick, label }: { active: boolean; onClick: () =
   );
 }
 
-function Tag({ children }: { children: React.ReactNode }) {
-  return <span className="text-[10px] rounded-full bg-background border border-card-border px-2 py-0.5 text-muted">{children}</span>;
+function Tag({ children, accent }: { children: React.ReactNode; accent?: boolean }) {
+  return (
+    <span
+      className="text-[10px] rounded-full border px-2 py-0.5"
+      style={
+        accent
+          ? { background: "var(--accent-tint)", borderColor: "var(--accent)", color: "var(--accent)" }
+          : { background: "var(--tint-workout)", borderColor: "var(--tint-workout)", color: "var(--icon-workout)" }
+      }
+    >
+      {children}
+    </span>
+  );
 }
 
 function WorkoutDetail({ workout, onBack }: { workout: Workout; onBack: () => void }) {

@@ -1,6 +1,11 @@
 import type { HistoryPoint } from "@/lib/queries";
 import { PHASE_LABELS, type CyclePhase } from "@/lib/cycle";
 
+export interface FactorDay {
+  date: string;
+  value: number;
+}
+
 export interface FactorComparison {
   id: string;
   label: string;
@@ -8,31 +13,30 @@ export interface FactorComparison {
   groupBLabel: string;
   avgA: number;
   avgB: number;
-  nA: number;
-  nB: number;
+  daysA: FactorDay[];
+  daysB: FactorDay[];
   note?: string;
 }
 
 const MIN_DAYS_PER_GROUP = 3;
 const MOOD_SCALE_MAX = 5;
 
-function avg(nums: number[]): number | null {
-  if (nums.length === 0) return null;
-  return nums.reduce((a, b) => a + b, 0) / nums.length;
+function avg(days: FactorDay[]): number {
+  return days.reduce((a, b) => a + b.value, 0) / days.length;
 }
 
 function splitBy(
   points: HistoryPoint[],
   predicate: (p: HistoryPoint) => boolean | null,
   metric: (p: HistoryPoint) => number | null,
-): { a: number[]; b: number[] } {
-  const a: number[] = [];
-  const b: number[] = [];
+): { a: FactorDay[]; b: FactorDay[] } {
+  const a: FactorDay[] = [];
+  const b: FactorDay[] = [];
   for (const p of points) {
     const cond = predicate(p);
     const value = metric(p);
     if (cond == null || value == null) continue;
-    (cond ? a : b).push(value);
+    (cond ? a : b).push({ date: p.date, value });
   }
   return { a, b };
 }
@@ -40,9 +44,11 @@ function splitBy(
 /**
  * Bucketed averages of mood by other logged variables — "does X actually
  * track with how you feel". Only rule-based comparison of her own numbers,
- * never a causal claim; each row is a description, not a diagnosis. Returns
- * the factors with the biggest observed gap first, capped so it reads as a
- * highlight reel rather than a wall of stats.
+ * never a causal claim; each row is a description, not a diagnosis. Day
+ * counts per group are whatever naturally occurred (e.g. more cloudy days
+ * than clear ones some months) — they aren't meant to match across groups.
+ * Returns the factors with the biggest observed gap first, capped so it
+ * reads as a highlight reel rather than a wall of stats.
  */
 export function computeFactors(points: HistoryPoint[], onBirthControl: boolean): FactorComparison[] {
   const results: FactorComparison[] = [];
@@ -55,10 +61,10 @@ export function computeFactors(points: HistoryPoint[], onBirthControl: boolean):
       label: "Clima",
       groupALabel: "Días nublados",
       groupBLabel: "Días despejados",
-      avgA: avg(weather.a)!,
-      avgB: avg(weather.b)!,
-      nA: weather.a.length,
-      nB: weather.b.length,
+      avgA: avg(weather.a),
+      avgB: avg(weather.b),
+      daysA: weather.a,
+      daysB: weather.b,
     });
   }
 
@@ -69,10 +75,10 @@ export function computeFactors(points: HistoryPoint[], onBirthControl: boolean):
       label: "Sueño",
       groupALabel: "Menos de 6.5h",
       groupBLabel: "6.5h o más",
-      avgA: avg(sleep.a)!,
-      avgB: avg(sleep.b)!,
-      nA: sleep.a.length,
-      nB: sleep.b.length,
+      avgA: avg(sleep.a),
+      avgB: avg(sleep.b),
+      daysA: sleep.a,
+      daysB: sleep.b,
     });
   }
 
@@ -83,10 +89,10 @@ export function computeFactors(points: HistoryPoint[], onBirthControl: boolean):
       label: "Movimiento",
       groupALabel: "Días con entrenamiento o caminata",
       groupBLabel: "Días sin",
-      avgA: avg(movement.a)!,
-      avgB: avg(movement.b)!,
-      nA: movement.a.length,
-      nB: movement.b.length,
+      avgA: avg(movement.a),
+      avgB: avg(movement.b),
+      daysA: movement.a,
+      daysB: movement.b,
     });
   }
 
@@ -97,10 +103,10 @@ export function computeFactors(points: HistoryPoint[], onBirthControl: boolean):
       label: "Contacto social",
       groupALabel: "Con contacto cercano",
       groupBLabel: "Con poco o nada",
-      avgA: avg(social.a)!,
-      avgB: avg(social.b)!,
-      nA: social.a.length,
-      nB: social.b.length,
+      avgA: avg(social.a),
+      avgB: avg(social.b),
+      daysA: social.a,
+      daysB: social.b,
     });
   }
 
@@ -111,10 +117,10 @@ export function computeFactors(points: HistoryPoint[], onBirthControl: boolean):
       label: "Redes sociales",
       groupALabel: "Más de 2h",
       groupBLabel: "2h o menos",
-      avgA: avg(screens.a)!,
-      avgB: avg(screens.b)!,
-      nA: screens.a.length,
-      nB: screens.b.length,
+      avgA: avg(screens.a),
+      avgB: avg(screens.b),
+      daysA: screens.a,
+      daysB: screens.b,
     });
   }
 
@@ -125,24 +131,40 @@ export function computeFactors(points: HistoryPoint[], onBirthControl: boolean):
       label: "Alcohol",
       groupALabel: "Con algún trago",
       groupBLabel: "Sin alcohol",
-      avgA: avg(alcohol.a)!,
-      avgB: avg(alcohol.b)!,
-      nA: alcohol.a.length,
-      nB: alcohol.b.length,
+      avgA: avg(alcohol.a),
+      avgB: avg(alcohol.b),
+      daysA: alcohol.a,
+      daysB: alcohol.b,
       note: "Es asociación, no causa: a veces se toma justo cuando el ánimo ya viene bajo.",
     });
   }
 
+  if (onBirthControl) {
+    const pill = splitBy(points, (p) => p.pillTaken, moodOf);
+    if (pill.a.length >= MIN_DAYS_PER_GROUP && pill.b.length >= MIN_DAYS_PER_GROUP) {
+      results.push({
+        id: "pill",
+        label: "Pastilla",
+        groupALabel: "Días que la tomaste",
+        groupBLabel: "Días que no",
+        avgA: avg(pill.a),
+        avgB: avg(pill.b),
+        daysA: pill.a,
+        daysB: pill.b,
+      });
+    }
+  }
+
   if (!onBirthControl) {
-    const byPhase = new Map<CyclePhase, number[]>();
+    const byPhase = new Map<CyclePhase, FactorDay[]>();
     for (const p of points) {
       if (p.cyclePhase == null || p.mood == null) continue;
       if (!byPhase.has(p.cyclePhase)) byPhase.set(p.cyclePhase, []);
-      byPhase.get(p.cyclePhase)!.push(p.mood);
+      byPhase.get(p.cyclePhase)!.push({ date: p.date, value: p.mood });
     }
     const phaseAverages = [...byPhase.entries()]
-      .filter(([, moods]) => moods.length >= MIN_DAYS_PER_GROUP)
-      .map(([phase, moods]) => ({ phase, avgMood: avg(moods)!, n: moods.length }));
+      .filter(([, days]) => days.length >= MIN_DAYS_PER_GROUP)
+      .map(([phase, days]) => ({ phase, avgMood: avg(days), days }));
 
     if (phaseAverages.length >= 2) {
       phaseAverages.sort((a, b) => a.avgMood - b.avgMood);
@@ -156,8 +178,8 @@ export function computeFactors(points: HistoryPoint[], onBirthControl: boolean):
           groupBLabel: `Fase ${PHASE_LABELS[highest.phase]}`,
           avgA: lowest.avgMood,
           avgB: highest.avgMood,
-          nA: lowest.n,
-          nB: highest.n,
+          daysA: lowest.days,
+          daysB: highest.days,
         });
       }
     }

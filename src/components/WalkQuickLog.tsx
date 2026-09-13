@@ -18,9 +18,9 @@ export function WalkQuickLog() {
   }
 
   return (
-    <section className="card p-4">
+    <section className="card p-4" style={{ background: "var(--tint-workout)" }}>
       <div className="flex items-center gap-1.5 text-sm font-medium">
-        <Footprints size={16} className="text-primary" />
+        <Footprints size={16} style={{ color: "var(--icon-workout)" }} />
         Caminata
       </div>
       <p className="text-xs text-muted mt-1">

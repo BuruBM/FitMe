@@ -1,3 +1,4 @@
+import { Dumbbell } from "lucide-react";
 import { WorkoutBrowser } from "@/components/WorkoutBrowser";
 import { WalkQuickLog } from "@/components/WalkQuickLog";
 import { WorkoutHistory } from "@/components/WorkoutHistory";
@@ -9,7 +10,10 @@ export default async function WorkoutsPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-lg font-semibold">Entrenamiento en casa</h1>
+        <h1 className="text-lg font-semibold flex items-center gap-2">
+          <Dumbbell size={19} style={{ color: "var(--icon-workout)" }} />
+          Entrenamiento en casa
+        </h1>
         <p className="text-sm text-muted mt-1">Elegí según cuánta energía tengas hoy.</p>
       </div>
       <WalkQuickLog />

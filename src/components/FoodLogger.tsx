@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { Search, Star, Sparkles, Pencil } from "lucide-react";
+import { Search, Star, Sparkles, Pencil, UtensilsCrossed } from "lucide-react";
 import { FOODS, searchLocalFoods, estimateFromText, type FoodItem } from "@/data/foods";
 import { logFood } from "@/lib/actions/food";
 import type { MealType, CustomFood } from "@/lib/database.types";
@@ -92,6 +92,10 @@ export function FoodLogger({ favorites }: { favorites: CustomFood[] }) {
 
   return (
     <div className="card p-3">
+      <div className="flex items-center gap-1.5 text-sm font-semibold mb-3 px-0.5">
+        <UtensilsCrossed size={15} style={{ color: "var(--icon-food)" }} />
+        Registrar comida
+      </div>
       <div className="grid grid-cols-4 gap-1 mb-3">
         <TabButton active={tab === "buscar"} onClick={() => setTab("buscar")} icon={<Search size={14} />} label="Buscar" />
         <TabButton active={tab === "favoritos"} onClick={() => setTab("favoritos")} icon={<Star size={14} />} label="Favoritos" />

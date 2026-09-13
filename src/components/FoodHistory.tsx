@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { UtensilsCrossed } from "lucide-react";
 import type { FoodLog } from "@/lib/database.types";
 
 interface DayGroup {
@@ -37,15 +38,21 @@ export function FoodHistory({ logs }: { logs: FoodLog[] }) {
   if (days.length === 0) {
     return (
       <section className="card p-4">
-        <h2 className="font-semibold mb-1 text-sm">Historial</h2>
-        <p className="text-sm text-muted">Los días anteriores van a aparecer acá.</p>
+        <div className="flex items-center gap-1.5 text-sm font-semibold">
+          <UtensilsCrossed size={15} style={{ color: "var(--icon-food)" }} />
+          Historial
+        </div>
+        <p className="text-sm text-muted mt-1">Los días anteriores van a aparecer acá.</p>
       </section>
     );
   }
 
   return (
     <section className="card p-4">
-      <h2 className="font-semibold mb-2 text-sm">Historial</h2>
+      <div className="flex items-center gap-1.5 text-sm font-semibold mb-2">
+        <UtensilsCrossed size={15} style={{ color: "var(--icon-food)" }} />
+        Historial
+      </div>
       <div className="space-y-1">
         {days.map((day) => {
           const open = openDate === day.date;

@@ -1,3 +1,4 @@
+import { Dumbbell } from "lucide-react";
 import type { WorkoutLog } from "@/lib/database.types";
 
 const INTENSITY_LABEL: Record<string, string> = { bajo: "Poca energía", medio: "Energía media", alto: "Con ganas" };
@@ -6,15 +7,21 @@ export function WorkoutHistory({ logs }: { logs: WorkoutLog[] }) {
   if (logs.length === 0) {
     return (
       <section className="card p-4">
-        <h2 className="font-semibold mb-1 text-sm">Historial</h2>
-        <p className="text-sm text-muted">Tus rutinas y caminatas registradas van a aparecer acá.</p>
+        <div className="flex items-center gap-1.5 text-sm font-semibold">
+          <Dumbbell size={15} style={{ color: "var(--icon-workout)" }} />
+          Historial
+        </div>
+        <p className="text-sm text-muted mt-1">Tus rutinas y caminatas registradas van a aparecer acá.</p>
       </section>
     );
   }
 
   return (
     <section className="card p-4">
-      <h2 className="font-semibold mb-2 text-sm">Historial</h2>
+      <div className="flex items-center gap-1.5 text-sm font-semibold mb-2">
+        <Dumbbell size={15} style={{ color: "var(--icon-workout)" }} />
+        Historial
+      </div>
       <div className="space-y-2 max-h-72 overflow-y-auto">
         {logs.map((log) => (
           <div key={log.id} className="flex justify-between text-xs border-b border-card-border pb-2 last:border-0 last:pb-0">

@@ -469,6 +469,7 @@ export interface HistoryPoint {
   movedToday: boolean;
   workoutNames: string[];
   petCareDone: boolean | null;
+  pillTaken: boolean | null;
   /** 0-100 composite of whatever metrics were logged that day; null if too little data. */
   wellness: number | null;
 }
@@ -501,6 +502,7 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
     { data: petCare },
     { data: workouts },
     { data: periodLogs },
+    { data: pillLogs },
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -521,6 +523,7 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
     // full history, not just this window: an old period start can still be the
     // applicable one for the early days of the window.
     supabase.from("cycle_logs").select("period_start_date").eq("user_id", user.id).lte("period_start_date", today),
+    supabase.from("pill_logs").select("log_date, taken").eq("user_id", user.id).gte("log_date", since),
   ]);
 
   const weightByDay = new Map((weights ?? []).map((w) => [w.log_date, w.weight_kg]));
@@ -536,6 +539,7 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
   const periodStarts = (periodLogs ?? []).map((p) => p.period_start_date);
   const avgCycleLength = profile?.avg_cycle_length ?? 28;
   const onBirthControl = profile?.on_birth_control ?? false;
+  const pillByDay = new Map((pillLogs ?? []).map((p) => [p.log_date, p.taken]));
 
   const waterByDay = new Map<string, number>();
   for (const w of water ?? []) waterByDay.set(w.log_date, (waterByDay.get(w.log_date) ?? 0) + w.amount_ml);
@@ -610,6 +614,7 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
       movedToday,
       workoutNames: workoutNamesByDay.get(date) ?? [],
       petCareDone,
+      pillTaken: onBirthControl ? (pillByDay.get(date) ?? null) : null,
       wellness,
     });
   }
