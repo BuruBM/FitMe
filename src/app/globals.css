@@ -20,6 +20,7 @@
   --tint-pets: #fbe3bd;
   --tint-food: #fbe6d2;
   --tint-workout: #d9e9f7;
+  --tint-danger: #fbdcd3;
   --icon-water: #0c86a8;
   --icon-sleep: #7c3aed;
   --icon-weather: #c9820a;
@@ -51,6 +52,7 @@
   --color-tint-pets: var(--tint-pets);
   --color-tint-food: var(--tint-food);
   --color-tint-workout: var(--tint-workout);
+  --color-tint-danger: var(--tint-danger);
   --font-sans: var(--font-sans);
 }
 
@@ -75,6 +77,7 @@
     --tint-pets: #3a2a10;
     --tint-food: #3d2a18;
     --tint-workout: #16293b;
+    --tint-danger: #40241e;
     --icon-water: #4dd8f2;
     --icon-sleep: #b09aff;
     --icon-weather: #fbc02d;

@@ -54,7 +54,7 @@ export function SymptomQuickLog() {
       <h2 className="font-semibold text-sm">¿Cómo te sentís hoy?</h2>
 
       <div>
-        <p className="text-xs text-muted mb-1">Hinchazón</p>
+        <p className="text-xs font-medium text-foreground/85 mb-1.5">Hinchazón</p>
         <div className="flex gap-1.5">
           {BLOATING_LABELS.map((label, i) => (
             <button
@@ -79,7 +79,7 @@ export function SymptomQuickLog() {
 
       <div className="grid grid-cols-2 gap-2 pt-1">
         <div>
-          <p className="text-xs text-muted mb-1">Tragos de alcohol</p>
+          <p className="text-xs font-medium text-foreground/85 mb-1.5">Tragos de alcohol</p>
           <div className="flex items-center gap-2">
             <button onClick={() => setAlcoholUnits((n) => Math.max(0, n - 1))} className="stepper" type="button">
               −
@@ -91,7 +91,7 @@ export function SymptomQuickLog() {
           </div>
         </div>
         <div>
-          <p className="text-xs text-muted mb-1">Tabaco</p>
+          <p className="text-xs font-medium text-foreground/85 mb-1.5">Tabaco</p>
           <button
             onClick={() => setTobaccoUsed((v) => !v)}
             className={`w-full text-xs rounded-md py-1.5 border ${
@@ -104,7 +104,7 @@ export function SymptomQuickLog() {
       </div>
 
       <div>
-        <p className="text-xs text-muted mb-1">Minutos en redes sociales (aprox.)</p>
+        <p className="text-xs font-medium text-foreground/85 mb-1.5">Minutos en redes sociales (aprox.)</p>
         <div className="flex items-center gap-2">
           <button onClick={() => setSocialMediaMinutes((n) => Math.max(0, n - 15))} className="stepper" type="button">
             −
@@ -117,7 +117,7 @@ export function SymptomQuickLog() {
       </div>
 
       <div>
-        <p className="text-xs text-muted mb-1">¿Algo para aclarar? (opcional)</p>
+        <p className="text-xs font-medium text-foreground/85 mb-1.5">¿Algo para aclarar? (opcional)</p>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
@@ -185,7 +185,7 @@ function RatingRow({
   const options = Array.from({ length: max - min + 1 }, (_, i) => min + i);
   return (
     <div>
-      <p className="text-xs text-muted mb-1">{label}</p>
+      <p className="text-xs font-medium text-foreground/85 mb-1.5">{label}</p>
       <div className="flex gap-1.5">
         {options.map((n) => (
           <button

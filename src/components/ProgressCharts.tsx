@@ -168,9 +168,14 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
         )}
 
         {hasData ? (
-          <div className="h-44 -ml-4">
+          <div className="h-44">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={buckets} onClick={handleChartClick} style={{ cursor: isDaily ? "pointer" : "default" }}>
+              <LineChart
+                data={buckets}
+                onClick={handleChartClick}
+                margin={{ top: 5, right: 8, left: -20, bottom: 0 }}
+                style={{ cursor: isDaily ? "pointer" : "default" }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="var(--muted)" />
                 <YAxis

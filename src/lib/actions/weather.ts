@@ -1,26 +1,25 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { geocodeCity } from "@/lib/weather";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
+import { searchCities, type GeocodeResult } from "@/lib/weather";
 
-export async function updateCity(city: string): Promise<{ ok: boolean; resolvedName?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export async function searchCitySuggestions(query: string): Promise<GeocodeResult[]> {
+  return searchCities(query);
+}
+
+export async function saveCitySelection(city: GeocodeResult): Promise<{ ok: boolean; resolvedName?: string }> {
+  const user = await getCurrentUser();
   if (!user) throw new Error("No autenticada");
-
-  const geo = await geocodeCity(city);
-  if (!geo) return { ok: false };
+  const supabase = await createClient();
 
   const { error } = await supabase
     .from("profiles")
-    .update({ city: geo.name, latitude: geo.latitude, longitude: geo.longitude })
+    .update({ city: city.name, latitude: city.latitude, longitude: city.longitude })
     .eq("id", user.id);
   if (error) throw error;
 
   revalidatePath("/dashboard");
   revalidatePath("/profile");
-  return { ok: true, resolvedName: geo.name };
+  return { ok: true, resolvedName: city.name };
 }

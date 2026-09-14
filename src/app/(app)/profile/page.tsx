@@ -6,6 +6,7 @@ import { RecommendationsPanel } from "@/components/RecommendationsPanel";
 import { CycleSettings } from "@/components/CycleSettings";
 import { CitySettings } from "@/components/CitySettings";
 import { ManualTargets } from "@/components/ManualTargets";
+import { ResetDataButton } from "@/components/ResetDataButton";
 
 export default async function ProfilePage() {
   const profile = await getProfile();
@@ -33,6 +34,7 @@ export default async function ProfilePage() {
         />
       )}
       <RecommendationsPanel />
+      <ResetDataButton />
       <form action={signOut}>
         <button type="submit" className="w-full rounded-lg border border-card-border text-sm py-2.5 text-muted">
           Cerrar sesión

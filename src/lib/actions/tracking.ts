@@ -1,18 +1,17 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { todayInAppTz } from "@/lib/date";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { awardXp } from "@/lib/actions/gamification-helpers";
 import { XP_RULES } from "@/lib/gamification";
 import { fetchCurrentWeather } from "@/lib/weather";
 
 async function requireUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) throw new Error("No autenticada");
+  const supabase = await createClient();
   return { supabase, user };
 }
 
@@ -124,17 +123,6 @@ export async function logSymptoms(input: SymptomInput) {
   const { supabase, user } = await requireUser();
   const today = todayInAppTz();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("latitude, longitude")
-    .eq("id", user.id)
-    .single();
-
-  const weather =
-    profile?.latitude != null && profile?.longitude != null
-      ? await fetchCurrentWeather(profile.latitude, profile.longitude)
-      : null;
-
   const { error } = await supabase.from("symptom_logs").upsert(
     {
       user_id: user.id,
@@ -146,8 +134,6 @@ export async function logSymptoms(input: SymptomInput) {
       sensitivity_level: input.sensitivityLevel,
       alcohol_units: input.alcoholUnits,
       tobacco_used: input.tobaccoUsed,
-      cloud_cover_pct: weather?.cloudCoverPct ?? null,
-      weather_condition: weather?.condition ?? null,
       social_media_minutes: input.socialMediaMinutes ?? null,
       social_contact: input.socialContact ?? null,
       stress_level: input.stressLevel ?? null,
@@ -161,6 +147,27 @@ export async function logSymptoms(input: SymptomInput) {
   await awardXp(supabase, user.id, XP_RULES.symptom_log);
   revalidatePath("/dashboard");
   revalidatePath("/progress");
+
+  // Attaching weather isn't worth making her wait on: it fetches an external
+  // API that can take seconds on a cold cache. Save the check-in immediately
+  // and fill in cloud cover/condition afterward, best-effort.
+  after(async () => {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("latitude, longitude")
+      .eq("id", user.id)
+      .single();
+    if (profile?.latitude == null || profile?.longitude == null) return;
+
+    const weather = await fetchCurrentWeather(profile.latitude, profile.longitude);
+    if (!weather) return;
+
+    await supabase
+      .from("symptom_logs")
+      .update({ cloud_cover_pct: weather.cloudCoverPct, weather_condition: weather.condition })
+      .eq("user_id", user.id)
+      .eq("log_date", today);
+  });
 }
 
 // ---------------- workouts ----------------

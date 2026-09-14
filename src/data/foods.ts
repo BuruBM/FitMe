@@ -32,7 +32,7 @@ export const FOODS: FoodItem[] = [
     fiber_g: 4,
     sodium_mg: 380,
     calcium_mg: 60,
-    favoriteFor: "Proteína de soja, tu favorita",
+    favoriteFor: "Proteína de soja",
   },
   {
     id: "hamburguesa-soja",
@@ -47,7 +47,7 @@ export const FOODS: FoodItem[] = [
     fiber_g: 5,
     sodium_mg: 420,
     calcium_mg: 70,
-    favoriteFor: "Proteína de soja, tu favorita",
+    favoriteFor: "Proteína de soja",
   },
   {
     id: "tofu-firme",
@@ -77,7 +77,7 @@ export const FOODS: FoodItem[] = [
     fiber_g: 0,
     sodium_mg: 70,
     calcium_mg: 28,
-    favoriteFor: "Tu favorito",
+    favoriteFor: "Proteína completa",
   },
   {
     id: "claras-huevo",
@@ -106,7 +106,7 @@ export const FOODS: FoodItem[] = [
     fiber_g: 1,
     sodium_mg: 130,
     calcium_mg: 120,
-    favoriteFor: "Tu favorita, rápida para desayuno o merienda",
+    favoriteFor: "Rápida para desayuno o merienda",
   },
   {
     id: "yogur-griego",

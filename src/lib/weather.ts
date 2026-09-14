@@ -48,25 +48,33 @@ export async function fetchCurrentWeather(lat: number, lon: number): Promise<Cur
 
 export interface GeocodeResult {
   name: string;
+  admin1: string | null;
+  country: string | null;
   latitude: number;
   longitude: number;
 }
 
-export async function geocodeCity(city: string): Promise<GeocodeResult | null> {
+export async function searchCities(query: string, count = 5): Promise<GeocodeResult[]> {
+  if (query.trim().length < 2) return [];
   try {
     const url = new URL("https://geocoding-api.open-meteo.com/v1/search");
-    url.searchParams.set("name", city);
-    url.searchParams.set("count", "1");
+    url.searchParams.set("name", query.trim());
+    url.searchParams.set("count", String(count));
     url.searchParams.set("language", "es");
 
-    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
-    if (!res.ok) return null;
+    const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+    if (!res.ok) return [];
     const data = await res.json();
-    const result = data.results?.[0];
-    if (!result) return null;
+    const results = data.results ?? [];
 
-    return { name: result.name, latitude: result.latitude, longitude: result.longitude };
+    return results.map((r: { name: string; admin1?: string; country?: string; latitude: number; longitude: number }) => ({
+      name: r.name,
+      admin1: r.admin1 ?? null,
+      country: r.country ?? null,
+      latitude: r.latitude,
+      longitude: r.longitude,
+    }));
   } catch {
-    return null;
+    return [];
   }
 }
