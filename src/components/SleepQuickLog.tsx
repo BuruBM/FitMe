@@ -6,6 +6,43 @@ import { logSleep } from "@/lib/actions/tracking";
 import { computeSleepHours } from "@/lib/sleep";
 import { IconBadge } from "@/components/IconBadge";
 
+const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
+const MINUTES = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, "0"));
+
+// The native <input type="time"> picker overflows the screen on some
+// Android/Chrome versions, especially in a card this narrow (shares a row
+// with Agua). Two plain <select>s avoid that entirely.
+function TimeSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [h, m] = value.split(":");
+  return (
+    <div className="flex items-center gap-1">
+      <select
+        value={h}
+        onChange={(e) => onChange(`${e.target.value}:${m}`)}
+        className="flex-1 rounded-lg border border-card-border bg-background px-2 py-1.5 text-sm outline-none focus:border-primary"
+      >
+        {HOURS.map((v) => (
+          <option key={v} value={v}>
+            {v}
+          </option>
+        ))}
+      </select>
+      <span className="text-muted">:</span>
+      <select
+        value={m}
+        onChange={(e) => onChange(`${h}:${e.target.value}`)}
+        className="flex-1 rounded-lg border border-card-border bg-background px-2 py-1.5 text-sm outline-none focus:border-primary"
+      >
+        {MINUTES.map((v) => (
+          <option key={v} value={v}>
+            {v}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 export function SleepQuickLog({
   currentHours,
   targetHours,
@@ -60,21 +97,15 @@ export function SleepQuickLog({
         <div className="mt-3 space-y-2">
           <div>
             <label className="text-[11px] text-muted">¿A qué hora te dormiste?</label>
-            <input
-              type="time"
-              value={bedtime}
-              onChange={(e) => setBedtime(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-card-border bg-background px-2 py-1.5 text-sm outline-none focus:border-primary"
-            />
+            <div className="mt-1">
+              <TimeSelect value={bedtime} onChange={setBedtime} />
+            </div>
           </div>
           <div>
             <label className="text-[11px] text-muted">¿A qué hora te levantaste?</label>
-            <input
-              type="time"
-              value={wakeTime}
-              onChange={(e) => setWakeTime(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-card-border bg-background px-2 py-1.5 text-sm outline-none focus:border-primary"
-            />
+            <div className="mt-1">
+              <TimeSelect value={wakeTime} onChange={setWakeTime} />
+            </div>
           </div>
           <p className="text-center text-sm font-medium">{hours}h dormidas</p>
           <div className="flex items-center justify-between">
