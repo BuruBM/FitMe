@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { shiftDateStr, todayInAppTz } from "@/lib/date";
 import { evaluateNewBadges, type BadgeContext } from "@/lib/gamification";
@@ -18,6 +19,7 @@ import type {
   PetCareLog,
   Profile,
   SleepLog,
+  SymptomLog,
   WorkoutLog,
 } from "@/lib/database.types";
 
@@ -200,7 +202,10 @@ export interface CycleSummary {
   daysSincePillStart: number | null;
 }
 
-export async function getCycleSummary(): Promise<CycleSummary | null> {
+// Called both directly by the dashboard and internally by
+// getDashboardInsights() — cache() dedupes those into a single DB round
+// trip per request instead of running the same three queries twice.
+export const getCycleSummary = cache(async (): Promise<CycleSummary | null> => {
   const supabase = await createClient();
   const user = await getCurrentUser();
   if (!user) return null;
@@ -234,7 +239,7 @@ export async function getCycleSummary(): Promise<CycleSummary | null> {
     daysUntilNextPeriod: daysUntilNextPeriod(lastPeriodStart, avgCycleLength),
     daysSincePillStart,
   };
-}
+});
 
 export async function getCurrentWeatherForUser(): Promise<{ weather: CurrentWeather | null; city: string | null }> {
   const supabase = await createClient();
@@ -263,6 +268,22 @@ export async function getTodayPetCare(): Promise<PetCareLog | null> {
   const today = todayInAppTz();
   const { data } = await supabase
     .from("pet_care_logs")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("log_date", today)
+    .maybeSingle();
+
+  return data ?? null;
+}
+
+export async function getTodaySymptomLog(): Promise<SymptomLog | null> {
+  const supabase = await createClient();
+  const user = await getCurrentUser();
+  if (!user) return null;
+
+  const today = todayInAppTz();
+  const { data } = await supabase
+    .from("symptom_logs")
     .select("*")
     .eq("user_id", user.id)
     .eq("log_date", today)

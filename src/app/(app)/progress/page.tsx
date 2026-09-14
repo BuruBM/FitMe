@@ -4,6 +4,8 @@ import {
   getMeasurementTrend,
   getProfile,
   getRecentSleepLogs,
+  getTodaySummary,
+  getTodaySymptomLog,
   getWeeklyReview,
 } from "@/lib/queries";
 import { BADGES } from "@/lib/gamification";
@@ -16,14 +18,17 @@ import { WeeklyReviewCard } from "@/components/WeeklyReviewCard";
 import { FactorsPanel } from "@/components/FactorsPanel";
 
 export default async function ProgressPage() {
-  const [history, gamification, profile, sleepLogs, weeklyReview, measurementTrend] = await Promise.all([
-    getHistory(365),
-    getGamificationSummary(),
-    getProfile(),
-    getRecentSleepLogs(14),
-    getWeeklyReview(),
-    getMeasurementTrend(),
-  ]);
+  const [history, gamification, profile, sleepLogs, weeklyReview, measurementTrend, todaySummary, todaySymptomLog] =
+    await Promise.all([
+      getHistory(365),
+      getGamificationSummary(),
+      getProfile(),
+      getRecentSleepLogs(14),
+      getWeeklyReview(),
+      getMeasurementTrend(),
+      getTodaySummary(),
+      getTodaySymptomLog(),
+    ]);
 
   const earnedIds = new Set(gamification?.state.badges ?? []);
 
@@ -34,8 +39,8 @@ export default async function ProgressPage() {
       <WeeklyReviewCard review={weeklyReview} />
       <ProgressCharts history={history} />
       <FactorsPanel history={history} />
-      <SymptomQuickLog />
-      <WeightQuickLog currentWeightKg={profile?.weight_kg ?? null} />
+      <SymptomQuickLog existing={todaySymptomLog} />
+      <WeightQuickLog todayWeightKg={todaySummary.weightKg} lastKnownWeightKg={profile?.weight_kg ?? null} />
       <MeasurementsQuickLog latest={measurementTrend.latest} previous={measurementTrend.previous} />
       <SleepHistory logs={sleepLogs} />
 

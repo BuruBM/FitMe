@@ -286,6 +286,7 @@ function SaltShortcut({ label, mg, onPick }: { label: string; mg: number; onPick
 function AddItemPanel({ base, onDone }: { base: Base; onDone: () => void }) {
   const [multiplier, setMultiplier] = useState(1);
   const [mealType, setMealType] = useState<MealType>(guessMealType());
+  const [saveAsFavorite, setSaveAsFavorite] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const scaled = {
@@ -313,6 +314,7 @@ function AddItemPanel({ base, onDone }: { base: Base; onDone: () => void }) {
         sodiumMg: Math.round(scaled.sodium_mg),
         calciumMg: Math.round(scaled.calcium_mg),
         source: base.source,
+        saveAsFavorite,
       });
       onDone();
     });
@@ -357,6 +359,13 @@ function AddItemPanel({ base, onDone }: { base: Base; onDone: () => void }) {
         <span>Sodio: {Math.round(scaled.sodium_mg)}mg</span>
         <span>Calcio: {Math.round(scaled.calcium_mg)}mg</span>
       </div>
+
+      {base.source !== "favorite" && (
+        <label className="flex items-center gap-2 text-xs text-muted">
+          <input type="checkbox" checked={saveAsFavorite} onChange={(e) => setSaveAsFavorite(e.target.checked)} />
+          Guardar como favorito para la próxima
+        </label>
+      )}
 
       <button onClick={add} disabled={isPending} className="btn-primary">
         {isPending ? "Agregando..." : "Agregar"}

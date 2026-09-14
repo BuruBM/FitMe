@@ -26,8 +26,8 @@ export function ResetDataButton() {
         Borrar mis registros
       </h2>
       <p className="text-xs text-muted mb-3">
-        Borra toda la comida, agua, sueño, peso, entrenamientos, ciclo y check-ins que cargaste — útil para probar
-        la app sin dejar datos de prueba en tu historial. Tu perfil, objetivos y preferencias quedan igual.
+        Borra toda la comida, agua, sueño, peso, entrenamientos, ciclo y check-ins que cargaste. Tu perfil, objetivos
+        y preferencias quedan igual.
       </p>
       {confirming ? (
         <div className="space-y-2">

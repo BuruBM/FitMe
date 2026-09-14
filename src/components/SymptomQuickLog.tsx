@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { logSymptoms } from "@/lib/actions/tracking";
+import type { SymptomLog } from "@/lib/database.types";
 
 const BLOATING_LABELS = ["Nada", "Leve", "Moderado", "Mucho"];
 const VALENCE_OPTIONS = [
@@ -12,21 +13,30 @@ const VALENCE_OPTIONS = [
   { value: 2, emoji: "😄", label: "Muy positivo" },
 ];
 
-export function SymptomQuickLog() {
-  const [bloating, setBloating] = useState(0);
-  const [energy, setEnergy] = useState(3);
-  const [mood, setMood] = useState(3);
-  const [irritability, setIrritability] = useState(1);
-  const [sensitivityLevel, setSensitivityLevel] = useState(1);
-  const [alcoholUnits, setAlcoholUnits] = useState(0);
-  const [tobaccoUsed, setTobaccoUsed] = useState(false);
-  const [socialMediaMinutes, setSocialMediaMinutes] = useState(60);
-  const [socialContact, setSocialContact] = useState(0);
-  const [stressLevel, setStressLevel] = useState(3);
-  const [notes, setNotes] = useState("");
-  const [notesValence, setNotesValence] = useState<number | null>(null);
+export function SymptomQuickLog({ existing }: { existing: SymptomLog | null }) {
+  const loggedToday = existing != null;
+  const [open, setOpen] = useState(false);
+  const [bloating, setBloating] = useState<number | null>(existing?.bloating ?? null);
+  const [energy, setEnergy] = useState<number | null>(existing?.energy ?? null);
+  const [mood, setMood] = useState<number | null>(existing?.mood ?? null);
+  const [irritability, setIrritability] = useState<number | null>(existing?.irritability ?? null);
+  const [sensitivityLevel, setSensitivityLevel] = useState<number | null>(existing?.sensitivity_level ?? null);
+  const [alcoholUnits, setAlcoholUnits] = useState(existing?.alcohol_units ?? 0);
+  const [tobaccoUsed, setTobaccoUsed] = useState(existing?.tobacco_used ?? false);
+  const [socialMediaMinutes, setSocialMediaMinutes] = useState(existing?.social_media_minutes ?? 0);
+  const [socialContact, setSocialContact] = useState<number | null>(existing?.social_contact ?? null);
+  const [stressLevel, setStressLevel] = useState<number | null>(existing?.stress_level ?? null);
+  const [notes, setNotes] = useState(existing?.notes ?? "");
+  const [notesValence, setNotesValence] = useState<number | null>(existing?.notes_valence ?? null);
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
+
+  const hasAnyValue =
+    [bloating, energy, mood, irritability, sensitivityLevel, stressLevel, socialContact].some((v) => v != null) ||
+    alcoholUnits > 0 ||
+    tobaccoUsed ||
+    socialMediaMinutes > 0 ||
+    notes.trim().length > 0;
 
   function save() {
     startTransition(async () => {
@@ -45,8 +55,30 @@ export function SymptomQuickLog() {
         notes: notes || undefined,
       });
       setSaved(true);
+      setOpen(false);
       setTimeout(() => setSaved(false), 2000);
     });
+  }
+
+  if (!open) {
+    return (
+      <section className="card p-4">
+        <h2 className="font-semibold text-sm mb-1">¿Cómo te sentís hoy?</h2>
+        <p className="text-xs text-muted mb-2">
+          {saved
+            ? "Guardado ✓"
+            : loggedToday
+              ? "Ya completaste tu check-in de hoy ✓ — podés editarlo si cambió algo."
+              : "Todavía no cargaste cómo te sentís hoy."}
+        </p>
+        <button
+          onClick={() => setOpen(true)}
+          className="w-full rounded-lg border border-card-border text-xs py-1.5 font-medium hover:border-primary"
+        >
+          {loggedToday ? "Editar" : "Completar"}
+        </button>
+      </section>
+    );
   }
 
   return (
@@ -147,13 +179,21 @@ export function SymptomQuickLog() {
         )}
       </div>
 
-      <button
-        onClick={save}
-        disabled={isPending}
-        className="w-full rounded-lg bg-primary text-primary-foreground text-sm font-medium py-2 disabled:opacity-50"
-      >
-        {saved ? "Guardado ✓" : "Guardar"}
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={save}
+          disabled={isPending || !hasAnyValue}
+          className="flex-1 rounded-lg bg-primary text-primary-foreground text-sm font-medium py-2 disabled:opacity-50"
+        >
+          Guardar
+        </button>
+        <button
+          onClick={() => setOpen(false)}
+          className="rounded-lg border border-card-border text-sm px-4 py-2 text-muted"
+        >
+          Cancelar
+        </button>
+      </div>
 
       <style jsx global>{`
         .stepper {
@@ -177,7 +217,7 @@ function RatingRow({
   max = 5,
 }: {
   label: string;
-  value: number;
+  value: number | null;
   onChange: (v: number) => void;
   min?: number;
   max?: number;

@@ -55,6 +55,32 @@ interface Bucket {
   value: number | null;
 }
 
+interface DotProps {
+  cx?: number;
+  cy?: number;
+  payload?: Bucket;
+  onSelect: (date: string) => void;
+  selectedDate: string | null;
+  color: string;
+}
+
+// Recharts fires the chart's own onClick for any tap inside the plot area,
+// snapping to the nearest x — on mobile that reads as "the whole chart is
+// one giant button" and can select a different day than the one tapped.
+// Making only the dots themselves clickable (with a generous invisible
+// touch target) fixes both: taps elsewhere do nothing, and the day you get
+// is the one you actually tapped.
+function ClickableDot({ cx, cy, payload, onSelect, selectedDate, color }: DotProps) {
+  if (cx == null || cy == null || !payload?.date || payload.value == null) return null;
+  const isSelected = payload.date === selectedDate;
+  return (
+    <g onClick={() => onSelect(payload.date!)} style={{ cursor: "pointer" }}>
+      <circle cx={cx} cy={cy} r={14} fill="transparent" />
+      <circle cx={cx} cy={cy} r={isSelected ? 6 : 4} fill={color} stroke="var(--card)" strokeWidth={isSelected ? 2 : 0} />
+    </g>
+  );
+}
+
 function average(nums: number[]): number | null {
   if (nums.length === 0) return null;
   return Math.round((nums.reduce((a, b) => a + b, 0) / nums.length) * 10) / 10;
@@ -96,10 +122,8 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
 
   const selectedPoint = selectedDate ? sliced.find((p) => p.date === selectedDate) ?? null : null;
 
-  function handleChartClick(e: unknown) {
-    if (!isDaily) return;
-    const payload = (e as { activePayload?: { payload: Bucket }[] } | null)?.activePayload?.[0]?.payload;
-    if (payload?.date) setSelectedDate(payload.date === selectedDate ? null : payload.date);
+  function selectDate(date: string) {
+    setSelectedDate(date === selectedDate ? null : date);
   }
 
   return (
@@ -170,12 +194,7 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
         {hasData ? (
           <div className="h-44">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={buckets}
-                onClick={handleChartClick}
-                margin={{ top: 5, right: 8, left: -20, bottom: 0 }}
-                style={{ cursor: isDaily ? "pointer" : "default" }}
-              >
+              <LineChart data={buckets} margin={{ top: 5, right: 8, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="var(--muted)" />
                 <YAxis
@@ -195,8 +214,20 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
                   name={metric.label}
                   stroke={metric.color}
                   strokeWidth={2.5}
-                  dot={{ r: 4, cursor: isDaily ? "pointer" : "default" }}
-                  activeDot={{ r: 6 }}
+                  dot={
+                    isDaily
+                      ? (dotProps: unknown) => (
+                          <ClickableDot
+                            key={(dotProps as { key?: string }).key}
+                            {...(dotProps as DotProps)}
+                            onSelect={selectDate}
+                            selectedDate={selectedDate}
+                            color={metric.color}
+                          />
+                        )
+                      : { r: 3 }
+                  }
+                  activeDot={isDaily ? false : { r: 6 }}
                   connectNulls
                 />
               </LineChart>

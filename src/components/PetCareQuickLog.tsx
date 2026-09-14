@@ -20,10 +20,12 @@ export function PetCareQuickLog({ today, pausedUntil }: { today: PetCareLog | nu
   const isPaused = pauseUntil != null && pauseUntil >= todayInAppTz();
 
   function toggle(current: boolean, setter: (v: boolean) => void, field: keyof ReturnType<typeof snapshot>) {
+    const before = snapshot();
+    const wasComplete = before.miloMedication && before.miloSupplement && before.zoeMedication && before.zoeSupplement;
     const next = !current;
     setter(next);
-    const state = { ...snapshot(), [field]: next };
-    startTransition(() => logPetCare(state));
+    const state = { ...before, [field]: next };
+    startTransition(() => logPetCare(state, wasComplete));
   }
 
   function snapshot() {
@@ -98,7 +100,6 @@ export function PetCareQuickLog({ today, pausedUntil }: { today: PetCareLog | nu
             supplement={miloSupplement}
             onToggleMedication={() => toggle(miloMedication, setMiloMedication, "miloMedication")}
             onToggleSupplement={() => toggle(miloSupplement, setMiloSupplement, "miloSupplement")}
-            disabled={isPending}
           />
           <PetColumn
             name="Zoe"
@@ -106,7 +107,6 @@ export function PetCareQuickLog({ today, pausedUntil }: { today: PetCareLog | nu
             supplement={zoeSupplement}
             onToggleMedication={() => toggle(zoeMedication, setZoeMedication, "zoeMedication")}
             onToggleSupplement={() => toggle(zoeSupplement, setZoeSupplement, "zoeSupplement")}
-            disabled={isPending}
           />
         </div>
       )}
@@ -120,42 +120,29 @@ function PetColumn({
   supplement,
   onToggleMedication,
   onToggleSupplement,
-  disabled,
 }: {
   name: string;
   medication: boolean;
   supplement: boolean;
   onToggleMedication: () => void;
   onToggleSupplement: () => void;
-  disabled: boolean;
 }) {
   return (
     <div>
       <p className="text-xs font-medium text-muted mb-1.5">{name}</p>
       <div className="space-y-1.5">
-        <ToggleButton label="Medicación" checked={medication} onClick={onToggleMedication} disabled={disabled} />
-        <ToggleButton label="Suplemento" checked={supplement} onClick={onToggleSupplement} disabled={disabled} />
+        <ToggleButton label="Medicación" checked={medication} onClick={onToggleMedication} />
+        <ToggleButton label="Suplemento" checked={supplement} onClick={onToggleSupplement} />
       </div>
     </div>
   );
 }
 
-function ToggleButton({
-  label,
-  checked,
-  onClick,
-  disabled,
-}: {
-  label: string;
-  checked: boolean;
-  onClick: () => void;
-  disabled: boolean;
-}) {
+function ToggleButton({ label, checked, onClick }: { label: string; checked: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      disabled={disabled}
-      className={`w-full text-xs rounded-md py-1.5 border disabled:opacity-50 ${
+      className={`w-full text-xs rounded-md py-1.5 border ${
         checked ? "bg-primary text-primary-foreground border-primary" : "border-card-border text-muted"
       }`}
     >

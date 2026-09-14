@@ -16,19 +16,42 @@ export function ManualTargets({
   carbTargetG: number | null;
   fatTargetG: number | null;
 }) {
-  const [calories, setCalories] = useState(calorieTarget ?? 1800);
-  const [protein, setProtein] = useState(proteinTargetG ?? 90);
-  const [carbs, setCarbs] = useState(carbTargetG ?? 180);
-  const [fat, setFat] = useState(fatTargetG ?? 55);
+  const [open, setOpen] = useState(false);
+  const [calories, setCalories] = useState(String(calorieTarget ?? 1800));
+  const [protein, setProtein] = useState(String(proteinTargetG ?? 90));
+  const [carbs, setCarbs] = useState(String(carbTargetG ?? 180));
+  const [fat, setFat] = useState(String(fatTargetG ?? 55));
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
 
   function save() {
     startTransition(async () => {
-      await updateTargetsManually({ calorieTarget: calories, proteinTargetG: protein, carbTargetG: carbs, fatTargetG: fat });
+      await updateTargetsManually({
+        calorieTarget: Number(calories) || 0,
+        proteinTargetG: Number(protein) || 0,
+        carbTargetG: Number(carbs) || 0,
+        fatTargetG: Number(fat) || 0,
+      });
       setSaved(true);
+      setOpen(false);
       setTimeout(() => setSaved(false), 2000);
     });
+  }
+
+  if (!open) {
+    return (
+      <section className="card p-4">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold text-sm flex items-center gap-2">
+            <IconBadge icon={<SlidersHorizontal size={13} />} tint="var(--tint-food)" color="var(--icon-food)" size={24} />
+            Ajustá tus objetivos a mano
+          </h2>
+          <button onClick={() => setOpen(true)} className="text-xs font-medium text-primary shrink-0">
+            {saved ? "Guardado ✓" : "Ajustar"}
+          </button>
+        </div>
+      </section>
+    );
   }
 
   return (
@@ -47,25 +70,33 @@ export function ManualTargets({
         <Field label="Carbohidratos (g)" value={carbs} onChange={setCarbs} />
         <Field label="Grasas (g)" value={fat} onChange={setFat} />
       </div>
-      <button
-        onClick={save}
-        disabled={isPending}
-        className="w-full rounded-lg bg-primary text-primary-foreground text-sm font-medium py-2 mt-3 disabled:opacity-50"
-      >
-        {saved ? "Guardado ✓" : "Guardar"}
-      </button>
+      <div className="flex gap-2 mt-3">
+        <button
+          onClick={save}
+          disabled={isPending}
+          className="flex-1 rounded-lg bg-primary text-primary-foreground text-sm font-medium py-2 disabled:opacity-50"
+        >
+          Guardar
+        </button>
+        <button
+          onClick={() => setOpen(false)}
+          className="rounded-lg border border-card-border text-sm px-4 py-2 text-muted"
+        >
+          Cancelar
+        </button>
+      </div>
     </section>
   );
 }
 
-function Field({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+function Field({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
       <label className="text-xs text-muted">{label}</label>
       <input
         type="number"
         value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
+        onChange={(e) => onChange(e.target.value)}
         className="mt-1 w-full rounded-lg border border-card-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
       />
     </div>

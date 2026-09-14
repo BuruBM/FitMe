@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { logMeasurements } from "@/lib/actions/tracking";
+import { todayInAppTz } from "@/lib/date";
 import type { BodyMeasurement } from "@/lib/database.types";
 
 const FIELDS = [
@@ -27,10 +28,12 @@ export function MeasurementsQuickLog({
   latest: BodyMeasurement | null;
   previous: BodyMeasurement | null;
 }) {
-  const [waist, setWaist] = useState(latest?.waist_cm?.toString() ?? "");
-  const [hip, setHip] = useState(latest?.hip_cm?.toString() ?? "");
-  const [thigh, setThigh] = useState(latest?.thigh_cm?.toString() ?? "");
-  const [arm, setArm] = useState(latest?.arm_cm?.toString() ?? "");
+  const loggedToday = latest?.log_date === todayInAppTz();
+  const [open, setOpen] = useState(false);
+  const [waist, setWaist] = useState("");
+  const [hip, setHip] = useState("");
+  const [thigh, setThigh] = useState("");
+  const [arm, setArm] = useState("");
   const [showExtra, setShowExtra] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
@@ -38,12 +41,21 @@ export function MeasurementsQuickLog({
   const values = { waist, hip, thigh, arm };
   const setters = { waist: setWaist, hip: setHip, thigh: setThigh, arm: setArm };
 
+  function startEditing() {
+    setWaist(loggedToday ? (latest?.waist_cm?.toString() ?? "") : "");
+    setHip(loggedToday ? (latest?.hip_cm?.toString() ?? "") : "");
+    setThigh(loggedToday ? (latest?.thigh_cm?.toString() ?? "") : "");
+    setArm(loggedToday ? (latest?.arm_cm?.toString() ?? "") : "");
+    setOpen(true);
+  }
+
   function save() {
     const n = (v: string) => (v ? Number(v) : null);
     if (!waist && !hip && !thigh && !arm) return;
     startTransition(async () => {
       await logMeasurements(n(waist), n(hip), n(thigh), n(arm));
       setSaved(true);
+      setOpen(false);
       setTimeout(() => setSaved(false), 2000);
     });
   }
@@ -52,49 +64,68 @@ export function MeasurementsQuickLog({
 
   return (
     <section className="card p-4">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="font-semibold text-sm">Medidas corporales</h2>
-        <button onClick={() => setShowExtra((v) => !v)} className="text-xs font-medium text-primary">
-          {showExtra ? "Menos medidas" : "+ Muslo y brazo"}
+      <h2 className="font-semibold text-sm mb-1">Medidas corporales</h2>
+      <p className="text-xs text-muted mb-2">
+        {loggedToday
+          ? `Registraste medidas hoy ✓${waistDelta ? ` · Cintura: ${waistDelta}` : ""}`
+          : latest
+            ? `Última medición: cintura ${latest.waist_cm ?? "—"}cm el ${new Date(latest.log_date + "T00:00:00").toLocaleDateString("es-AR")}.`
+            : "Todavía no cargaste medidas."}
+      </p>
+
+      {!open ? (
+        <button
+          onClick={startEditing}
+          className="w-full rounded-lg border border-card-border text-xs py-1.5 font-medium hover:border-primary"
+        >
+          {saved ? "Guardado ✓" : loggedToday ? "Editar" : "Registrar medidas de hoy"}
         </button>
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        {FIELDS.map((f) => (
-          <div key={f.key}>
-            <label className="text-xs text-muted">{f.label} (cm)</label>
-            <input
-              type="number"
-              step="0.5"
-              value={values[f.key]}
-              onChange={(e) => setters[f.key](e.target.value)}
-              placeholder={f.placeholder}
-              className="mt-1 w-full rounded-lg border border-card-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-            />
+      ) : (
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-muted">{loggedToday ? "Editando hoy" : "Nueva medición"}</span>
+            <button onClick={() => setShowExtra((v) => !v)} className="text-xs font-medium text-primary">
+              {showExtra ? "Menos medidas" : "+ Muslo y brazo"}
+            </button>
           </div>
-        ))}
-        {showExtra &&
-          EXTRA_FIELDS.map((f) => (
-            <div key={f.key}>
-              <label className="text-xs text-muted">{f.label} (cm)</label>
-              <input
-                type="number"
-                step="0.5"
-                value={values[f.key]}
-                onChange={(e) => setters[f.key](e.target.value)}
-                placeholder={f.placeholder}
-                className="mt-1 w-full rounded-lg border border-card-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-              />
-            </div>
-          ))}
-      </div>
-      {waistDelta && <p className="text-[11px] text-muted mt-2">Cintura: {waistDelta}</p>}
-      <button
-        onClick={save}
-        disabled={isPending || (!waist && !hip && !thigh && !arm)}
-        className="mt-3 w-full rounded-lg bg-primary text-primary-foreground text-sm font-medium py-2 disabled:opacity-50"
-      >
-        {saved ? "Guardado ✓" : "Guardar"}
-      </button>
+          <div className="grid grid-cols-2 gap-2">
+            {FIELDS.map((f) => (
+              <div key={f.key}>
+                <label className="text-xs text-muted">{f.label} (cm)</label>
+                <input
+                  type="number"
+                  step="0.5"
+                  value={values[f.key]}
+                  onChange={(e) => setters[f.key](e.target.value)}
+                  placeholder={f.placeholder}
+                  className="mt-1 w-full rounded-lg border border-card-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+              </div>
+            ))}
+            {showExtra &&
+              EXTRA_FIELDS.map((f) => (
+                <div key={f.key}>
+                  <label className="text-xs text-muted">{f.label} (cm)</label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={values[f.key]}
+                    onChange={(e) => setters[f.key](e.target.value)}
+                    placeholder={f.placeholder}
+                    className="mt-1 w-full rounded-lg border border-card-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                  />
+                </div>
+              ))}
+          </div>
+          <button
+            onClick={save}
+            disabled={isPending || (!waist && !hip && !thigh && !arm)}
+            className="mt-3 w-full rounded-lg bg-primary text-primary-foreground text-sm font-medium py-2 disabled:opacity-50"
+          >
+            Guardar
+          </button>
+        </div>
+      )}
     </section>
   );
 }

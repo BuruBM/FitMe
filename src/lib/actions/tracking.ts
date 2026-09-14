@@ -7,6 +7,7 @@ import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { awardXp } from "@/lib/actions/gamification-helpers";
 import { XP_RULES } from "@/lib/gamification";
 import { fetchCurrentWeather } from "@/lib/weather";
+import { estimateSleepQuality } from "@/lib/sleep";
 
 async function requireUser() {
   const user = await getCurrentUser();
@@ -35,7 +36,6 @@ export async function logWater(amountMl: number) {
 // ---------------- sleep ----------------
 export interface SleepInput {
   hours: number;
-  quality: number;
   bedtime?: string;
   wakeUps?: number;
   notes?: string;
@@ -50,7 +50,7 @@ export async function logSleep(input: SleepInput) {
       user_id: user.id,
       log_date: today,
       hours: input.hours,
-      quality: input.quality,
+      quality: estimateSleepQuality(input.hours, input.wakeUps ?? 0),
       bedtime: input.bedtime ?? null,
       wake_ups: input.wakeUps ?? 0,
       notes: input.notes ?? null,
@@ -105,16 +105,16 @@ export async function logMeasurements(
 
 // ---------------- symptoms ----------------
 export interface SymptomInput {
-  bloating: number;
-  energy: number;
-  mood: number;
-  irritability: number;
-  sensitivityLevel: number;
+  bloating: number | null;
+  energy: number | null;
+  mood: number | null;
+  irritability: number | null;
+  sensitivityLevel: number | null;
   alcoholUnits: number;
   tobaccoUsed: boolean;
   socialMediaMinutes?: number;
-  socialContact?: number;
-  stressLevel?: number;
+  socialContact?: number | null;
+  stressLevel?: number | null;
   notesValence?: number;
   notes?: string;
 }

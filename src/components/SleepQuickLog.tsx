@@ -22,9 +22,9 @@ export function SleepQuickLog({
   const [bedtime, setBedtime] = useState(currentBedtime?.slice(0, 5) ?? "23:00");
   const [wakeUps, setWakeUps] = useState(currentWakeUps ?? 0);
 
-  function save(quality: number) {
+  function save() {
     startTransition(async () => {
-      await logSleep({ hours, quality, bedtime, wakeUps });
+      await logSleep({ hours, bedtime, wakeUps });
       setOpen(false);
     });
   }
@@ -89,19 +89,13 @@ export function SleepQuickLog({
               </button>
             </div>
           </div>
-          <div className="flex gap-1">
-            {[1, 2, 3, 4, 5].map((q) => (
-              <button
-                key={q}
-                disabled={isPending}
-                onClick={() => save(q)}
-                className="flex-1 text-xs rounded-md border border-card-border py-1 hover:border-primary disabled:opacity-50"
-                title="Calidad del sueño"
-              >
-                {"★".repeat(q)}
-              </button>
-            ))}
-          </div>
+          <button
+            onClick={save}
+            disabled={isPending}
+            className="w-full rounded-lg bg-primary text-primary-foreground text-sm font-medium py-2 disabled:opacity-50"
+          >
+            Guardar
+          </button>
         </div>
       )}
     </div>

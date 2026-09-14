@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { Cloud } from "lucide-react";
 import {
   getCurrentWeatherForUser,
   getCycleSummary,
@@ -18,13 +20,32 @@ import { CycleCard } from "@/components/CycleCard";
 import { WeatherCard } from "@/components/WeatherCard";
 import { PetCareQuickLog } from "@/components/PetCareQuickLog";
 import { InsightsBanner } from "@/components/InsightsBanner";
+import { IconBadge } from "@/components/IconBadge";
+
+// Weather is an external API call (Open-Meteo) that can be slow on a cold
+// cache — split into its own Suspense boundary so it doesn't hold up
+// everything else on the page from rendering.
+async function WeatherSection() {
+  const { weather, city } = await getCurrentWeatherForUser();
+  return <WeatherCard weather={weather} city={city} />;
+}
+
+function WeatherSkeleton() {
+  return (
+    <section className="card p-4 animate-pulse">
+      <div className="flex items-center gap-2 text-sm font-medium">
+        <IconBadge icon={<Cloud size={14} />} tint="var(--tint-weather)" color="var(--icon-weather)" size={26} />
+        <span className="h-3 w-20 rounded bg-card-border/40" />
+      </div>
+    </section>
+  );
+}
 
 export default async function DashboardPage() {
-  const [profile, summary, cycleSummary, weatherInfo, petCare, insights] = await Promise.all([
+  const [profile, summary, cycleSummary, petCare, insights] = await Promise.all([
     getProfile(),
     getTodaySummary(),
     getCycleSummary(),
-    getCurrentWeatherForUser(),
     getTodayPetCare(),
     getDashboardInsights(),
   ]);
@@ -93,7 +114,9 @@ export default async function DashboardPage() {
         />
       </section>
 
-      <WeatherCard weather={weatherInfo.weather} city={weatherInfo.city} />
+      <Suspense fallback={<WeatherSkeleton />}>
+        <WeatherSection />
+      </Suspense>
 
       {profile.tracks_cycle && cycleSummary && <CycleCard summary={cycleSummary} pcos={profile.pcos} />}
 

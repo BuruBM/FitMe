@@ -17,7 +17,7 @@ function isComplete(input: PetCareInput): boolean {
   return input.miloMedication && input.miloSupplement && input.zoeMedication && input.zoeSupplement;
 }
 
-export async function logPetCare(input: PetCareInput) {
+export async function logPetCare(input: PetCareInput, wasComplete: boolean) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -25,17 +25,6 @@ export async function logPetCare(input: PetCareInput) {
   if (!user) throw new Error("No autenticada");
 
   const today = todayInAppTz();
-
-  const { data: existing } = await supabase
-    .from("pet_care_logs")
-    .select("milo_medication, milo_supplement, zoe_medication, zoe_supplement")
-    .eq("user_id", user.id)
-    .eq("log_date", today)
-    .maybeSingle();
-
-  const wasComplete = existing
-    ? existing.milo_medication && existing.milo_supplement && existing.zoe_medication && existing.zoe_supplement
-    : false;
 
   const { error } = await supabase.from("pet_care_logs").upsert(
     {

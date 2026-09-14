@@ -18,7 +18,7 @@ const CATEGORIES: { value: Tip["category"]; label: string }[] = [
 ];
 
 export function RecommendationsPanel() {
-  const [category, setCategory] = useState<Tip["category"]>("hormonas");
+  const [category, setCategory] = useState<Tip["category"]>("proteína");
   const tips = TIPS.filter((t) => t.category === category);
 
   return (
