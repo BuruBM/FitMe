@@ -140,6 +140,7 @@ export interface ManualTargets {
   proteinTargetG: number;
   carbTargetG: number;
   fatTargetG: number;
+  waterTargetMl: number;
 }
 
 export async function updateTargetsManually(targets: ManualTargets) {
@@ -156,6 +157,7 @@ export async function updateTargetsManually(targets: ManualTargets) {
       protein_target_g: targets.proteinTargetG,
       carb_target_g: targets.carbTargetG,
       fat_target_g: targets.fatTargetG,
+      water_target_ml: targets.waterTargetMl,
     })
     .eq("id", user.id);
   if (error) throw error;

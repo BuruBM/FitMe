@@ -10,17 +10,20 @@ export function ManualTargets({
   proteinTargetG,
   carbTargetG,
   fatTargetG,
+  waterTargetMl,
 }: {
   calorieTarget: number | null;
   proteinTargetG: number | null;
   carbTargetG: number | null;
   fatTargetG: number | null;
+  waterTargetMl: number | null;
 }) {
   const [open, setOpen] = useState(false);
   const [calories, setCalories] = useState(String(calorieTarget ?? 1800));
   const [protein, setProtein] = useState(String(proteinTargetG ?? 90));
   const [carbs, setCarbs] = useState(String(carbTargetG ?? 180));
   const [fat, setFat] = useState(String(fatTargetG ?? 55));
+  const [water, setWater] = useState(String((waterTargetMl ?? 2000) / 1000));
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
 
@@ -31,6 +34,7 @@ export function ManualTargets({
         proteinTargetG: Number(protein) || 0,
         carbTargetG: Number(carbs) || 0,
         fatTargetG: Number(fat) || 0,
+        waterTargetMl: Math.round((Number(water) || 0) * 1000),
       });
       setSaved(true);
       setOpen(false);
@@ -69,6 +73,7 @@ export function ManualTargets({
         <Field label="Proteína (g)" value={protein} onChange={setProtein} />
         <Field label="Carbohidratos (g)" value={carbs} onChange={setCarbs} />
         <Field label="Grasas (g)" value={fat} onChange={setFat} />
+        <Field label="Agua (L)" value={water} onChange={setWater} step="0.1" />
       </div>
       <div className="flex gap-2 mt-3">
         <button
@@ -89,12 +94,23 @@ export function ManualTargets({
   );
 }
 
-function Field({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function Field({
+  label,
+  value,
+  onChange,
+  step,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  step?: string;
+}) {
   return (
     <div>
       <label className="text-xs text-muted">{label}</label>
       <input
         type="number"
+        step={step}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="mt-1 w-full rounded-lg border border-card-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"

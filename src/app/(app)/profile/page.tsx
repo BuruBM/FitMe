@@ -25,6 +25,7 @@ export default async function ProfilePage() {
         proteinTargetG={profile.protein_target_g}
         carbTargetG={profile.carb_target_g}
         fatTargetG={profile.fat_target_g}
+        waterTargetMl={profile.water_target_ml}
       />
       <CitySettings currentCity={profile.city} />
       <VacationSettings since={profile.vacation_since} until={profile.vacation_until} />
