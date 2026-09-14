@@ -30,6 +30,7 @@ interface Base {
   name: string;
   unit: string;
   refQty: number;
+  gramsPerUnit: number | null;
   calories: number;
   protein_g: number;
   carbs_g: number;
@@ -40,11 +41,19 @@ interface Base {
   source: "local_db" | "open_food_facts" | "favorite";
 }
 
+// Local DB entries like "Papa hervida (1 unidad mediana)" store the grams
+// that one unit actually weighs — showing it saves her from having to guess
+// what a "unidad mediana" means when she's the one weighing/estimating.
+function foodWeightNote(f: FoodItem): string {
+  return `${f.unit} ≈ ${f.quantity}g`;
+}
+
 function fromFoodItem(f: FoodItem): Base {
   return {
     name: f.name,
     unit: f.unit,
     refQty: 1,
+    gramsPerUnit: f.quantity,
     calories: f.calories,
     protein_g: f.protein_g,
     carbs_g: f.carbs_g,
@@ -61,6 +70,7 @@ function fromOffResult(r: OffResult): Base {
     name: r.name,
     unit: r.unit,
     refQty: 1,
+    gramsPerUnit: null,
     calories: r.calories,
     protein_g: r.protein_g,
     carbs_g: r.carbs_g,
@@ -77,6 +87,7 @@ function fromCustomFood(f: CustomFood): Base {
     name: f.name,
     unit: f.default_unit,
     refQty: f.default_quantity || 1,
+    gramsPerUnit: null,
     calories: f.calories,
     protein_g: f.protein_g,
     carbs_g: f.carbs_g,
@@ -197,7 +208,7 @@ function SearchTab({ hidden }: { hidden: Set<string> }) {
           <FoodResultRow
             key={f.id}
             name={f.name}
-            meta={`${Math.round(f.calories)} kcal · P${f.protein_g}g`}
+            meta={`${foodWeightNote(f)} · ${Math.round(f.calories)} kcal · P${f.protein_g}g`}
             note={f.favoriteFor}
             onClick={() => setSelected(fromFoodItem(f))}
           />
@@ -262,7 +273,7 @@ function FavoritesTab({
             <FoodResultRow
               key={f.id}
               name={f.name}
-              meta={`${Math.round(f.calories)} kcal · P${f.protein_g}g`}
+              meta={`${foodWeightNote(f)} · ${Math.round(f.calories)} kcal · P${f.protein_g}g`}
               onClick={() => setSelected(fromFoodItem(f))}
               onRemove={() => onHideDefault(f.id)}
             />
@@ -406,7 +417,10 @@ function AddItemPanel({ base, onDone }: { base: Base; onDone: () => void }) {
       <p className="font-medium text-sm">{base.name}</p>
 
       <div>
-        <label className="text-xs text-muted">Cantidad ({base.unit})</label>
+        <label className="text-xs text-muted">
+          Cantidad ({base.unit}
+          {base.gramsPerUnit ? ` ≈ ${base.gramsPerUnit}g` : ""})
+        </label>
         <div className="flex items-center gap-2 mt-1">
           <button
             onClick={() => setMultiplierInput(String(Math.max(0.1, Math.round((multiplier - 0.1) * 100) / 100)))}
@@ -446,6 +460,9 @@ function AddItemPanel({ base, onDone }: { base: Base; onDone: () => void }) {
       </div>
 
       <div className="rounded-lg bg-background border border-card-border px-3 py-2 text-xs grid grid-cols-2 gap-y-1">
+        {base.gramsPerUnit != null && (
+          <span className="col-span-2 font-medium">≈ {Math.round(base.gramsPerUnit * multiplier)}g en total</span>
+        )}
         <span>Calorías: {Math.round(scaled.calories)} kcal</span>
         <span>Proteína: {scaled.protein_g.toFixed(1)}g</span>
         <span>Carbs: {scaled.carbs_g.toFixed(1)}g</span>
@@ -505,7 +522,7 @@ function TextTab() {
                 <FoodResultRow
                   key={f.id}
                   name={f.name}
-                  meta={`${Math.round(f.calories)} kcal · P${f.protein_g}g`}
+                  meta={`${foodWeightNote(f)} · ${Math.round(f.calories)} kcal · P${f.protein_g}g`}
                   onClick={() => setSelected(fromFoodItem(f))}
                 />
               ))}
