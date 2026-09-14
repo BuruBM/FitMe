@@ -1,21 +1,20 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { getGamificationSummary } from "@/lib/queries";
 import { BottomNav } from "@/components/BottomNav";
 import { TopBar } from "@/components/TopBar";
 import { BadgeToast } from "@/components/BadgeToast";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase.from("profiles").select("onboarded, full_name").eq("id", user.id).single();
+  const supabase = await createClient();
+  const [{ data: profile }, gamification] = await Promise.all([
+    supabase.from("profiles").select("onboarded, full_name").eq("id", user.id).single(),
+    getGamificationSummary(),
+  ]);
   if (!profile?.onboarded) redirect("/onboarding");
-
-  const gamification = await getGamificationSummary();
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">

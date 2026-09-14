@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { shiftDateStr, todayInAppTz } from "@/lib/date";
 import { evaluateNewBadges, type BadgeContext } from "@/lib/gamification";
 import {
@@ -23,9 +23,7 @@ import type {
 
 export async function getProfile(): Promise<Profile | null> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) return null;
 
   const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
@@ -50,9 +48,7 @@ export interface TodaySummary {
 
 export async function getTodaySummary(): Promise<TodaySummary> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   const today = todayInAppTz();
 
   const empty: TodaySummary = {
@@ -114,9 +110,7 @@ export interface GamificationSummary {
 
 export async function getGamificationSummary(): Promise<GamificationSummary | null> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) return null;
 
   const { data: state } = await supabase
@@ -208,9 +202,7 @@ export interface CycleSummary {
 
 export async function getCycleSummary(): Promise<CycleSummary | null> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) return null;
 
   const today = todayInAppTz();
@@ -246,9 +238,7 @@ export async function getCycleSummary(): Promise<CycleSummary | null> {
 
 export async function getCurrentWeatherForUser(): Promise<{ weather: CurrentWeather | null; city: string | null }> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) return { weather: null, city: null };
 
   const { data: profile } = await supabase
@@ -267,9 +257,7 @@ export async function getCurrentWeatherForUser(): Promise<{ weather: CurrentWeat
 
 export async function getTodayPetCare(): Promise<PetCareLog | null> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) return null;
 
   const today = todayInAppTz();
@@ -285,9 +273,7 @@ export async function getTodayPetCare(): Promise<PetCareLog | null> {
 
 export async function getRecentFoodLogs(days = 14): Promise<FoodLog[]> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) return [];
 
   const today = todayInAppTz();
@@ -306,9 +292,7 @@ export async function getRecentFoodLogs(days = 14): Promise<FoodLog[]> {
 
 export async function getRecentSleepLogs(days = 14): Promise<SleepLog[]> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) return [];
 
   const since = shiftDateStr(todayInAppTz(), -(days - 1));
@@ -329,9 +313,7 @@ export interface MeasurementTrend {
 
 export async function getMeasurementTrend(): Promise<MeasurementTrend> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) return { latest: null, previous: null };
 
   const { data } = await supabase
@@ -346,9 +328,7 @@ export async function getMeasurementTrend(): Promise<MeasurementTrend> {
 
 export async function getRecentWorkoutLogs(days = 21): Promise<WorkoutLog[]> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) return [];
 
   const since = shiftDateStr(todayInAppTz(), -(days - 1));
@@ -364,9 +344,7 @@ export async function getRecentWorkoutLogs(days = 21): Promise<WorkoutLog[]> {
 
 export async function getDashboardInsights(): Promise<Insight[]> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) return [];
 
   const today = todayInAppTz();
@@ -486,9 +464,7 @@ function scale1to5(value: number): number {
 
 export async function getHistory(days = 14): Promise<HistoryPoint[]> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) return [];
 
   const today = todayInAppTz();
@@ -627,9 +603,7 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
 
 export async function getWeeklyReview(): Promise<WeeklyReview | null> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) return null;
 
   const [{ data: profile }, history] = await Promise.all([
