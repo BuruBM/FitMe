@@ -361,7 +361,8 @@ function SaltShortcut({ label, mg, onPick }: { label: string; mg: number; onPick
 }
 
 function AddItemPanel({ base, onDone }: { base: Base; onDone: () => void }) {
-  const [multiplier, setMultiplier] = useState(1);
+  const [multiplierInput, setMultiplierInput] = useState("1");
+  const multiplier = Number(multiplierInput) || 0;
   const [mealType, setMealType] = useState<MealType>(guessMealType());
   const [saveAsFavorite, setSaveAsFavorite] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -407,11 +408,27 @@ function AddItemPanel({ base, onDone }: { base: Base; onDone: () => void }) {
       <div>
         <label className="text-xs text-muted">Cantidad ({base.unit})</label>
         <div className="flex items-center gap-2 mt-1">
-          <button onClick={() => setMultiplier((m) => Math.max(0.25, m - 0.25))} className="stepper">
+          <button
+            onClick={() => setMultiplierInput(String(Math.max(0.1, Math.round((multiplier - 0.1) * 100) / 100)))}
+            className="stepper"
+            type="button"
+          >
             −
           </button>
-          <span className="w-14 text-center text-sm font-medium">{multiplier}x</span>
-          <button onClick={() => setMultiplier((m) => m + 0.25)} className="stepper">
+          <input
+            type="number"
+            step="0.05"
+            min="0"
+            value={multiplierInput}
+            onChange={(e) => setMultiplierInput(e.target.value)}
+            className="w-16 text-center text-sm font-medium rounded-lg border border-card-border bg-background py-1.5 outline-none focus:border-primary"
+          />
+          <span className="text-sm text-muted">x</span>
+          <button
+            onClick={() => setMultiplierInput(String(Math.round((multiplier + 0.1) * 100) / 100))}
+            className="stepper"
+            type="button"
+          >
             +
           </button>
         </div>
@@ -444,7 +461,7 @@ function AddItemPanel({ base, onDone }: { base: Base; onDone: () => void }) {
         </label>
       )}
 
-      <button onClick={add} disabled={isPending} className="btn-primary">
+      <button onClick={add} disabled={isPending || multiplier <= 0} className="btn-primary">
         {isPending ? "Agregando..." : "Agregar"}
       </button>
 
