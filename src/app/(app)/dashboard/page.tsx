@@ -5,6 +5,7 @@ import {
   getCurrentWeatherForUser,
   getCycleSummary,
   getDashboardInsights,
+  getPeriodHistory,
   getProfile,
   getTodayPetCare,
   getTodaySummary,
@@ -42,12 +43,13 @@ function WeatherSkeleton() {
 }
 
 export default async function DashboardPage() {
-  const [profile, summary, cycleSummary, petCare, insights] = await Promise.all([
+  const [profile, summary, cycleSummary, petCare, insights, periodHistory] = await Promise.all([
     getProfile(),
     getTodaySummary(),
     getCycleSummary(),
     getTodayPetCare(),
     getDashboardInsights(),
+    getPeriodHistory(),
   ]);
 
   if (!profile) return null;
@@ -118,7 +120,9 @@ export default async function DashboardPage() {
         <WeatherSection />
       </Suspense>
 
-      {profile.tracks_cycle && cycleSummary && <CycleCard summary={cycleSummary} pcos={profile.pcos} />}
+      {profile.tracks_cycle && cycleSummary && (
+        <CycleCard summary={cycleSummary} pcos={profile.pcos} history={periodHistory} />
+      )}
 
       {profile.tracks_pets && <PetCareQuickLog today={petCare} pausedUntil={profile.pet_care_paused_until} />}
 

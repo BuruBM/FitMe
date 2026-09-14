@@ -8,15 +8,24 @@ import { todayInAppTz } from "@/lib/date";
 import type { CycleSummary } from "@/lib/queries";
 import { IconBadge } from "@/components/IconBadge";
 
-export function CycleCard({ summary, pcos }: { summary: CycleSummary; pcos: boolean }) {
+function formatDate(dateStr: string): string {
+  return new Date(dateStr + "T00:00:00").toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" });
+}
+
+export function CycleCard({ summary, pcos, history }: { summary: CycleSummary; pcos: boolean; history: string[] }) {
   const [isPending, startTransition] = useTransition();
   const [confirming, setConfirming] = useState(false);
   const [periodDate, setPeriodDate] = useState(todayInAppTz());
   const [pillTaken, setPillTakenLocal] = useState(summary.pillTakenToday);
+  const [historyLocal, setHistoryLocal] = useState(history);
+  const [showHistory, setShowHistory] = useState(false);
+
+  const hasHistory = historyLocal.length > 0;
 
   function registerPeriod() {
     startTransition(async () => {
       await logPeriodStart(periodDate);
+      setHistoryLocal((prev) => [...new Set([periodDate, ...prev])].sort().reverse());
       setConfirming(false);
     });
   }
@@ -55,7 +64,7 @@ export function CycleCard({ summary, pcos }: { summary: CycleSummary; pcos: bool
           )}
         </>
       ) : (
-        <p className="text-xs text-muted mt-1">Registrá el inicio de tu último período para verlo acá.</p>
+        <p className="text-xs text-muted mt-1">Registrá el inicio de tu último período para empezar a hacer el seguimiento.</p>
       )}
       {pcos && (
         <p className="text-[11px] text-muted mt-0.5">Es una estimación: con SOP el ciclo puede variar bastante.</p>
@@ -73,6 +82,11 @@ export function CycleCard({ summary, pcos }: { summary: CycleSummary; pcos: bool
                 onChange={(e) => setPeriodDate(e.target.value)}
                 className="w-full rounded-lg border border-card-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
               />
+              {hasHistory && (
+                <p className="text-[11px] text-muted mt-1">
+                  Esto agrega un registro nuevo — tus períodos anteriores quedan como están.
+                </p>
+              )}
             </div>
             <div className="flex gap-2">
               <button
@@ -98,10 +112,27 @@ export function CycleCard({ summary, pcos }: { summary: CycleSummary; pcos: bool
             }}
             className="w-full rounded-lg border border-card-border text-xs font-medium py-2 hover:border-primary"
           >
-            Registrar inicio de período
+            {hasHistory ? "Registrar período de este mes" : "Registrar mi último período"}
           </button>
         )}
       </div>
+
+      {hasHistory && (
+        <div className="mt-2">
+          <button onClick={() => setShowHistory((v) => !v)} className="text-xs font-medium text-primary">
+            {showHistory ? "Ocultar historial" : `Ver historial (${historyLocal.length})`}
+          </button>
+          {showHistory && (
+            <ul className="mt-1.5 space-y-1">
+              {historyLocal.map((date) => (
+                <li key={date} className="text-xs text-muted">
+                  {formatDate(date)}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       {summary.onBirthControl && (
         <button

@@ -241,6 +241,25 @@ export const getCycleSummary = cache(async (): Promise<CycleSummary | null> => {
   };
 });
 
+// Every period start she's logged is kept (logPeriodStart upserts by date,
+// it never overwrites a different date) — this surfaces that history so
+// logging this month's start doesn't read as silently replacing the
+// original one.
+export async function getPeriodHistory(limit = 12): Promise<string[]> {
+  const supabase = await createClient();
+  const user = await getCurrentUser();
+  if (!user) return [];
+
+  const { data } = await supabase
+    .from("cycle_logs")
+    .select("period_start_date")
+    .eq("user_id", user.id)
+    .order("period_start_date", { ascending: false })
+    .limit(limit);
+
+  return (data ?? []).map((r) => r.period_start_date);
+}
+
 export async function getCurrentWeatherForUser(): Promise<{ weather: CurrentWeather | null; city: string | null }> {
   const supabase = await createClient();
   const user = await getCurrentUser();

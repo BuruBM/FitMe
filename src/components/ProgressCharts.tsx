@@ -108,7 +108,7 @@ function bucketize(points: HistoryPoint[], period: Period, metricKey: MetricKey)
 }
 
 export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
-  const [period, setPeriod] = useState<Period>("mes");
+  const [period, setPeriod] = useState<Period>("semana");
   const [metricKey, setMetricKey] = useState<MetricKey>("wellness");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showWellnessInfo, setShowWellnessInfo] = useState(false);
@@ -196,7 +196,7 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={buckets} margin={{ top: 5, right: 16, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="var(--muted)" />
+                <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="var(--muted)" padding={{ left: 12, right: 12 }} />
                 <YAxis
                   domain={metric.domain}
                   tick={{ fontSize: 11 }}
