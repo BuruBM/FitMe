@@ -7,7 +7,7 @@ import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { awardXp } from "@/lib/actions/gamification-helpers";
 import { XP_RULES } from "@/lib/gamification";
 import { fetchCurrentWeather } from "@/lib/weather";
-import { estimateSleepQuality } from "@/lib/sleep";
+import { estimateSleepQuality, computeSleepHours } from "@/lib/sleep";
 
 async function requireUser() {
   const user = await getCurrentUser();
@@ -41,8 +41,8 @@ export async function logWater(amountMl: number) {
 
 // ---------------- sleep ----------------
 export interface SleepInput {
-  hours: number;
-  bedtime?: string;
+  bedtime: string;
+  wakeTime: string;
   wakeUps?: number;
   notes?: string;
 }
@@ -50,14 +50,15 @@ export interface SleepInput {
 export async function logSleep(input: SleepInput) {
   const { supabase, user } = await requireUser();
   const today = todayInAppTz();
+  const hours = computeSleepHours(input.bedtime, input.wakeTime);
 
   const { error } = await supabase.from("sleep_logs").upsert(
     {
       user_id: user.id,
       log_date: today,
-      hours: input.hours,
-      quality: estimateSleepQuality(input.hours, input.wakeUps ?? 0),
-      bedtime: input.bedtime ?? null,
+      hours,
+      quality: estimateSleepQuality(hours, input.wakeUps ?? 0),
+      bedtime: input.bedtime,
       wake_ups: input.wakeUps ?? 0,
       notes: input.notes ?? null,
     },

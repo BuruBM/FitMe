@@ -7,6 +7,7 @@ import { CycleSettings } from "@/components/CycleSettings";
 import { CitySettings } from "@/components/CitySettings";
 import { ManualTargets } from "@/components/ManualTargets";
 import { ResetDataButton } from "@/components/ResetDataButton";
+import { VacationSettings } from "@/components/VacationSettings";
 
 export default async function ProfilePage() {
   const profile = await getProfile();
@@ -26,6 +27,7 @@ export default async function ProfilePage() {
         fatTargetG={profile.fat_target_g}
       />
       <CitySettings currentCity={profile.city} />
+      <VacationSettings since={profile.vacation_since} until={profile.vacation_until} />
       {profile.tracks_cycle && (
         <CycleSettings
           avgCycleLength={profile.avg_cycle_length}

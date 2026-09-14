@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Moon } from "lucide-react";
 import { logSleep } from "@/lib/actions/tracking";
+import { computeSleepHours } from "@/lib/sleep";
 import { IconBadge } from "@/components/IconBadge";
 
 export function SleepQuickLog({
@@ -18,18 +19,19 @@ export function SleepQuickLog({
 }) {
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
-  const [hours, setHours] = useState(currentHours ?? 6.5);
   const [bedtime, setBedtime] = useState(currentBedtime?.slice(0, 5) ?? "23:00");
+  const [wakeTime, setWakeTime] = useState("07:00");
   const [wakeUps, setWakeUps] = useState(currentWakeUps ?? 0);
   const [saved, setSaved] = useState<{ hours: number; bedtime: string; wakeUps: number } | null>(null);
 
+  const hours = computeSleepHours(bedtime, wakeTime);
   const displayHours = saved?.hours ?? currentHours;
   const displayBedtime = saved?.bedtime ?? currentBedtime?.slice(0, 5) ?? null;
   const displayWakeUps = saved?.wakeUps ?? currentWakeUps;
 
   function save() {
     startTransition(async () => {
-      await logSleep({ hours, bedtime, wakeUps });
+      await logSleep({ bedtime, wakeTime, wakeUps });
       setSaved({ hours, bedtime, wakeUps });
       setOpen(false);
     });
@@ -56,24 +58,26 @@ export function SleepQuickLog({
         </button>
       ) : (
         <div className="mt-3 space-y-2">
-          <div>
-            <label className="text-[11px] text-muted">¿A qué hora te dormiste (o pensás dormirte)?</label>
-            <input
-              type="time"
-              value={bedtime}
-              onChange={(e) => setBedtime(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-card-border bg-background px-2 py-1.5 text-sm outline-none focus:border-primary"
-            />
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[11px] text-muted">¿A qué hora te dormiste?</label>
+              <input
+                type="time"
+                value={bedtime}
+                onChange={(e) => setBedtime(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-card-border bg-background px-2 py-1.5 text-sm outline-none focus:border-primary"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] text-muted">¿A qué hora te levantaste?</label>
+              <input
+                type="time"
+                value={wakeTime}
+                onChange={(e) => setWakeTime(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-card-border bg-background px-2 py-1.5 text-sm outline-none focus:border-primary"
+              />
+            </div>
           </div>
-          <input
-            type="range"
-            min={3}
-            max={10}
-            step={0.5}
-            value={hours}
-            onChange={(e) => setHours(Number(e.target.value))}
-            className="w-full accent-[var(--primary)]"
-          />
           <p className="text-center text-sm font-medium">{hours}h dormidas</p>
           <div className="flex items-center justify-between">
             <label className="text-[11px] text-muted">¿Te despertaste durante la noche?</label>

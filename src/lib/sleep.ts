@@ -7,3 +7,15 @@ export function estimateSleepQuality(hours: number, wakeUps: number): number {
   const score = hoursScore - wakeUps * 0.6;
   return Math.min(5, Math.max(1, Math.round(score)));
 }
+
+// Asking for a fixed "hours slept" number doesn't hold up when bedtime and
+// wake-up time genuinely shift (weekdays vs. weekends) — better to ask for
+// both times and derive it. Handles the overnight wrap (e.g. 23:00 -> 07:00).
+export function computeSleepHours(bedtime: string, wakeTime: string): number {
+  const [bedH, bedM] = bedtime.split(":").map(Number);
+  const [wakeH, wakeM] = wakeTime.split(":").map(Number);
+  const bedMinutes = bedH * 60 + bedM;
+  const wakeMinutes = wakeH * 60 + wakeM;
+  const diffMinutes = ((wakeMinutes - bedMinutes + 1440) % 1440) || 1440;
+  return Math.round((diffMinutes / 60) * 4) / 4;
+}
