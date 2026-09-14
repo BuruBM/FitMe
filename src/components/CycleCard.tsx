@@ -12,7 +12,7 @@ function formatDate(dateStr: string): string {
   return new Date(dateStr + "T00:00:00").toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" });
 }
 
-export function CycleCard({ summary, pcos, history }: { summary: CycleSummary; pcos: boolean; history: string[] }) {
+export function CycleCard({ summary, history }: { summary: CycleSummary; history: string[] }) {
   const [isPending, startTransition] = useTransition();
   const [confirming, setConfirming] = useState(false);
   const [periodDate, setPeriodDate] = useState(todayInAppTz());
@@ -49,12 +49,6 @@ export function CycleCard({ summary, pcos, history }: { summary: CycleSummary; p
             Fase {PHASE_LABELS[summary.estimate.phase]} · día {summary.estimate.cycleDay} del ciclo
           </p>
           <p className="text-xs text-muted mt-1">{PHASE_MOOD_INFO[summary.estimate.phase]}</p>
-          {summary.onBirthControl && summary.daysSincePillStart != null && summary.daysSincePillStart < 90 && (
-            <p className="text-xs text-muted mt-1">
-              Recién retomaste la pastilla — el cuerpo puede tardar hasta 3 meses en acomodarse, así que los
-              cambios de ánimo son esperables mientras tanto.
-            </p>
-          )}
           {summary.daysUntilNextPeriod != null && summary.daysUntilNextPeriod <= 3 && (
             <p className="text-xs font-medium mt-1.5" style={{ color: "var(--icon-cycle)" }}>
               {summary.daysUntilNextPeriod <= 0
@@ -65,9 +59,6 @@ export function CycleCard({ summary, pcos, history }: { summary: CycleSummary; p
         </>
       ) : (
         <p className="text-xs text-muted mt-1">Registrá el inicio de tu último período para empezar a hacer el seguimiento.</p>
-      )}
-      {pcos && (
-        <p className="text-[11px] text-muted mt-0.5">Es una estimación: con SOP el ciclo puede variar bastante.</p>
       )}
 
       <div className="mt-3">
