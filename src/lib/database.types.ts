@@ -35,6 +35,8 @@ export interface Profile {
   on_birth_control: boolean;
   pill_started_on: string | null;
   pcos: boolean;
+  tracks_cycle: boolean;
+  tracks_pets: boolean;
   city: string | null;
   latitude: number | null;
   longitude: number | null;

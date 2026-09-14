@@ -375,7 +375,7 @@ export async function getDashboardInsights(): Promise<Insight[]> {
 
   const [{ data: profile }, { data: symptomLogs }, { data: foodLogs }, { data: sleepLogs }, cycleSummary] =
     await Promise.all([
-      supabase.from("profiles").select("protein_target_g, pcos, pill_started_on").eq("id", user.id).single(),
+      supabase.from("profiles").select("protein_target_g, pcos, pill_started_on, tracks_cycle").eq("id", user.id).single(),
       supabase
         .from("symptom_logs")
         .select("log_date, mood, irritability, sensitivity_level, social_media_minutes, social_contact, cloud_cover_pct")
@@ -423,9 +423,11 @@ export async function getDashboardInsights(): Promise<Insight[]> {
     ? Math.round((new Date(today).getTime() - new Date(profile.pill_started_on).getTime()) / 86400000)
     : null;
 
+  const tracksCycle = profile?.tracks_cycle ?? false;
+
   return computeInsights({
-    phase: cycleSummary?.estimate?.phase ?? null,
-    onBirthControl: cycleSummary?.onBirthControl ?? false,
+    phase: tracksCycle ? (cycleSummary?.estimate?.phase ?? null) : null,
+    onBirthControl: tracksCycle && (cycleSummary?.onBirthControl ?? false),
     daysSincePillStart,
     pcos: profile?.pcos ?? false,
     isWeekend,
@@ -506,7 +508,7 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("sleep_target_hours, water_target_ml, protein_target_g, avg_cycle_length, on_birth_control")
+      .select("sleep_target_hours, water_target_ml, protein_target_g, avg_cycle_length, on_birth_control, tracks_cycle")
       .eq("id", user.id)
       .single(),
     supabase.from("weight_logs").select("log_date, weight_kg").eq("user_id", user.id).gte("log_date", since),
@@ -539,6 +541,7 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
   const periodStarts = (periodLogs ?? []).map((p) => p.period_start_date);
   const avgCycleLength = profile?.avg_cycle_length ?? 28;
   const onBirthControl = profile?.on_birth_control ?? false;
+  const tracksCycle = profile?.tracks_cycle ?? false;
   const pillByDay = new Map((pillLogs ?? []).map((p) => [p.log_date, p.taken]));
 
   const waterByDay = new Map<string, number>();
@@ -566,10 +569,10 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
     const pet = petCareByDay.get(date);
     const petCareDone = pet ? pet.milo_medication && pet.milo_supplement && pet.zoe_medication && pet.zoe_supplement : null;
     const movedToday = movedDaySet.has(date);
-    // Tracked regardless of birth control: exogenous hormones don't
-    // necessarily override her own cycle, especially with PCOS, so the
-    // phase estimate stays useful to cross-reference against mood.
-    const cyclePhase = estimateCycleForDate(date, periodStarts, avgCycleLength)?.phase ?? null;
+    // Tracked regardless of birth control (exogenous hormones don't
+    // necessarily override her own cycle, especially with PCOS), but only
+    // at all if this profile opted into cycle tracking.
+    const cyclePhase = tracksCycle ? (estimateCycleForDate(date, periodStarts, avgCycleLength)?.phase ?? null) : null;
 
     const wellnessInputs: number[] = [];
     if (symptom?.mood != null) wellnessInputs.push(scale1to5(symptom.mood));

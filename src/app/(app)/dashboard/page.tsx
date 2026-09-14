@@ -95,9 +95,9 @@ export default async function DashboardPage() {
 
       <WeatherCard weather={weatherInfo.weather} city={weatherInfo.city} />
 
-      {cycleSummary && <CycleCard summary={cycleSummary} pcos={profile.pcos} />}
+      {profile.tracks_cycle && cycleSummary && <CycleCard summary={cycleSummary} pcos={profile.pcos} />}
 
-      <PetCareQuickLog today={petCare} pausedUntil={profile.pet_care_paused_until} />
+      {profile.tracks_pets && <PetCareQuickLog today={petCare} pausedUntil={profile.pet_care_paused_until} />}
 
       <section className="card p-4 border-l-4 border-l-accent">
         <p className="text-xs font-medium text-accent uppercase tracking-wide">Desafío de la semana</p>

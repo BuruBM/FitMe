@@ -9,14 +9,18 @@ export function OnboardingForm() {
   const [error, setError] = useState<string | null>(null);
 
   const [fullName, setFullName] = useState("");
+  const [sex, setSex] = useState<"female" | "male">("female");
   const [birthDate, setBirthDate] = useState("");
   const [heightCm, setHeightCm] = useState("");
   const [weightKg, setWeightKg] = useState("");
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>("light");
   const [goal, setGoal] = useState<Goal>("lose_weight");
   const [wakeTime, setWakeTime] = useState("06:00");
-  const [bloatingProne, setBloatingProne] = useState(true);
-  const [osteopeniaRisk, setOsteopeniaRisk] = useState(true);
+  const [bloatingProne, setBloatingProne] = useState(false);
+  const [osteopeniaRisk, setOsteopeniaRisk] = useState(false);
+  const [pcos, setPcos] = useState(false);
+  const [tracksCycle, setTracksCycle] = useState(true);
+  const [tracksPets, setTracksPets] = useState(false);
   const [tripDate, setTripDate] = useState("");
 
   function handleSubmit(e: React.FormEvent) {
@@ -32,6 +36,7 @@ export function OnboardingForm() {
       try {
         await completeOnboarding({
           fullName,
+          sex,
           birthDate,
           heightCm: Number(heightCm),
           weightKg: Number(weightKg),
@@ -40,6 +45,9 @@ export function OnboardingForm() {
           wakeTime,
           bloatingProne,
           osteopeniaRisk,
+          pcos: tracksCycle && pcos,
+          tracksCycle,
+          tracksPets,
           tripDate: tripDate || null,
         });
       } catch (err) {
@@ -63,6 +71,13 @@ export function OnboardingForm() {
           className="input"
           placeholder="Tu nombre"
         />
+      </Field>
+
+      <Field label="Sexo (para calcular objetivos calóricos con precisión)">
+        <select value={sex} onChange={(e) => setSex(e.target.value as "female" | "male")} className="input">
+          <option value="female">Mujer</option>
+          <option value="male">Varón</option>
+        </select>
       </Field>
 
       <div className="grid grid-cols-2 gap-3">
@@ -128,17 +143,15 @@ export function OnboardingForm() {
         <input type="date" value={tripDate} onChange={(e) => setTripDate(e.target.value)} className="input" />
       </Field>
 
-      <div className="space-y-2 pt-1">
-        <Toggle
-          checked={bloatingProne}
-          onChange={setBloatingProne}
-          label="Me hincho con facilidad"
-        />
-        <Toggle
-          checked={osteopeniaRisk}
-          onChange={setOsteopeniaRisk}
-          label="Tengo tendencia a la osteopenia"
-        />
+      <div className="space-y-2 pt-4 border-t border-card-border">
+        <p className="text-xs font-medium text-muted uppercase tracking-wide">Qué querés trackear</p>
+        <Toggle checked={tracksCycle} onChange={setTracksCycle} label="Ciclo hormonal (período, fase, pastilla)" />
+        {tracksCycle && (
+          <Toggle checked={pcos} onChange={setPcos} label="Tengo SOP (síndrome de ovario poliquístico)" />
+        )}
+        <Toggle checked={tracksPets} onChange={setTracksPets} label="Cuidado de mascotas (medicación/suplementos)" />
+        <Toggle checked={bloatingProne} onChange={setBloatingProne} label="Me hincho con facilidad" />
+        <Toggle checked={osteopeniaRisk} onChange={setOsteopeniaRisk} label="Tengo tendencia a la osteopenia" />
       </div>
 
       <button

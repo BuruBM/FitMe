@@ -9,6 +9,7 @@ import type { ActivityLevel, Goal } from "@/lib/database.types";
 
 export interface OnboardingInput {
   fullName: string;
+  sex: "female" | "male";
   birthDate: string;
   heightCm: number;
   weightKg: number;
@@ -17,6 +18,9 @@ export interface OnboardingInput {
   wakeTime: string;
   bloatingProne: boolean;
   osteopeniaRisk: boolean;
+  pcos: boolean;
+  tracksCycle: boolean;
+  tracksPets: boolean;
   tripDate: string | null;
 }
 
@@ -28,7 +32,7 @@ export async function completeOnboarding(input: OnboardingInput) {
   if (!user) throw new Error("No autenticada");
 
   const targets = calculateNutritionTargets({
-    sex: "female",
+    sex: input.sex,
     birthDate: input.birthDate,
     heightCm: input.heightCm,
     weightKg: input.weightKg,
@@ -42,6 +46,7 @@ export async function completeOnboarding(input: OnboardingInput) {
     .from("profiles")
     .update({
       full_name: input.fullName,
+      sex: input.sex,
       birth_date: input.birthDate,
       height_cm: input.heightCm,
       weight_kg: input.weightKg,
@@ -50,6 +55,9 @@ export async function completeOnboarding(input: OnboardingInput) {
       wake_time: input.wakeTime,
       bloating_prone: input.bloatingProne,
       osteopenia_risk: input.osteopeniaRisk,
+      pcos: input.pcos,
+      tracks_cycle: input.tracksCycle,
+      tracks_pets: input.tracksPets,
       trip_date: input.tripDate,
       calorie_target: targets.calorieTarget,
       protein_target_g: targets.proteinTargetG,
@@ -84,7 +92,7 @@ export async function updateProfile(input: OnboardingInput) {
   if (!user) throw new Error("No autenticada");
 
   const targets = calculateNutritionTargets({
-    sex: "female",
+    sex: input.sex,
     birthDate: input.birthDate,
     heightCm: input.heightCm,
     weightKg: input.weightKg,
@@ -98,6 +106,7 @@ export async function updateProfile(input: OnboardingInput) {
     .from("profiles")
     .update({
       full_name: input.fullName,
+      sex: input.sex,
       birth_date: input.birthDate,
       height_cm: input.heightCm,
       weight_kg: input.weightKg,
@@ -106,6 +115,9 @@ export async function updateProfile(input: OnboardingInput) {
       wake_time: input.wakeTime,
       bloating_prone: input.bloatingProne,
       osteopenia_risk: input.osteopeniaRisk,
+      pcos: input.pcos,
+      tracks_cycle: input.tracksCycle,
+      tracks_pets: input.tracksPets,
       trip_date: input.tripDate,
       calorie_target: targets.calorieTarget,
       protein_target_g: targets.proteinTargetG,

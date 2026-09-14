@@ -7,6 +7,7 @@ import type { ActivityLevel, Goal, Profile } from "@/lib/database.types";
 export function EditProfileForm({ profile, onDone }: { profile: Profile; onDone: () => void }) {
   const [isPending, startTransition] = useTransition();
   const [fullName, setFullName] = useState(profile.full_name ?? "");
+  const [sex, setSex] = useState<"female" | "male">(profile.sex === "male" ? "male" : "female");
   const [birthDate, setBirthDate] = useState(profile.birth_date ?? "");
   const [heightCm, setHeightCm] = useState(profile.height_cm?.toString() ?? "");
   const [weightKg, setWeightKg] = useState(profile.weight_kg?.toString() ?? "");
@@ -15,12 +16,16 @@ export function EditProfileForm({ profile, onDone }: { profile: Profile; onDone:
   const [wakeTime, setWakeTime] = useState(profile.wake_time?.slice(0, 5) ?? "06:00");
   const [bloatingProne, setBloatingProne] = useState(profile.bloating_prone);
   const [osteopeniaRisk, setOsteopeniaRisk] = useState(profile.osteopenia_risk);
+  const [pcos, setPcos] = useState(profile.pcos);
+  const [tracksCycle, setTracksCycle] = useState(profile.tracks_cycle);
+  const [tracksPets, setTracksPets] = useState(profile.tracks_pets);
   const [tripDate, setTripDate] = useState(profile.trip_date ?? "");
 
   function save() {
     startTransition(async () => {
       await updateProfile({
         fullName,
+        sex,
         birthDate,
         heightCm: Number(heightCm),
         weightKg: Number(weightKg),
@@ -29,6 +34,9 @@ export function EditProfileForm({ profile, onDone }: { profile: Profile; onDone:
         wakeTime,
         bloatingProne,
         osteopeniaRisk,
+        pcos: tracksCycle && pcos,
+        tracksCycle,
+        tracksPets,
         tripDate: tripDate || null,
       });
       onDone();
@@ -39,6 +47,12 @@ export function EditProfileForm({ profile, onDone }: { profile: Profile; onDone:
     <div className="card p-4 space-y-3">
       <Field label="Nombre">
         <input value={fullName} onChange={(e) => setFullName(e.target.value)} className="input" />
+      </Field>
+      <Field label="Sexo (para calcular objetivos calóricos)">
+        <select value={sex} onChange={(e) => setSex(e.target.value as "female" | "male")} className="input">
+          <option value="female">Mujer</option>
+          <option value="male">Varón</option>
+        </select>
       </Field>
       <div className="grid grid-cols-2 gap-2">
         <Field label="Nacimiento">
@@ -74,14 +88,33 @@ export function EditProfileForm({ profile, onDone }: { profile: Profile; onDone:
           <input type="date" value={tripDate} onChange={(e) => setTripDate(e.target.value)} className="input" />
         </Field>
       </div>
-      <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" checked={bloatingProne} onChange={(e) => setBloatingProne(e.target.checked)} />
-        Me hincho con facilidad
-      </label>
-      <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" checked={osteopeniaRisk} onChange={(e) => setOsteopeniaRisk(e.target.checked)} />
-        Tendencia a osteopenia
-      </label>
+
+      <div className="space-y-2 pt-2 border-t border-card-border">
+        <p className="text-xs font-medium text-muted uppercase tracking-wide">Qué trackeo</p>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={tracksCycle} onChange={(e) => setTracksCycle(e.target.checked)} />
+          Ciclo hormonal (período, fase, pastilla)
+        </label>
+        {tracksCycle && (
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={pcos} onChange={(e) => setPcos(e.target.checked)} />
+            Tengo SOP (síndrome de ovario poliquístico)
+          </label>
+        )}
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={tracksPets} onChange={(e) => setTracksPets(e.target.checked)} />
+          Cuidado de mascotas (medicación/suplementos)
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={bloatingProne} onChange={(e) => setBloatingProne(e.target.checked)} />
+          Me hincho con facilidad
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={osteopeniaRisk} onChange={(e) => setOsteopeniaRisk(e.target.checked)} />
+          Tendencia a osteopenia
+        </label>
+      </div>
+
       <div className="flex gap-2 pt-1">
         <button onClick={onDone} className="flex-1 rounded-lg border border-card-border text-sm py-2">
           Cancelar
