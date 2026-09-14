@@ -58,25 +58,23 @@ export function SleepQuickLog({
         </button>
       ) : (
         <div className="mt-3 space-y-2">
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="text-[11px] text-muted">¿A qué hora te dormiste?</label>
-              <input
-                type="time"
-                value={bedtime}
-                onChange={(e) => setBedtime(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-card-border bg-background px-2 py-1.5 text-sm outline-none focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="text-[11px] text-muted">¿A qué hora te levantaste?</label>
-              <input
-                type="time"
-                value={wakeTime}
-                onChange={(e) => setWakeTime(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-card-border bg-background px-2 py-1.5 text-sm outline-none focus:border-primary"
-              />
-            </div>
+          <div>
+            <label className="text-[11px] text-muted">¿A qué hora te dormiste?</label>
+            <input
+              type="time"
+              value={bedtime}
+              onChange={(e) => setBedtime(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-card-border bg-background px-2 py-1.5 text-sm outline-none focus:border-primary"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] text-muted">¿A qué hora te levantaste?</label>
+            <input
+              type="time"
+              value={wakeTime}
+              onChange={(e) => setWakeTime(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-card-border bg-background px-2 py-1.5 text-sm outline-none focus:border-primary"
+            />
           </div>
           <p className="text-center text-sm font-medium">{hours}h dormidas</p>
           <div className="flex items-center justify-between">
