@@ -14,7 +14,7 @@ const VALENCE_OPTIONS = [
 ];
 
 export function SymptomQuickLog({ existing }: { existing: SymptomLog | null }) {
-  const loggedToday = existing != null;
+  const [loggedToday, setLoggedToday] = useState(existing != null);
   const [open, setOpen] = useState(false);
   const [bloating, setBloating] = useState<number | null>(existing?.bloating ?? null);
   const [energy, setEnergy] = useState<number | null>(existing?.energy ?? null);
@@ -55,6 +55,7 @@ export function SymptomQuickLog({ existing }: { existing: SymptomLog | null }) {
         notes: notes || undefined,
       });
       setSaved(true);
+      setLoggedToday(true);
       setOpen(false);
       setTimeout(() => setSaved(false), 2000);
     });

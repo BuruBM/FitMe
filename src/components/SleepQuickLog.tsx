@@ -21,10 +21,16 @@ export function SleepQuickLog({
   const [hours, setHours] = useState(currentHours ?? 6.5);
   const [bedtime, setBedtime] = useState(currentBedtime?.slice(0, 5) ?? "23:00");
   const [wakeUps, setWakeUps] = useState(currentWakeUps ?? 0);
+  const [saved, setSaved] = useState<{ hours: number; bedtime: string; wakeUps: number } | null>(null);
+
+  const displayHours = saved?.hours ?? currentHours;
+  const displayBedtime = saved?.bedtime ?? currentBedtime?.slice(0, 5) ?? null;
+  const displayWakeUps = saved?.wakeUps ?? currentWakeUps;
 
   function save() {
     startTransition(async () => {
       await logSleep({ hours, bedtime, wakeUps });
+      setSaved({ hours, bedtime, wakeUps });
       setOpen(false);
     });
   }
@@ -36,9 +42,9 @@ export function SleepQuickLog({
         Sueño
       </div>
       <p className="text-xs text-muted mt-1">
-        {currentHours != null ? `${currentHours}h anoche` : "Sin registrar"} · meta {targetHours}h
-        {currentBedtime ? ` · te dormiste ${currentBedtime.slice(0, 5)}` : ""}
-        {currentWakeUps ? ` · te despertaste ${currentWakeUps}x` : ""}
+        {displayHours != null ? `${displayHours}h anoche` : "Sin registrar"} · meta {targetHours}h
+        {displayBedtime ? ` · te dormiste ${displayBedtime}` : ""}
+        {displayWakeUps ? ` · te despertaste ${displayWakeUps}x` : ""}
       </p>
 
       {!open ? (
@@ -46,7 +52,7 @@ export function SleepQuickLog({
           onClick={() => setOpen(true)}
           className="mt-3 w-full rounded-lg border border-card-border text-xs py-1.5 font-medium hover:border-primary"
         >
-          {currentHours != null ? "Editar" : "Registrar"}
+          {displayHours != null ? "Editar" : "Registrar"}
         </button>
       ) : (
         <div className="mt-3 space-y-2">

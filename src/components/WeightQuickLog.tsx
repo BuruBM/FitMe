@@ -10,7 +10,8 @@ export function WeightQuickLog({
   todayWeightKg: number | null;
   lastKnownWeightKg: number | null;
 }) {
-  const loggedToday = todayWeightKg != null;
+  const [loggedTodayValue, setLoggedTodayValue] = useState(todayWeightKg);
+  const loggedToday = loggedTodayValue != null;
   const [open, setOpen] = useState(false);
   const [weight, setWeight] = useState(todayWeightKg?.toString() ?? "");
   const [isPending, startTransition] = useTransition();
@@ -21,6 +22,7 @@ export function WeightQuickLog({
     if (!value) return;
     startTransition(async () => {
       await logWeight(value);
+      setLoggedTodayValue(value);
       setSaved(true);
       setOpen(false);
       setTimeout(() => setSaved(false), 2000);
@@ -32,7 +34,7 @@ export function WeightQuickLog({
       <h2 className="font-semibold mb-1 text-sm">Peso</h2>
       <p className="text-xs text-muted mb-2">
         {loggedToday
-          ? `Registraste ${todayWeightKg}kg hoy ✓`
+          ? `Registraste ${loggedTodayValue}kg hoy ✓`
           : lastKnownWeightKg != null
             ? `Última vez: ${lastKnownWeightKg}kg. Todavía no registraste hoy.`
             : "Todavía no registraste tu peso."}
@@ -41,7 +43,7 @@ export function WeightQuickLog({
       {!open ? (
         <button
           onClick={() => {
-            setWeight(loggedToday ? (todayWeightKg?.toString() ?? "") : "");
+            setWeight(loggedToday ? (loggedTodayValue?.toString() ?? "") : "");
             setOpen(true);
           }}
           className="w-full rounded-lg border border-card-border text-xs py-1.5 font-medium hover:border-primary"

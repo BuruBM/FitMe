@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { Search, Star, Sparkles, Pencil, UtensilsCrossed } from "lucide-react";
+import { Search, Star, Sparkles, Pencil, UtensilsCrossed, X } from "lucide-react";
 import { IconBadge } from "@/components/IconBadge";
 import { FOODS, searchLocalFoods, estimateFromText, type FoodItem } from "@/data/foods";
-import { logFood } from "@/lib/actions/food";
+import { logFood, deleteFavoriteFood, hideDefaultFood, unhideDefaultFood } from "@/lib/actions/food";
 import type { MealType, CustomFood } from "@/lib/database.types";
 import type { OffResult } from "@/app/api/food-search/route";
 
@@ -88,8 +88,23 @@ function fromCustomFood(f: CustomFood): Base {
   };
 }
 
-export function FoodLogger({ favorites }: { favorites: CustomFood[] }) {
+export function FoodLogger({ favorites, hiddenDefaultIds }: { favorites: CustomFood[]; hiddenDefaultIds: string[] }) {
   const [tab, setTab] = useState<Tab>("buscar");
+  const [hidden, setHidden] = useState(new Set(hiddenDefaultIds));
+
+  function hideDefault(id: string) {
+    setHidden((prev) => new Set(prev).add(id));
+    hideDefaultFood(id);
+  }
+
+  function unhideDefault(id: string) {
+    setHidden((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    unhideDefaultFood(id);
+  }
 
   return (
     <div className="card p-3">
@@ -104,8 +119,10 @@ export function FoodLogger({ favorites }: { favorites: CustomFood[] }) {
         <TabButton active={tab === "manual"} onClick={() => setTab("manual")} icon={<Pencil size={14} />} label="Manual" />
       </div>
 
-      {tab === "buscar" && <SearchTab />}
-      {tab === "favoritos" && <FavoritesTab favorites={favorites} />}
+      {tab === "buscar" && <SearchTab hidden={hidden} />}
+      {tab === "favoritos" && (
+        <FavoritesTab favorites={favorites} hidden={hidden} onHideDefault={hideDefault} onUnhideDefault={unhideDefault} />
+      )}
       {tab === "texto" && <TextTab />}
       {tab === "manual" && <ManualTab />}
       <GlobalStyles />
@@ -137,13 +154,16 @@ function TabButton({
   );
 }
 
-function SearchTab() {
+function SearchTab({ hidden }: { hidden: Set<string> }) {
   const [query, setQuery] = useState("");
   const [offResults, setOffResults] = useState<OffResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<Base | null>(null);
 
-  const localResults = useMemo(() => (query ? searchLocalFoods(query) : FOODS.filter((f) => f.favoriteFor)), [query]);
+  const localResults = useMemo(
+    () => (query ? searchLocalFoods(query) : FOODS.filter((f) => f.favoriteFor && !hidden.has(f.id))),
+    [query, hidden],
+  );
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -206,16 +226,37 @@ function SearchTab() {
   );
 }
 
-function FavoritesTab({ favorites }: { favorites: CustomFood[] }) {
+function FavoritesTab({
+  favorites,
+  hidden,
+  onHideDefault,
+  onUnhideDefault,
+}: {
+  favorites: CustomFood[];
+  hidden: Set<string>;
+  onHideDefault: (id: string) => void;
+  onUnhideDefault: (id: string) => void;
+}) {
   const [selected, setSelected] = useState<Base | null>(null);
-  const starred = FOODS.filter((f) => f.favoriteFor);
+  const [removedCustomIds, setRemovedCustomIds] = useState<Set<string>>(new Set());
+  const [showHidden, setShowHidden] = useState(false);
+  const [, startTransition] = useTransition();
+
+  const starred = FOODS.filter((f) => f.favoriteFor && !hidden.has(f.id));
+  const hiddenDefaults = FOODS.filter((f) => f.favoriteFor && hidden.has(f.id));
+  const visibleCustom = favorites.filter((f) => !removedCustomIds.has(f.id));
+
+  function removeCustom(id: string) {
+    setRemovedCustomIds((prev) => new Set(prev).add(id));
+    startTransition(() => deleteFavoriteFood(id));
+  }
 
   if (selected) return <AddItemPanel base={selected} onDone={() => setSelected(null)} />;
 
   return (
     <div className="space-y-3">
       <div>
-        <p className="text-xs text-muted mb-1.5">Tus proteínas preferidas</p>
+        <p className="text-xs text-muted mb-1.5">Sugeridos</p>
         <div className="space-y-1.5">
           {starred.map((f) => (
             <FoodResultRow
@@ -223,23 +264,46 @@ function FavoritesTab({ favorites }: { favorites: CustomFood[] }) {
               name={f.name}
               meta={`${Math.round(f.calories)} kcal · P${f.protein_g}g`}
               onClick={() => setSelected(fromFoodItem(f))}
+              onRemove={() => onHideDefault(f.id)}
             />
           ))}
+          {starred.length === 0 && <p className="text-xs text-muted">No te quedan sugeridos — los sacaste todos.</p>}
         </div>
       </div>
       {favorites.length > 0 && (
         <div>
           <p className="text-xs text-muted mb-1.5">Guardados por vos</p>
           <div className="space-y-1.5">
-            {favorites.map((f) => (
+            {visibleCustom.map((f) => (
               <FoodResultRow
                 key={f.id}
                 name={f.name}
                 meta={`${Math.round(f.calories)} kcal · P${f.protein_g}g`}
                 onClick={() => setSelected(fromCustomFood(f))}
+                onRemove={() => removeCustom(f.id)}
               />
             ))}
+            {visibleCustom.length === 0 && <p className="text-xs text-muted">Sin guardados por ahora.</p>}
           </div>
+        </div>
+      )}
+      {hiddenDefaults.length > 0 && (
+        <div>
+          <button onClick={() => setShowHidden((v) => !v)} className="text-xs font-medium text-primary">
+            {showHidden ? "Ocultar sacados" : `Ver sacados (${hiddenDefaults.length})`}
+          </button>
+          {showHidden && (
+            <div className="space-y-1.5 mt-1.5">
+              {hiddenDefaults.map((f) => (
+                <div key={f.id} className="flex items-center justify-between rounded-lg border border-card-border px-3 py-2">
+                  <p className="text-sm text-muted">{f.name}</p>
+                  <button onClick={() => onUnhideDefault(f.id)} className="text-xs font-medium text-primary shrink-0 ml-2">
+                    Restaurar
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -251,23 +315,36 @@ function FoodResultRow({
   meta,
   note,
   onClick,
+  onRemove,
 }: {
   name: string;
   meta: string;
   note?: string;
   onClick: () => void;
+  onRemove?: () => void;
 }) {
   return (
-    <button
-      onClick={onClick}
-      className="w-full text-left rounded-lg border border-card-border px-3 py-2 hover:border-primary transition"
-    >
-      <p className="text-sm font-medium">{name}</p>
-      <p className="text-xs text-muted">
-        {meta}
-        {note ? ` · ${note}` : ""}
-      </p>
-    </button>
+    <div className="flex items-stretch gap-1.5">
+      <button
+        onClick={onClick}
+        className="flex-1 min-w-0 text-left rounded-lg border border-card-border px-3 py-2 hover:border-primary transition"
+      >
+        <p className="text-sm font-medium">{name}</p>
+        <p className="text-xs text-muted">
+          {meta}
+          {note ? ` · ${note}` : ""}
+        </p>
+      </button>
+      {onRemove && (
+        <button
+          onClick={onRemove}
+          aria-label="Sacar de favoritos"
+          className="shrink-0 w-9 rounded-lg border border-card-border text-muted hover:border-danger hover:text-danger flex items-center justify-center"
+        >
+          <X size={14} />
+        </button>
+      )}
+    </div>
   );
 }
 

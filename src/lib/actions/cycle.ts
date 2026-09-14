@@ -1,17 +1,16 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { after } from "next/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { todayInAppTz } from "@/lib/date";
 import { awardXp } from "@/lib/actions/gamification-helpers";
 import { XP_RULES } from "@/lib/gamification";
 
 async function requireUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) throw new Error("No autenticada");
+  const supabase = await createClient();
   return { supabase, user };
 }
 
@@ -39,7 +38,7 @@ export async function setPillTaken(taken: boolean) {
   if (error) throw error;
 
   if (taken) await awardXp(supabase, user.id, XP_RULES.food_log);
-  revalidatePath("/dashboard");
+  after(() => revalidatePath("/dashboard"));
 }
 
 export async function updateCycleSettings(avgCycleLength: number, onBirthControl: boolean, pillStartedOn: string | null) {

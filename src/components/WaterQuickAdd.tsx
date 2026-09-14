@@ -1,15 +1,17 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Droplet } from "lucide-react";
 import { logWater } from "@/lib/actions/tracking";
 import { IconBadge } from "@/components/IconBadge";
 
 export function WaterQuickAdd({ currentMl, targetMl }: { currentMl: number; targetMl: number }) {
+  const [total, setTotal] = useState(currentMl);
   const [isPending, startTransition] = useTransition();
-  const pct = targetMl > 0 ? Math.min(100, Math.round((currentMl / targetMl) * 100)) : 0;
+  const pct = targetMl > 0 ? Math.min(100, Math.round((total / targetMl) * 100)) : 0;
 
   function add(ml: number) {
+    setTotal((t) => t + ml);
     startTransition(() => {
       logWater(ml);
     });
@@ -22,7 +24,7 @@ export function WaterQuickAdd({ currentMl, targetMl }: { currentMl: number; targ
         Agua
       </div>
       <p className="text-xs text-muted mt-1">
-        {(currentMl / 1000).toFixed(1)}L / {(targetMl / 1000).toFixed(1)}L ({pct}%)
+        {(total / 1000).toFixed(1)}L / {(targetMl / 1000).toFixed(1)}L ({pct}%)
       </p>
       <div className="h-2 rounded-full bg-card-border overflow-hidden mt-2">
         <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--icon-water)" }} />

@@ -292,6 +292,15 @@ export async function getTodaySymptomLog(): Promise<SymptomLog | null> {
   return data ?? null;
 }
 
+export async function getHiddenDefaultFoodIds(): Promise<string[]> {
+  const supabase = await createClient();
+  const user = await getCurrentUser();
+  if (!user) return [];
+
+  const { data } = await supabase.from("hidden_default_foods").select("food_id").eq("user_id", user.id);
+  return (data ?? []).map((r) => r.food_id);
+}
+
 export async function getRecentFoodLogs(days = 14): Promise<FoodLog[]> {
   const supabase = await createClient();
   const user = await getCurrentUser();
@@ -622,14 +631,17 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
   return points;
 }
 
-export async function getWeeklyReview(): Promise<WeeklyReview | null> {
+// Accepts an already-fetched week of history so callers that already have
+// getHistory(365) in hand (the Progress page) don't trigger a second,
+// separate round of the same ~10 parallel table queries just for this.
+export async function getWeeklyReview(last7Days?: HistoryPoint[]): Promise<WeeklyReview | null> {
   const supabase = await createClient();
   const user = await getCurrentUser();
   if (!user) return null;
 
   const [{ data: profile }, history] = await Promise.all([
     supabase.from("profiles").select("protein_target_g, water_target_ml, sleep_target_hours").eq("id", user.id).single(),
-    getHistory(7),
+    last7Days ? Promise.resolve(last7Days) : getHistory(7),
   ]);
 
   const proteinTarget = profile?.protein_target_g ?? 90;

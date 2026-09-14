@@ -74,7 +74,7 @@ function ClickableDot({ cx, cy, payload, onSelect, selectedDate, color }: DotPro
   if (cx == null || cy == null || !payload?.date || payload.value == null) return null;
   const isSelected = payload.date === selectedDate;
   return (
-    <g onClick={() => onSelect(payload.date!)} style={{ cursor: "pointer" }}>
+    <g onClick={() => onSelect(payload.date!)} tabIndex={-1} style={{ cursor: "pointer", outline: "none" }}>
       <circle cx={cx} cy={cy} r={14} fill="transparent" />
       <circle cx={cx} cy={cy} r={isSelected ? 6 : 4} fill={color} stroke="var(--card)" strokeWidth={isSelected ? 2 : 0} />
     </g>
@@ -194,7 +194,7 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
         {hasData ? (
           <div className="h-44">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={buckets} margin={{ top: 5, right: 8, left: -20, bottom: 0 }}>
+              <LineChart data={buckets} margin={{ top: 5, right: 16, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="var(--muted)" />
                 <YAxis
@@ -205,6 +205,7 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
                   tickFormatter={metric.tickFormatter}
                 />
                 <Tooltip
+                  cursor={false}
                   contentStyle={{ fontSize: 12, borderRadius: 8 }}
                   formatter={(v: unknown) => [metric.formatValue(Number(v)), metric.label]}
                 />

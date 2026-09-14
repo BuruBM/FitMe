@@ -62,6 +62,12 @@ export interface CustomFood {
   created_at: string;
 }
 
+export interface HiddenDefaultFood {
+  user_id: string;
+  food_id: string;
+  created_at: string;
+}
+
 export interface FoodLog {
   id: string;
   user_id: string;
@@ -190,6 +196,11 @@ export interface Database {
     Tables: {
       profiles: { Row: Profile; Insert: Partial<Profile> & { id: string }; Update: Partial<Profile> };
       custom_foods: { Row: CustomFood; Insert: Partial<CustomFood>; Update: Partial<CustomFood> };
+      hidden_default_foods: {
+        Row: HiddenDefaultFood;
+        Insert: Partial<HiddenDefaultFood> & { user_id: string; food_id: string };
+        Update: Partial<HiddenDefaultFood>;
+      };
       food_logs: { Row: FoodLog; Insert: Partial<FoodLog>; Update: Partial<FoodLog> };
       water_logs: { Row: WaterLog; Insert: Partial<WaterLog>; Update: Partial<WaterLog> };
       sleep_logs: { Row: SleepLog; Insert: Partial<SleepLog>; Update: Partial<SleepLog> };

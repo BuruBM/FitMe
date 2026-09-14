@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { after } from "next/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { todayInAppTz } from "@/lib/date";
 import { awardXp } from "@/lib/actions/gamification-helpers";
 import { XP_RULES } from "@/lib/gamification";
@@ -18,11 +19,9 @@ function isComplete(input: PetCareInput): boolean {
 }
 
 export async function logPetCare(input: PetCareInput, wasComplete: boolean) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) throw new Error("No autenticada");
+  const supabase = await createClient();
 
   const today = todayInAppTz();
 
@@ -45,19 +44,22 @@ export async function logPetCare(input: PetCareInput, wasComplete: boolean) {
     await awardXp(supabase, user.id, XP_RULES.pet_care_done);
   }
 
-  revalidatePath("/dashboard");
-  revalidatePath("/progress");
+  // The checklist already flips instantly on screen (optimistic local
+  // state), so refresh the cached pages in the background instead of
+  // making every tap wait on a full page re-render.
+  after(() => {
+    revalidatePath("/dashboard");
+    revalidatePath("/progress");
+  });
 }
 
 export async function setPetCarePause(untilDate: string | null) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) throw new Error("No autenticada");
+  const supabase = await createClient();
 
   const { error } = await supabase.from("profiles").update({ pet_care_paused_until: untilDate }).eq("id", user.id);
   if (error) throw error;
 
-  revalidatePath("/dashboard");
+  after(() => revalidatePath("/dashboard"));
 }

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { todayInAppTz } from "@/lib/date";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { awardXp } from "@/lib/actions/gamification-helpers";
 import { XP_RULES } from "@/lib/gamification";
 import type { MealType, FoodSource } from "@/lib/database.types";
@@ -25,11 +25,9 @@ export interface LogFoodInput {
 }
 
 export async function logFood(input: LogFoodInput) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) throw new Error("No autenticada");
+  const supabase = await createClient();
 
   const today = todayInAppTz();
 
@@ -76,11 +74,9 @@ export async function logFood(input: LogFoodInput) {
 }
 
 export async function deleteFoodLog(id: string) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) throw new Error("No autenticada");
+  const supabase = await createClient();
 
   const { error } = await supabase.from("food_logs").delete().eq("id", id).eq("user_id", user.id);
   if (error) throw error;
@@ -90,11 +86,9 @@ export async function deleteFoodLog(id: string) {
 }
 
 export async function getFavoriteFoods() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) return [];
+  const supabase = await createClient();
 
   const { data } = await supabase
     .from("custom_foods")
@@ -105,4 +99,48 @@ export async function getFavoriteFoods() {
     .limit(30);
 
   return data ?? [];
+}
+
+// Foods she added herself (via "Guardar como favorito") get fully deleted.
+export async function deleteFavoriteFood(id: string) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("No autenticada");
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("custom_foods").delete().eq("id", id).eq("user_id", user.id);
+  if (error) throw error;
+
+  revalidatePath("/food");
+}
+
+// Curated defaults (the hardcoded soy/egg/protein-powder shortcuts) are
+// shared app data, not per-user rows — hiding one just records that this
+// user doesn't want it in their Favoritos, without touching the food itself.
+export async function hideDefaultFood(foodId: string) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("No autenticada");
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("hidden_default_foods").upsert(
+    { user_id: user.id, food_id: foodId },
+    { onConflict: "user_id,food_id" },
+  );
+  if (error) throw error;
+
+  revalidatePath("/food");
+}
+
+export async function unhideDefaultFood(foodId: string) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("No autenticada");
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("hidden_default_foods")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("food_id", foodId);
+  if (error) throw error;
+
+  revalidatePath("/food");
 }

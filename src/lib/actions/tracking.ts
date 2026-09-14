@@ -29,8 +29,14 @@ export async function logWater(amountMl: number) {
   if (error) throw error;
 
   await awardXp(supabase, user.id, XP_RULES.food_log); // small bump per log
-  revalidatePath("/dashboard");
-  revalidatePath("/food");
+
+  // The quick-add already updates the total on screen optimistically, so
+  // there's nothing for her to wait on here — refresh the cached pages in
+  // the background instead of making this round trip do it synchronously.
+  after(() => {
+    revalidatePath("/dashboard");
+    revalidatePath("/food");
+  });
 }
 
 // ---------------- sleep ----------------
@@ -60,8 +66,10 @@ export async function logSleep(input: SleepInput) {
   if (error) throw error;
 
   await awardXp(supabase, user.id, XP_RULES.sleep_log);
-  revalidatePath("/dashboard");
-  revalidatePath("/progress");
+  after(() => {
+    revalidatePath("/dashboard");
+    revalidatePath("/progress");
+  });
 }
 
 // ---------------- weight ----------------
@@ -77,8 +85,10 @@ export async function logWeight(weightKg: number) {
   await supabase.from("profiles").update({ weight_kg: weightKg }).eq("id", user.id);
 
   await awardXp(supabase, user.id, XP_RULES.weight_log);
-  revalidatePath("/dashboard");
-  revalidatePath("/progress");
+  after(() => {
+    revalidatePath("/dashboard");
+    revalidatePath("/progress");
+  });
 }
 
 // ---------------- body measurements ----------------
@@ -100,7 +110,7 @@ export async function logMeasurements(
   if (error) throw error;
 
   await awardXp(supabase, user.id, XP_RULES.weight_log);
-  revalidatePath("/progress");
+  after(() => revalidatePath("/progress"));
 }
 
 // ---------------- symptoms ----------------
@@ -145,8 +155,6 @@ export async function logSymptoms(input: SymptomInput) {
   if (error) throw error;
 
   await awardXp(supabase, user.id, XP_RULES.symptom_log);
-  revalidatePath("/dashboard");
-  revalidatePath("/progress");
 
   // Attaching weather isn't worth making her wait on: it fetches an external
   // API that can take seconds on a cold cache. Save the check-in immediately
@@ -167,6 +175,11 @@ export async function logSymptoms(input: SymptomInput) {
       .update({ cloud_cover_pct: weather.cloudCoverPct, weather_condition: weather.condition })
       .eq("user_id", user.id)
       .eq("log_date", today);
+  });
+
+  after(() => {
+    revalidatePath("/dashboard");
+    revalidatePath("/progress");
   });
 }
 

@@ -28,7 +28,9 @@ export function MeasurementsQuickLog({
   latest: BodyMeasurement | null;
   previous: BodyMeasurement | null;
 }) {
-  const loggedToday = latest?.log_date === todayInAppTz();
+  const [loggedTodayLocal, setLoggedTodayLocal] = useState(latest?.log_date === todayInAppTz());
+  const [savedWaist, setSavedWaist] = useState(latest?.waist_cm ?? null);
+  const loggedToday = loggedTodayLocal;
   const [open, setOpen] = useState(false);
   const [waist, setWaist] = useState("");
   const [hip, setHip] = useState("");
@@ -42,7 +44,7 @@ export function MeasurementsQuickLog({
   const setters = { waist: setWaist, hip: setHip, thigh: setThigh, arm: setArm };
 
   function startEditing() {
-    setWaist(loggedToday ? (latest?.waist_cm?.toString() ?? "") : "");
+    setWaist(loggedToday ? (savedWaist?.toString() ?? "") : "");
     setHip(loggedToday ? (latest?.hip_cm?.toString() ?? "") : "");
     setThigh(loggedToday ? (latest?.thigh_cm?.toString() ?? "") : "");
     setArm(loggedToday ? (latest?.arm_cm?.toString() ?? "") : "");
@@ -54,13 +56,15 @@ export function MeasurementsQuickLog({
     if (!waist && !hip && !thigh && !arm) return;
     startTransition(async () => {
       await logMeasurements(n(waist), n(hip), n(thigh), n(arm));
+      setLoggedTodayLocal(true);
+      setSavedWaist(n(waist));
       setSaved(true);
       setOpen(false);
       setTimeout(() => setSaved(false), 2000);
     });
   }
 
-  const waistDelta = delta(latest?.waist_cm ?? null, previous?.waist_cm ?? null);
+  const waistDelta = delta(savedWaist, previous?.waist_cm ?? null);
 
   return (
     <section className="card p-4">

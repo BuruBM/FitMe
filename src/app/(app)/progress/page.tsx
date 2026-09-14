@@ -18,17 +18,17 @@ import { WeeklyReviewCard } from "@/components/WeeklyReviewCard";
 import { FactorsPanel } from "@/components/FactorsPanel";
 
 export default async function ProgressPage() {
-  const [history, gamification, profile, sleepLogs, weeklyReview, measurementTrend, todaySummary, todaySymptomLog] =
+  const [history, gamification, profile, sleepLogs, measurementTrend, todaySummary, todaySymptomLog] =
     await Promise.all([
       getHistory(365),
       getGamificationSummary(),
       getProfile(),
       getRecentSleepLogs(14),
-      getWeeklyReview(),
       getMeasurementTrend(),
       getTodaySummary(),
       getTodaySymptomLog(),
     ]);
+  const weeklyReview = await getWeeklyReview(history.slice(-7));
 
   const earnedIds = new Set(gamification?.state.badges ?? []);
 

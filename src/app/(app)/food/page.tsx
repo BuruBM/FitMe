@@ -1,15 +1,16 @@
 import { UtensilsCrossed } from "lucide-react";
 import { getFavoriteFoods } from "@/lib/actions/food";
-import { getRecentFoodLogs, getTodaySummary } from "@/lib/queries";
+import { getHiddenDefaultFoodIds, getRecentFoodLogs, getTodaySummary } from "@/lib/queries";
 import { FoodLogger } from "@/components/FoodLogger";
 import { TodayFoodList } from "@/components/TodayFoodList";
 import { FoodHistory } from "@/components/FoodHistory";
 
 export default async function FoodPage() {
-  const [favorites, summary, history] = await Promise.all([
+  const [favorites, summary, history, hiddenDefaultIds] = await Promise.all([
     getFavoriteFoods(),
     getTodaySummary(),
     getRecentFoodLogs(14),
+    getHiddenDefaultFoodIds(),
   ]);
 
   return (
@@ -18,7 +19,7 @@ export default async function FoodPage() {
         <UtensilsCrossed size={18} style={{ color: "var(--icon-food)" }} />
         Comida
       </h1>
-      <FoodLogger favorites={favorites} />
+      <FoodLogger favorites={favorites} hiddenDefaultIds={hiddenDefaultIds} />
       <TodayFoodList logs={summary.foodLogs} />
       <FoodHistory logs={history} />
     </div>
