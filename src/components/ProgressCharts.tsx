@@ -181,7 +181,7 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
                   <li>Irritabilidad y estrés: más bajo tu número, más puntos (se invierten).</li>
                   <li>Contacto social: más alto tu número (0-5), más puntos.</li>
                   <li>Sueño, agua y proteína: % de tu objetivo alcanzado ese día (tope 100%).</li>
-                  <li>Movimiento: 100 si entrenaste o caminaste, 0 si no.</li>
+                  <li>Movimiento: si entrenaste o caminaste suma puntos extra ese día — si no, simplemente no cuenta (no resta).</li>
                 </ul>
                 <p>
                   Como es un promedio de lo que cargaste, un día con pocos datos no pesa igual que uno completo —

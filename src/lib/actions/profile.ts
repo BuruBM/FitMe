@@ -178,15 +178,3 @@ export async function updateTripDate(tripDate: string | null) {
   revalidatePath("/profile");
 }
 
-export async function setVacation(since: string | null, until: string | null) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("No autenticada");
-
-  await supabase.from("profiles").update({ vacation_since: since, vacation_until: until }).eq("id", user.id);
-  revalidatePath("/dashboard");
-  revalidatePath("/profile");
-  revalidatePath("/progress");
-}

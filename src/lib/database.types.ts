@@ -22,8 +22,6 @@ export interface Profile {
   osteopenia_risk: boolean;
   vegetarian: boolean;
   trip_date: string | null;
-  vacation_since: string | null;
-  vacation_until: string | null;
   calorie_target: number | null;
   protein_target_g: number | null;
   carb_target_g: number | null;

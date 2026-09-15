@@ -554,7 +554,7 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
     supabase
       .from("profiles")
       .select(
-        "sleep_target_hours, water_target_ml, protein_target_g, avg_cycle_length, on_birth_control, tracks_cycle, vacation_since, vacation_until",
+        "sleep_target_hours, water_target_ml, protein_target_g, avg_cycle_length, on_birth_control, tracks_cycle",
       )
       .eq("id", user.id)
       .single(),
@@ -604,10 +604,6 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
   const sleepTarget = profile?.sleep_target_hours ?? 7.5;
   const waterTarget = profile?.water_target_ml ?? 2000;
   const proteinTarget = profile?.protein_target_g ?? 90;
-  const vacationSince = profile?.vacation_since ?? null;
-  const vacationUntil = profile?.vacation_until ?? null;
-  const isVacationDay = (d: string) =>
-    vacationSince != null && vacationUntil != null && d >= vacationSince && d <= vacationUntil;
 
   const points: HistoryPoint[] = [];
   for (let i = days - 1; i >= 0; i--) {
@@ -634,11 +630,10 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
     if (sleepHours != null) wellnessInputs.push(pct(sleepHours, sleepTarget));
     if (waterMl > 0) wellnessInputs.push(pct(waterMl, waterTarget));
     if (proteinG > 0) wellnessInputs.push(pct(proteinG, proteinTarget));
-    // Movement isn't self-rated here — it's the real signal from Entreno
-    // (workouts/walks). On a day inside her vacation window, not moving
-    // isn't a real signal of anything — leave it out of the average instead
-    // of scoring it 0, same as any other day with nothing logged.
-    if (!isVacationDay(date)) wellnessInputs.push(movedToday ? 100 : 0);
+    // Movement is a bonus, not a requirement: a day counts it in when she
+    // trained or walked, but a day with nothing logged just leaves it out of
+    // the average (like any other unlogged category) instead of scoring 0.
+    if (movedToday) wellnessInputs.push(100);
 
     const wellness =
       wellnessInputs.length >= 2
