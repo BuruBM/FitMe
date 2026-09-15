@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { Search, Star, Sparkles, Pencil, UtensilsCrossed, X } from "lucide-react";
+import { Search, Star, Sparkles, Pencil, UtensilsCrossed, X, Repeat } from "lucide-react";
 import { IconBadge } from "@/components/IconBadge";
 import { FOODS, searchLocalFoods, estimateFromText, type FoodItem } from "@/data/foods";
-import { logFood, deleteFavoriteFood, hideDefaultFood, unhideDefaultFood } from "@/lib/actions/food";
-import type { MealType, CustomFood } from "@/lib/database.types";
+import { logFood, deleteFavoriteFood, hideDefaultFood, unhideDefaultFood, repeatMeal } from "@/lib/actions/food";
+import type { MealType, CustomFood, FoodLog } from "@/lib/database.types";
 import type { OffResult } from "@/app/api/food-search/route";
 
 type Tab = "buscar" | "favoritos" | "texto" | "manual";
@@ -17,6 +17,7 @@ const MEAL_OPTIONS: { value: MealType; label: string }[] = [
   { value: "cena", label: "Cena" },
   { value: "snack", label: "Snack" },
 ];
+
 
 function guessMealType(): MealType {
   const h = new Date().getHours();
@@ -99,7 +100,15 @@ function fromCustomFood(f: CustomFood): Base {
   };
 }
 
-export function FoodLogger({ favorites, hiddenDefaultIds }: { favorites: CustomFood[]; hiddenDefaultIds: string[] }) {
+export function FoodLogger({
+  favorites,
+  hiddenDefaultIds,
+  yesterdayLogs,
+}: {
+  favorites: CustomFood[];
+  hiddenDefaultIds: string[];
+  yesterdayLogs: FoodLog[];
+}) {
   const [tab, setTab] = useState<Tab>("buscar");
   const [hidden, setHidden] = useState(new Set(hiddenDefaultIds));
 
@@ -130,7 +139,7 @@ export function FoodLogger({ favorites, hiddenDefaultIds }: { favorites: CustomF
         <TabButton active={tab === "manual"} onClick={() => setTab("manual")} icon={<Pencil size={14} />} label="Manual" />
       </div>
 
-      {tab === "buscar" && <SearchTab hidden={hidden} />}
+      {tab === "buscar" && <SearchTab yesterdayLogs={yesterdayLogs} />}
       {tab === "favoritos" && (
         <FavoritesTab favorites={favorites} hidden={hidden} onHideDefault={hideDefault} onUnhideDefault={unhideDefault} />
       )}
@@ -165,16 +174,13 @@ function TabButton({
   );
 }
 
-function SearchTab({ hidden }: { hidden: Set<string> }) {
+function SearchTab({ yesterdayLogs }: { yesterdayLogs: FoodLog[] }) {
   const [query, setQuery] = useState("");
   const [offResults, setOffResults] = useState<OffResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<Base | null>(null);
 
-  const localResults = useMemo(
-    () => (query ? searchLocalFoods(query) : FOODS.filter((f) => f.favoriteFor && !hidden.has(f.id))),
-    [query, hidden],
-  );
+  const localResults = useMemo(() => (query ? searchLocalFoods(query) : []), [query]);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -208,7 +214,7 @@ function SearchTab({ hidden }: { hidden: Set<string> }) {
         placeholder="Buscá un alimento, ej: tofu, milanesa de soja..."
         className="input"
       />
-      {!query && <p className="text-xs text-muted">Sugeridos para vos:</p>}
+      {!query && <RepeatYesterday yesterdayLogs={yesterdayLogs} onDone={done} />}
       <div className="space-y-1.5 max-h-80 overflow-y-auto">
         {localResults.map((f) => (
           <FoodResultRow
@@ -239,6 +245,69 @@ function SearchTab({ hidden }: { hidden: Set<string> }) {
           </p>
         )}
       </div>
+    </div>
+  );
+}
+
+function RepeatYesterday({ yesterdayLogs, onDone }: { yesterdayLogs: FoodLog[]; onDone: () => void }) {
+  const [isPending, startTransition] = useTransition();
+  const [repeatedMeals, setRepeatedMeals] = useState<Set<MealType>>(new Set());
+
+  if (yesterdayLogs.length === 0) return null;
+
+  const meals = MEAL_OPTIONS.map((m) => ({
+    ...m,
+    items: yesterdayLogs.filter((l) => l.meal_type === m.value),
+  })).filter((m) => m.items.length > 0 && !repeatedMeals.has(m.value));
+
+  if (meals.length === 0) return null;
+
+  function repeat(mealType: MealType, items: FoodLog[]) {
+    startTransition(async () => {
+      await repeatMeal(
+        mealType,
+        items.map((it) => ({
+          name: it.name,
+          quantity: it.quantity,
+          unit: it.unit,
+          calories: it.calories,
+          proteinG: it.protein_g,
+          carbsG: it.carbs_g,
+          fatG: it.fat_g,
+          fiberG: it.fiber_g,
+          sodiumMg: it.sodium_mg,
+          calciumMg: it.calcium_mg,
+          source: it.source,
+        })),
+      );
+      setRepeatedMeals((prev) => new Set(prev).add(mealType));
+      onDone();
+    });
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <p className="text-xs text-muted flex items-center gap-1">
+        <Repeat size={12} />
+        Repetir de ayer
+      </p>
+      {meals.map((m) => (
+        <div key={m.value} className="rounded-lg border border-card-border px-3 py-2">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm font-medium">{m.label}</p>
+            <button
+              onClick={() => repeat(m.value, m.items)}
+              disabled={isPending}
+              className="shrink-0 rounded-md bg-primary text-primary-foreground text-xs font-medium px-2.5 py-1 disabled:opacity-50"
+            >
+              Repetir
+            </button>
+          </div>
+          <p className="text-xs text-muted mt-0.5">
+            {m.items.map((it) => `${it.name} (${it.quantity} ${it.unit})`).join(", ")}
+          </p>
+        </div>
+      ))}
     </div>
   );
 }

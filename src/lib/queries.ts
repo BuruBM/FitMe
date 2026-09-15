@@ -320,6 +320,22 @@ export async function getHiddenDefaultFoodIds(): Promise<string[]> {
   return (data ?? []).map((r) => r.food_id);
 }
 
+export async function getYesterdayFoodLogs(): Promise<FoodLog[]> {
+  const supabase = await createClient();
+  const user = await getCurrentUser();
+  if (!user) return [];
+
+  const yesterday = shiftDateStr(todayInAppTz(), -1);
+  const { data } = await supabase
+    .from("food_logs")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("log_date", yesterday)
+    .order("logged_at", { ascending: true });
+
+  return data ?? [];
+}
+
 export async function getRecentFoodLogs(days = 14): Promise<FoodLog[]> {
   const supabase = await createClient();
   const user = await getCurrentUser();

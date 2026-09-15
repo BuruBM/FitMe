@@ -85,6 +85,96 @@ export async function deleteFoodLog(id: string) {
   revalidatePath("/food");
 }
 
+// Lets her change the portion or which meal something belongs to without
+// deleting and re-adding it. Rescales every macro by the same ratio as the
+// quantity change, using the log's own current values as the "per current
+// quantity" baseline — works regardless of where the food originally came
+// from (local DB, Open Food Facts, manual, favorite).
+export async function updateFoodLog(id: string, quantity: number, mealType: MealType) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("No autenticada");
+  const supabase = await createClient();
+
+  const { data: existing, error: fetchError } = await supabase
+    .from("food_logs")
+    .select("quantity, calories, protein_g, carbs_g, fat_g, fiber_g, sodium_mg, calcium_mg")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .single();
+  if (fetchError) throw fetchError;
+
+  const ratio = existing.quantity > 0 ? quantity / existing.quantity : 1;
+
+  const { error } = await supabase
+    .from("food_logs")
+    .update({
+      quantity,
+      meal_type: mealType,
+      calories: Math.round(existing.calories * ratio),
+      protein_g: Math.round(existing.protein_g * ratio * 10) / 10,
+      carbs_g: Math.round(existing.carbs_g * ratio * 10) / 10,
+      fat_g: Math.round(existing.fat_g * ratio * 10) / 10,
+      fiber_g: Math.round(existing.fiber_g * ratio * 10) / 10,
+      sodium_mg: Math.round(existing.sodium_mg * ratio),
+      calcium_mg: Math.round(existing.calcium_mg * ratio),
+    })
+    .eq("id", id)
+    .eq("user_id", user.id);
+  if (error) throw error;
+
+  revalidatePath("/dashboard");
+  revalidatePath("/food");
+}
+
+export interface RepeatMealItem {
+  name: string;
+  quantity: number;
+  unit: string;
+  calories: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
+  fiberG: number;
+  sodiumMg: number;
+  calciumMg: number;
+  source: FoodSource;
+}
+
+// One tap to log everything from a previous day's breakfast/lunch/etc again
+// today, instead of re-searching and re-adding each item one by one.
+export async function repeatMeal(mealType: MealType, items: RepeatMealItem[]) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("No autenticada");
+  if (items.length === 0) return;
+  const supabase = await createClient();
+
+  const today = todayInAppTz();
+  const { error } = await supabase.from("food_logs").insert(
+    items.map((it) => ({
+      user_id: user.id,
+      log_date: today,
+      meal_type: mealType,
+      name: it.name,
+      quantity: it.quantity,
+      unit: it.unit,
+      calories: it.calories,
+      protein_g: it.proteinG,
+      carbs_g: it.carbsG,
+      fat_g: it.fatG,
+      fiber_g: it.fiberG,
+      sodium_mg: it.sodiumMg,
+      calcium_mg: it.calciumMg,
+      source: it.source,
+    })),
+  );
+  if (error) throw error;
+
+  await awardXp(supabase, user.id, XP_RULES.food_log);
+
+  revalidatePath("/dashboard");
+  revalidatePath("/food");
+}
+
 export async function getFavoriteFoods() {
   const user = await getCurrentUser();
   if (!user) return [];
