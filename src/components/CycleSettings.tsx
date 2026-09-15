@@ -17,12 +17,16 @@ export function CycleSettings({
   const [length, setLength] = useState(avgCycleLength);
   const [pill, setPill] = useState(onBirthControl);
   const [startedOn, setStartedOn] = useState(pillStartedOn ?? "");
+  const [savedState, setSavedState] = useState({ length: avgCycleLength, pill: onBirthControl, startedOn: pillStartedOn ?? "" });
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
+
+  const isDirty = length !== savedState.length || pill !== savedState.pill || startedOn !== savedState.startedOn;
 
   function save() {
     startTransition(async () => {
       await updateCycleSettings(length, pill, startedOn || null);
+      setSavedState({ length, pill, startedOn });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     });
@@ -67,7 +71,7 @@ export function CycleSettings({
         )}
         <button
           onClick={save}
-          disabled={isPending}
+          disabled={isPending || !isDirty}
           className="w-full rounded-lg bg-primary text-primary-foreground text-sm font-medium py-2 disabled:opacity-50"
         >
           {saved ? "Guardado ✓" : "Guardar"}

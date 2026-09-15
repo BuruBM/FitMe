@@ -7,6 +7,7 @@ import type { BodyMeasurement } from "@/lib/database.types";
 
 const FIELDS = [
   { key: "waist", label: "Cintura", placeholder: "ej: 78" },
+  { key: "abdomen", label: "Abdomen", placeholder: "a la altura del ombligo" },
   { key: "hip", label: "Cadera", placeholder: "opcional" },
 ] as const;
 const EXTRA_FIELDS = [
@@ -30,9 +31,11 @@ export function MeasurementsQuickLog({
 }) {
   const [loggedTodayLocal, setLoggedTodayLocal] = useState(latest?.log_date === todayInAppTz());
   const [savedWaist, setSavedWaist] = useState(latest?.waist_cm ?? null);
+  const [savedAbdomen, setSavedAbdomen] = useState(latest?.abdomen_cm ?? null);
   const loggedToday = loggedTodayLocal;
   const [open, setOpen] = useState(false);
   const [waist, setWaist] = useState("");
+  const [abdomen, setAbdomen] = useState("");
   const [hip, setHip] = useState("");
   const [thigh, setThigh] = useState("");
   const [arm, setArm] = useState("");
@@ -40,11 +43,12 @@ export function MeasurementsQuickLog({
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
 
-  const values = { waist, hip, thigh, arm };
-  const setters = { waist: setWaist, hip: setHip, thigh: setThigh, arm: setArm };
+  const values = { waist, abdomen, hip, thigh, arm };
+  const setters = { waist: setWaist, abdomen: setAbdomen, hip: setHip, thigh: setThigh, arm: setArm };
 
   function startEditing() {
     setWaist(loggedToday ? (savedWaist?.toString() ?? "") : "");
+    setAbdomen(loggedToday ? (savedAbdomen?.toString() ?? "") : "");
     setHip(loggedToday ? (latest?.hip_cm?.toString() ?? "") : "");
     setThigh(loggedToday ? (latest?.thigh_cm?.toString() ?? "") : "");
     setArm(loggedToday ? (latest?.arm_cm?.toString() ?? "") : "");
@@ -53,11 +57,12 @@ export function MeasurementsQuickLog({
 
   function save() {
     const n = (v: string) => (v ? Number(v) : null);
-    if (!waist && !hip && !thigh && !arm) return;
+    if (!waist && !abdomen && !hip && !thigh && !arm) return;
     startTransition(async () => {
-      await logMeasurements(n(waist), n(hip), n(thigh), n(arm));
+      await logMeasurements(n(waist), n(abdomen), n(hip), n(thigh), n(arm));
       setLoggedTodayLocal(true);
       setSavedWaist(n(waist));
+      setSavedAbdomen(n(abdomen));
       setSaved(true);
       setOpen(false);
       setTimeout(() => setSaved(false), 2000);
@@ -123,7 +128,7 @@ export function MeasurementsQuickLog({
           </div>
           <button
             onClick={save}
-            disabled={isPending || (!waist && !hip && !thigh && !arm)}
+            disabled={isPending || (!waist && !abdomen && !hip && !thigh && !arm)}
             className="mt-3 w-full rounded-lg bg-primary text-primary-foreground text-sm font-medium py-2 disabled:opacity-50"
           >
             Guardar
