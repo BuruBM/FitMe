@@ -527,6 +527,10 @@ function scale1to5(value: number): number {
   return ((value - 1) / 4) * 100;
 }
 
+function scale0to5(value: number): number {
+  return (value / 5) * 100;
+}
+
 export async function getHistory(days = 14): Promise<HistoryPoint[]> {
   const supabase = await createClient();
   const user = await getCurrentUser();
@@ -626,6 +630,7 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
     if (symptom?.energy != null) wellnessInputs.push(scale1to5(symptom.energy));
     if (symptom?.irritability != null) wellnessInputs.push(100 - scale1to5(symptom.irritability));
     if (symptom?.stress_level != null) wellnessInputs.push(100 - scale1to5(symptom.stress_level));
+    if (symptom?.social_contact != null) wellnessInputs.push(scale0to5(symptom.social_contact));
     if (sleepHours != null) wellnessInputs.push(pct(sleepHours, sleepTarget));
     if (waterMl > 0) wellnessInputs.push(pct(waterMl, waterTarget));
     if (proteinG > 0) wellnessInputs.push(pct(proteinG, proteinTarget));

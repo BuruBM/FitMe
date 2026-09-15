@@ -167,7 +167,8 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
         {metricKey === "wellness" && (
           <div className="mb-2">
             <p className="text-xs text-muted">
-              Combina ánimo, energía, irritabilidad, estrés, sueño, agua, proteína y si te moviste.{" "}
+              Combina ánimo, energía, irritabilidad, estrés, contacto social, sueño, agua, proteína y si te
+              moviste.{" "}
               <button onClick={() => setShowWellnessInfo((v) => !v)} className="text-primary font-medium">
                 {showWellnessInfo ? "Ocultar" : "¿Cómo se calcula?"}
               </button>
@@ -178,6 +179,7 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
                 <ul className="list-disc pl-4 space-y-0.5">
                   <li>Ánimo y energía: más alto tu número (1-5), más puntos.</li>
                   <li>Irritabilidad y estrés: más bajo tu número, más puntos (se invierten).</li>
+                  <li>Contacto social: más alto tu número (0-5), más puntos.</li>
                   <li>Sueño, agua y proteína: % de tu objetivo alcanzado ese día (tope 100%).</li>
                   <li>Movimiento: 100 si entrenaste o caminaste, 0 si no.</li>
                 </ul>
