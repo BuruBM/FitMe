@@ -70,7 +70,7 @@ function fromOffResult(r: OffResult): Base {
     name: r.name,
     unit: r.unit,
     refQty: 1,
-    gramsPerUnit: null,
+    gramsPerUnit: r.quantity,
     calories: r.calories,
     protein_g: r.protein_g,
     carbs_g: r.carbs_g,
@@ -192,7 +192,13 @@ function SearchTab({ hidden }: { hidden: Set<string> }) {
     return () => clearTimeout(t);
   }, [query]);
 
-  if (selected) return <AddItemPanel base={selected} onDone={() => setSelected(null)} />;
+  function done() {
+    setSelected(null);
+    setQuery("");
+    setOffResults([]);
+  }
+
+  if (selected) return <AddItemPanel base={selected} onDone={done} />;
 
   return (
     <div className="space-y-3">

@@ -18,6 +18,7 @@ export function CycleSettings({
   const [pill, setPill] = useState(onBirthControl);
   const [startedOn, setStartedOn] = useState(pillStartedOn ?? "");
   const [savedState, setSavedState] = useState({ length: avgCycleLength, pill: onBirthControl, startedOn: pillStartedOn ?? "" });
+  const [editingStartDate, setEditingStartDate] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
 
@@ -54,7 +55,18 @@ export function CycleSettings({
           <input type="checkbox" checked={pill} onChange={(e) => setPill(e.target.checked)} />
           Estoy tomando pastillas anticonceptivas
         </label>
-        {pill && (
+        {pill && !editingStartDate && (
+          <button
+            type="button"
+            onClick={() => setEditingStartDate(true)}
+            className="text-xs text-muted text-left"
+          >
+            {startedOn ? `Empezaste el ${new Date(startedOn + "T00:00:00").toLocaleDateString("es-AR")}` : "Fecha de inicio no cargada"}
+            {" · "}
+            <span className="text-primary font-medium">Cambiar</span>
+          </button>
+        )}
+        {pill && editingStartDate && (
           <div>
             <label className="text-xs text-muted">¿Desde cuándo la retomaste/empezaste?</label>
             <input
