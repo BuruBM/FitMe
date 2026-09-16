@@ -7,7 +7,7 @@ export const XP_RULES = {
   weight_log: 5,
   workout_done: 20,
   symptom_log: 5,
-  pet_care_done: 10,
+  pet_care_item: 3,
 } as const;
 
 export function xpForLevel(level: number): number {

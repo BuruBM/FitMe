@@ -20,12 +20,10 @@ export function PetCareQuickLog({ today, pausedUntil }: { today: PetCareLog | nu
   const isPaused = pauseUntil != null && pauseUntil >= todayInAppTz();
 
   function toggle(current: boolean, setter: (v: boolean) => void, field: keyof ReturnType<typeof snapshot>) {
-    const before = snapshot();
-    const wasComplete = before.miloMedication && before.miloSupplement && before.zoeMedication && before.zoeSupplement;
     const next = !current;
+    const state = { ...snapshot(), [field]: next };
     setter(next);
-    const state = { ...before, [field]: next };
-    startTransition(() => logPetCare(state, wasComplete));
+    startTransition(() => logPetCare(state));
   }
 
   function snapshot() {

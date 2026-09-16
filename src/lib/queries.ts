@@ -514,7 +514,7 @@ export interface HistoryPoint {
   cyclePhase: CyclePhase | null;
   movedToday: boolean;
   workoutNames: string[];
-  petCareDone: boolean | null;
+  petCareItemsDone: number | null;
   pillTaken: boolean | null;
   /** 0-100 composite of whatever metrics were logged that day; null if too little data. */
   wellness: number | null;
@@ -640,7 +640,9 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
     const proteinG = proteinByDay.get(date) ?? 0;
     const movementMinutes = durationByDay.get(date) ?? 0;
     const pet = petCareByDay.get(date);
-    const petCareDone = pet ? pet.milo_supplement && pet.zoe_supplement : null;
+    const petCareItemsDone = pet
+      ? [pet.milo_medication, pet.milo_supplement, pet.zoe_medication, pet.zoe_supplement].filter(Boolean).length
+      : null;
     const movedToday = movedDaySet.has(date);
     // Tracked regardless of birth control (exogenous hormones don't
     // necessarily override her own cycle, especially with PCOS), but only
@@ -696,7 +698,7 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
       cyclePhase,
       movedToday,
       workoutNames: workoutNamesByDay.get(date) ?? [],
-      petCareDone,
+      petCareItemsDone,
       pillTaken: onBirthControl ? (pillByDay.get(date) ?? null) : null,
       wellness,
     });

@@ -14,20 +14,19 @@ export interface PetCareInput {
   zoeSupplement: boolean;
 }
 
-function isComplete(input: PetCareInput): boolean {
-  // Neither medication is realistically daily — Zoe's isn't meant to be, and
-  // Milo's gets skipped a couple times a week even though that's the ideal.
-  // So neither gates "complete" here; they're still logged when given, just
-  // not required to count the day as done. Supplements are the daily items.
-  return input.miloSupplement && input.zoeSupplement;
-}
-
-export async function logPetCare(input: PetCareInput, wasComplete: boolean) {
+export async function logPetCare(input: PetCareInput) {
   const user = await getCurrentUser();
   if (!user) throw new Error("No autenticada");
   const supabase = await createClient();
 
   const today = todayInAppTz();
+
+  const { data: existing } = await supabase
+    .from("pet_care_logs")
+    .select("milo_medication, milo_supplement, zoe_medication, zoe_supplement")
+    .eq("user_id", user.id)
+    .eq("log_date", today)
+    .maybeSingle();
 
   const { error } = await supabase.from("pet_care_logs").upsert(
     {
@@ -42,10 +41,18 @@ export async function logPetCare(input: PetCareInput, wasComplete: boolean) {
   );
   if (error) throw error;
 
-  // Award XP once, the moment the day's checklist first becomes fully done —
-  // not per toggle, so it can't be farmed by flipping a box on and off.
-  if (!wasComplete && isComplete(input)) {
-    await awardXp(supabase, user.id, XP_RULES.pet_care_done);
+  // Award XP per task the moment it's first checked today — proportional to
+  // how much she actually did, not one all-or-nothing bonus. Comparing
+  // against the row's previously saved state (not a client-supplied flag)
+  // means unchecking and rechecking the same box can't re-earn it.
+  const prev = existing ?? { milo_medication: false, milo_supplement: false, zoe_medication: false, zoe_supplement: false };
+  let newlyDone = 0;
+  if (input.miloMedication && !prev.milo_medication) newlyDone++;
+  if (input.miloSupplement && !prev.milo_supplement) newlyDone++;
+  if (input.zoeMedication && !prev.zoe_medication) newlyDone++;
+  if (input.zoeSupplement && !prev.zoe_supplement) newlyDone++;
+  if (newlyDone > 0) {
+    await awardXp(supabase, user.id, XP_RULES.pet_care_item * newlyDone);
   }
 
   // The checklist already flips instantly on screen (optimistic local

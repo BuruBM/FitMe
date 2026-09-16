@@ -28,7 +28,7 @@ function buildStats(point: HistoryPoint): Stat[] {
     point.calories > 0 && { label: "Calorías", value: `${Math.round(point.calories)} kcal` },
     point.proteinG > 0 && { label: "Proteína", value: `${Math.round(point.proteinG)}g` },
     { label: "Movimiento", value: point.workoutNames.length > 0 ? point.workoutNames.join(", ") : "Sin registrar" },
-    point.petCareDone != null && { label: "Milo y Zoe", value: point.petCareDone ? "Completo" : "Incompleto" },
+    point.petCareItemsDone != null && { label: "Milo y Zoe", value: `${point.petCareItemsDone}/4 tareas` },
     point.alcoholUnits != null && {
       label: "Alcohol",
       value: point.alcoholUnits > 0 ? `${point.alcoholUnits} trago(s)` : "Sin alcohol",
