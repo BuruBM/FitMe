@@ -663,10 +663,11 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
     // Protein: only falling short of a healthy minimum costs points — going
     // over her goal target is never penalized, it just caps at 100.
     if (proteinG > 0) wellnessInputs.push(pct(proteinG, proteinMinimum));
-    // Calories: only going over her target costs points. Coming in under
-    // isn't scored at all (neither rewarded nor penalized) — same "omit,
-    // don't zero" treatment as an unlogged day.
-    if (calorieTarget && caloriesToday > calorieTarget) wellnessInputs.push(scaleCloseness(caloriesToday, calorieTarget));
+    // Calories: closeness to her target either way — she's eating in a
+    // deficit on purpose, so landing on or a bit under the target scores
+    // well too, not just hitting it exactly. Only drifting far off (well
+    // over, or way under) costs points.
+    if (caloriesToday > 0 && calorieTarget) wellnessInputs.push(scaleCloseness(caloriesToday, calorieTarget));
     // Movement is a bonus, not a requirement: a day with minutes logged counts
     // in proportionally (more time = more points, up to the daily target); a
     // day with nothing logged just leaves it out of the average instead of
