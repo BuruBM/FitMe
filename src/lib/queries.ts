@@ -136,9 +136,9 @@ export async function getGamificationSummary(): Promise<GamificationSummary | nu
         .eq("user_id", user.id),
     ]);
 
-  // Zoe's medication isn't daily, so it's not required for a day to count as complete.
+  // Neither pet's medication is realistically daily, so neither is required for a day to count as complete.
   const totalPetCareDaysComplete = (petCareRows ?? []).filter(
-    (p) => p.milo_medication && p.milo_supplement && p.zoe_supplement,
+    (p) => p.milo_supplement && p.zoe_supplement,
   ).length;
 
   const { data: profile } = await supabase
@@ -615,7 +615,7 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
     const sleepHours = sleep?.hours ?? null;
     const proteinG = proteinByDay.get(date) ?? 0;
     const pet = petCareByDay.get(date);
-    const petCareDone = pet ? pet.milo_medication && pet.milo_supplement && pet.zoe_supplement : null;
+    const petCareDone = pet ? pet.milo_supplement && pet.zoe_supplement : null;
     const movedToday = movedDaySet.has(date);
     // Tracked regardless of birth control (exogenous hormones don't
     // necessarily override her own cycle, especially with PCOS), but only

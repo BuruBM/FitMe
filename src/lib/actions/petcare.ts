@@ -15,10 +15,11 @@ export interface PetCareInput {
 }
 
 function isComplete(input: PetCareInput): boolean {
-  // Zoe's medication isn't a daily thing (unlike Milo's, which ideally is) —
-  // so it doesn't gate "complete" here. It's still logged when given, just
-  // not required to count the day as done.
-  return input.miloMedication && input.miloSupplement && input.zoeSupplement;
+  // Neither medication is realistically daily — Zoe's isn't meant to be, and
+  // Milo's gets skipped a couple times a week even though that's the ideal.
+  // So neither gates "complete" here; they're still logged when given, just
+  // not required to count the day as done. Supplements are the daily items.
+  return input.miloSupplement && input.zoeSupplement;
 }
 
 export async function logPetCare(input: PetCareInput, wasComplete: boolean) {
