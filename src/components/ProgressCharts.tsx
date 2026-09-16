@@ -167,8 +167,8 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
         {metricKey === "wellness" && (
           <div className="mb-2">
             <p className="text-xs text-muted">
-              Combina ánimo, energía, irritabilidad, estrés, contacto social, sueño, agua, proteína y si te
-              moviste.{" "}
+              Combina ánimo, energía, irritabilidad, estrés, contacto social, redes, sueño, agua, calorías,
+              proteína y movimiento.{" "}
               <button onClick={() => setShowWellnessInfo((v) => !v)} className="text-primary font-medium">
                 {showWellnessInfo ? "Ocultar" : "¿Cómo se calcula?"}
               </button>
@@ -180,8 +180,10 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
                   <li>Ánimo y energía: más alto tu número (1-5), más puntos.</li>
                   <li>Irritabilidad y estrés: más bajo tu número, más puntos (se invierten).</li>
                   <li>Contacto social: más alto tu número (0-5), más puntos.</li>
-                  <li>Sueño, agua y proteína: % de tu objetivo alcanzado ese día (tope 100%).</li>
-                  <li>Movimiento: si entrenaste o caminaste suma puntos extra ese día — si no, simplemente no cuenta (no resta).</li>
+                  <li>Redes: menos minutos, más puntos.</li>
+                  <li>Sueño y agua: % de tu objetivo alcanzado ese día (tope 100%).</li>
+                  <li>Calorías y proteína: más puntos cuanto más cerca de tu objetivo — pasarte también resta, no solo quedarte corta.</li>
+                  <li>Movimiento: suma puntos extra según los minutos que hiciste (tope a los 30 min) — si no registraste nada, simplemente no cuenta (no resta).</li>
                 </ul>
                 <p>
                   Como es un promedio de lo que cargaste, un día con pocos datos no pesa igual que uno completo —

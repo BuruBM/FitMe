@@ -524,6 +524,23 @@ function pct(value: number, target: number): number {
   return target > 0 ? Math.min(100, Math.max(0, (value / target) * 100)) : 0;
 }
 
+// For metrics with a "sweet spot" rather than a "more is always better" target
+// (calories, protein): 100 right at the target, falling off symmetrically the
+// further away you are in either direction — so going over costs points too,
+// not just falling short.
+function scaleCloseness(value: number, target: number): number {
+  if (target <= 0) return 0;
+  const diffPct = Math.abs(value - target) / target;
+  return Math.max(0, 100 - diffPct * 100);
+}
+
+// For metrics where less is better (social media time): 100 at zero, falling
+// to 0 once it reaches capMinutes.
+function scaleLessIsBetter(value: number, capMinutes: number): number {
+  if (capMinutes <= 0) return 0;
+  return Math.max(0, 100 - (value / capMinutes) * 100);
+}
+
 function scale1to5(value: number): number {
   return ((value - 1) / 4) * 100;
 }
@@ -531,6 +548,9 @@ function scale1to5(value: number): number {
 function scale0to5(value: number): number {
   return (value / 5) * 100;
 }
+
+const MOVEMENT_TARGET_MIN = 30;
+const SOCIAL_MEDIA_CAP_MIN = 120;
 
 export async function getHistory(days = 14): Promise<HistoryPoint[]> {
   const supabase = await createClient();
@@ -555,7 +575,7 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
     supabase
       .from("profiles")
       .select(
-        "sleep_target_hours, water_target_ml, protein_target_g, avg_cycle_length, on_birth_control, tracks_cycle",
+        "sleep_target_hours, water_target_ml, protein_target_g, calorie_target, avg_cycle_length, on_birth_control, tracks_cycle",
       )
       .eq("id", user.id)
       .single(),
@@ -569,7 +589,7 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
       .select("log_date, milo_medication, milo_supplement, zoe_medication, zoe_supplement")
       .eq("user_id", user.id)
       .gte("log_date", since),
-    supabase.from("workout_logs").select("log_date, workout_name").eq("user_id", user.id).gte("log_date", since),
+    supabase.from("workout_logs").select("log_date, workout_name, duration_min").eq("user_id", user.id).gte("log_date", since),
     // full history, not just this window: an old period start can still be the
     // applicable one for the early days of the window.
     supabase.from("cycle_logs").select("period_start_date").eq("user_id", user.id).lte("period_start_date", today),
@@ -582,9 +602,11 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
   const petCareByDay = new Map((petCare ?? []).map((p) => [p.log_date, p]));
   const movedDaySet = new Set((workouts ?? []).map((w) => w.log_date));
   const workoutNamesByDay = new Map<string, string[]>();
+  const durationByDay = new Map<string, number>();
   for (const w of workouts ?? []) {
     if (!workoutNamesByDay.has(w.log_date)) workoutNamesByDay.set(w.log_date, []);
     workoutNamesByDay.get(w.log_date)!.push(w.workout_name);
+    durationByDay.set(w.log_date, (durationByDay.get(w.log_date) ?? 0) + (w.duration_min ?? 0));
   }
   const periodStarts = (periodLogs ?? []).map((p) => p.period_start_date);
   const avgCycleLength = profile?.avg_cycle_length ?? 28;
@@ -605,6 +627,7 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
   const sleepTarget = profile?.sleep_target_hours ?? 7.5;
   const waterTarget = profile?.water_target_ml ?? 2000;
   const proteinTarget = profile?.protein_target_g ?? 90;
+  const calorieTarget = profile?.calorie_target ?? null;
 
   const points: HistoryPoint[] = [];
   for (let i = days - 1; i >= 0; i--) {
@@ -613,7 +636,9 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
     const sleep = sleepByDay.get(date);
     const waterMl = waterByDay.get(date) ?? 0;
     const sleepHours = sleep?.hours ?? null;
+    const caloriesToday = caloriesByDay.get(date) ?? 0;
     const proteinG = proteinByDay.get(date) ?? 0;
+    const movementMinutes = durationByDay.get(date) ?? 0;
     const pet = petCareByDay.get(date);
     const petCareDone = pet ? pet.milo_supplement && pet.zoe_supplement : null;
     const movedToday = movedDaySet.has(date);
@@ -628,13 +653,16 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
     if (symptom?.irritability != null) wellnessInputs.push(100 - scale1to5(symptom.irritability));
     if (symptom?.stress_level != null) wellnessInputs.push(100 - scale1to5(symptom.stress_level));
     if (symptom?.social_contact != null) wellnessInputs.push(scale0to5(symptom.social_contact));
+    if (symptom?.social_media_minutes != null) wellnessInputs.push(scaleLessIsBetter(symptom.social_media_minutes, SOCIAL_MEDIA_CAP_MIN));
     if (sleepHours != null) wellnessInputs.push(pct(sleepHours, sleepTarget));
     if (waterMl > 0) wellnessInputs.push(pct(waterMl, waterTarget));
-    if (proteinG > 0) wellnessInputs.push(pct(proteinG, proteinTarget));
-    // Movement is a bonus, not a requirement: a day counts it in when she
-    // trained or walked, but a day with nothing logged just leaves it out of
-    // the average (like any other unlogged category) instead of scoring 0.
-    if (movedToday) wellnessInputs.push(100);
+    if (proteinG > 0) wellnessInputs.push(scaleCloseness(proteinG, proteinTarget));
+    if (caloriesToday > 0 && calorieTarget) wellnessInputs.push(scaleCloseness(caloriesToday, calorieTarget));
+    // Movement is a bonus, not a requirement: a day with minutes logged counts
+    // in proportionally (more time = more points, up to the daily target); a
+    // day with nothing logged just leaves it out of the average instead of
+    // scoring 0.
+    if (movementMinutes > 0) wellnessInputs.push(pct(movementMinutes, MOVEMENT_TARGET_MIN));
 
     const wellness =
       wellnessInputs.length >= 2
@@ -649,7 +677,7 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
       sleepQuality: sleep?.quality ?? null,
       sleepBedtime: sleep?.bedtime ?? null,
       sleepWakeUps: sleep?.wake_ups ?? null,
-      calories: caloriesByDay.get(date) ?? 0,
+      calories: caloriesToday,
       proteinG,
       mood: symptom?.mood ?? null,
       energy: symptom?.energy ?? null,
