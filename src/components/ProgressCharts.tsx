@@ -182,7 +182,8 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
                   <li>Contacto social: más alto tu número (0-5), más puntos.</li>
                   <li>Redes: menos minutos, más puntos.</li>
                   <li>Sueño y agua: % de tu objetivo alcanzado ese día (tope 100%).</li>
-                  <li>Calorías y proteína: más puntos cuanto más cerca de tu objetivo — pasarte también resta, no solo quedarte corta.</li>
+                  <li>Calorías: solo resta si te pasás de tu objetivo — quedarte corta no suma ni resta.</li>
+                  <li>Proteína: solo resta si consumís menos que un mínimo saludable para tu peso — pasarte de tu objetivo no resta.</li>
                   <li>Movimiento: suma puntos extra según los minutos que hiciste (tope a los 30 min) — si no registraste nada, simplemente no cuenta (no resta).</li>
                 </ul>
                 <p>

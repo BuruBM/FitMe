@@ -575,7 +575,7 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
     supabase
       .from("profiles")
       .select(
-        "sleep_target_hours, water_target_ml, protein_target_g, calorie_target, avg_cycle_length, on_birth_control, tracks_cycle",
+        "sleep_target_hours, water_target_ml, calorie_target, weight_kg, avg_cycle_length, on_birth_control, tracks_cycle",
       )
       .eq("id", user.id)
       .single(),
@@ -626,8 +626,10 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
 
   const sleepTarget = profile?.sleep_target_hours ?? 7.5;
   const waterTarget = profile?.water_target_ml ?? 2000;
-  const proteinTarget = profile?.protein_target_g ?? 90;
   const calorieTarget = profile?.calorie_target ?? null;
+  // General adult RDA floor (~0.8g protein per kg body weight) — not her
+  // higher fitness-goal target, just the minimum to not run a deficit.
+  const proteinMinimum = Math.round((profile?.weight_kg ?? 65) * 0.8);
 
   const points: HistoryPoint[] = [];
   for (let i = days - 1; i >= 0; i--) {
@@ -658,8 +660,13 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
     if (symptom?.social_media_minutes != null) wellnessInputs.push(scaleLessIsBetter(symptom.social_media_minutes, SOCIAL_MEDIA_CAP_MIN));
     if (sleepHours != null) wellnessInputs.push(pct(sleepHours, sleepTarget));
     if (waterMl > 0) wellnessInputs.push(pct(waterMl, waterTarget));
-    if (proteinG > 0) wellnessInputs.push(scaleCloseness(proteinG, proteinTarget));
-    if (caloriesToday > 0 && calorieTarget) wellnessInputs.push(scaleCloseness(caloriesToday, calorieTarget));
+    // Protein: only falling short of a healthy minimum costs points — going
+    // over her goal target is never penalized, it just caps at 100.
+    if (proteinG > 0) wellnessInputs.push(pct(proteinG, proteinMinimum));
+    // Calories: only going over her target costs points. Coming in under
+    // isn't scored at all (neither rewarded nor penalized) — same "omit,
+    // don't zero" treatment as an unlogged day.
+    if (calorieTarget && caloriesToday > calorieTarget) wellnessInputs.push(scaleCloseness(caloriesToday, calorieTarget));
     // Movement is a bonus, not a requirement: a day with minutes logged counts
     // in proportionally (more time = more points, up to the daily target); a
     // day with nothing logged just leaves it out of the average instead of
