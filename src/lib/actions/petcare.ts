@@ -15,7 +15,10 @@ export interface PetCareInput {
 }
 
 function isComplete(input: PetCareInput): boolean {
-  return input.miloMedication && input.miloSupplement && input.zoeMedication && input.zoeSupplement;
+  // Zoe's medication isn't a daily thing (unlike Milo's, which ideally is) —
+  // so it doesn't gate "complete" here. It's still logged when given, just
+  // not required to count the day as done.
+  return input.miloMedication && input.miloSupplement && input.zoeSupplement;
 }
 
 export async function logPetCare(input: PetCareInput, wasComplete: boolean) {
