@@ -5,7 +5,15 @@ import { Droplet } from "lucide-react";
 import { logWater } from "@/lib/actions/tracking";
 import { IconBadge } from "@/components/IconBadge";
 
-export function WaterQuickAdd({ currentMl, targetMl }: { currentMl: number; targetMl: number }) {
+export function WaterQuickAdd({
+  currentMl,
+  targetMl,
+  date,
+}: {
+  currentMl: number;
+  targetMl: number;
+  date?: string;
+}) {
   const [total, setTotal] = useState(currentMl);
   const [isPending, startTransition] = useTransition();
   const pct = targetMl > 0 ? Math.min(100, Math.round((total / targetMl) * 100)) : 0;
@@ -13,7 +21,7 @@ export function WaterQuickAdd({ currentMl, targetMl }: { currentMl: number; targ
   function add(ml: number) {
     setTotal((t) => t + ml);
     startTransition(() => {
-      logWater(ml);
+      logWater(ml, date);
     });
   }
 

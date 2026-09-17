@@ -105,6 +105,74 @@ export async function getTodaySummary(): Promise<TodaySummary> {
   };
 }
 
+export interface DayEditorData {
+  date: string;
+  profile: Profile;
+  foodLogs: FoodLog[];
+  workoutLogs: WorkoutLog[];
+  waterMl: number;
+  sleepHours: number | null;
+  sleepBedtime: string | null;
+  sleepWakeUps: number | null;
+  weightKg: number | null;
+  measurement: BodyMeasurement | null;
+  symptom: SymptomLog | null;
+  petCare: PetCareLog | null;
+  pillTaken: boolean | null;
+}
+
+// Powers the "edit a past day" page — same shape of data as the various
+// "today" widgets, but for an arbitrary date so she can backfill a day she
+// didn't get to (or didn't finish) at the time.
+export async function getDayEditorData(date: string): Promise<DayEditorData | null> {
+  const supabase = await createClient();
+  const user = await getCurrentUser();
+  if (!user) return null;
+
+  const [
+    { data: profile },
+    { data: foodLogs },
+    { data: workoutLogs },
+    { data: waterLogs },
+    { data: sleepLog },
+    { data: weightLog },
+    { data: measurement },
+    { data: symptom },
+    { data: petCare },
+    { data: pillLog },
+  ] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", user.id).single(),
+    supabase.from("food_logs").select("*").eq("user_id", user.id).eq("log_date", date).order("logged_at"),
+    supabase.from("workout_logs").select("*").eq("user_id", user.id).eq("log_date", date).order("completed_at"),
+    supabase.from("water_logs").select("amount_ml").eq("user_id", user.id).eq("log_date", date),
+    supabase.from("sleep_logs").select("*").eq("user_id", user.id).eq("log_date", date).maybeSingle(),
+    supabase.from("weight_logs").select("weight_kg").eq("user_id", user.id).eq("log_date", date).maybeSingle(),
+    supabase.from("body_measurements").select("*").eq("user_id", user.id).eq("log_date", date).maybeSingle(),
+    supabase.from("symptom_logs").select("*").eq("user_id", user.id).eq("log_date", date).maybeSingle(),
+    supabase.from("pet_care_logs").select("*").eq("user_id", user.id).eq("log_date", date).maybeSingle(),
+    supabase.from("pill_logs").select("taken").eq("user_id", user.id).eq("log_date", date).maybeSingle(),
+  ]);
+  if (!profile) return null;
+
+  const waterMl = (waterLogs ?? []).reduce((sum, w) => sum + w.amount_ml, 0);
+
+  return {
+    date,
+    profile,
+    foodLogs: foodLogs ?? [],
+    workoutLogs: workoutLogs ?? [],
+    waterMl,
+    sleepHours: sleepLog?.hours ?? null,
+    sleepBedtime: sleepLog?.bedtime ?? null,
+    sleepWakeUps: sleepLog?.wake_ups ?? null,
+    weightKg: weightLog?.weight_kg ?? null,
+    measurement: measurement ?? null,
+    symptom: symptom ?? null,
+    petCare: petCare ?? null,
+    pillTaken: pillLog?.taken ?? null,
+  };
+}
+
 export interface GamificationSummary {
   state: GamificationState;
   newlyEarned: string[];

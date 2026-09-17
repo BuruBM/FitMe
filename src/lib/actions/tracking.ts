@@ -17,13 +17,13 @@ async function requireUser() {
 }
 
 // ---------------- water ----------------
-export async function logWater(amountMl: number) {
+export async function logWater(amountMl: number, date?: string) {
   const { supabase, user } = await requireUser();
-  const today = todayInAppTz();
+  const day = date ?? todayInAppTz();
 
   const { error } = await supabase.from("water_logs").insert({
     user_id: user.id,
-    log_date: today,
+    log_date: day,
     amount_ml: amountMl,
   });
   if (error) throw error;
@@ -36,6 +36,7 @@ export async function logWater(amountMl: number) {
   after(() => {
     revalidatePath("/dashboard");
     revalidatePath("/food");
+    revalidatePath("/day/[date]", "page");
   });
 }
 
@@ -47,15 +48,15 @@ export interface SleepInput {
   notes?: string;
 }
 
-export async function logSleep(input: SleepInput) {
+export async function logSleep(input: SleepInput, date?: string) {
   const { supabase, user } = await requireUser();
-  const today = todayInAppTz();
+  const day = date ?? todayInAppTz();
   const hours = computeSleepHours(input.bedtime, input.wakeTime);
 
   const { error } = await supabase.from("sleep_logs").upsert(
     {
       user_id: user.id,
-      log_date: today,
+      log_date: day,
       hours,
       quality: estimateSleepQuality(hours, input.wakeUps ?? 0),
       bedtime: input.bedtime,
@@ -70,25 +71,32 @@ export async function logSleep(input: SleepInput) {
   after(() => {
     revalidatePath("/dashboard");
     revalidatePath("/progress");
+    revalidatePath("/day/[date]", "page");
   });
 }
 
 // ---------------- weight ----------------
-export async function logWeight(weightKg: number) {
+export async function logWeight(weightKg: number, date?: string) {
   const { supabase, user } = await requireUser();
+  const day = date ?? todayInAppTz();
   const today = todayInAppTz();
 
   const { error } = await supabase
     .from("weight_logs")
-    .upsert({ user_id: user.id, log_date: today, weight_kg: weightKg }, { onConflict: "user_id,log_date" });
+    .upsert({ user_id: user.id, log_date: day, weight_kg: weightKg }, { onConflict: "user_id,log_date" });
   if (error) throw error;
 
-  await supabase.from("profiles").update({ weight_kg: weightKg }).eq("id", user.id);
+  // Only overwrite the profile's "current weight" snapshot when logging
+  // today — backfilling an old day shouldn't override what she weighs now.
+  if (day === today) {
+    await supabase.from("profiles").update({ weight_kg: weightKg }).eq("id", user.id);
+  }
 
   await awardXp(supabase, user.id, XP_RULES.weight_log);
   after(() => {
     revalidatePath("/dashboard");
     revalidatePath("/progress");
+    revalidatePath("/day/[date]", "page");
   });
 }
 
@@ -99,14 +107,15 @@ export async function logMeasurements(
   hipCm: number | null,
   thighCm: number | null,
   armCm: number | null,
+  date?: string,
 ) {
   const { supabase, user } = await requireUser();
-  const today = todayInAppTz();
+  const day = date ?? todayInAppTz();
 
   const { error } = await supabase.from("body_measurements").upsert(
     {
       user_id: user.id,
-      log_date: today,
+      log_date: day,
       waist_cm: waistCm,
       abdomen_cm: abdomenCm,
       hip_cm: hipCm,
@@ -118,7 +127,10 @@ export async function logMeasurements(
   if (error) throw error;
 
   await awardXp(supabase, user.id, XP_RULES.weight_log);
-  after(() => revalidatePath("/progress"));
+  after(() => {
+    revalidatePath("/progress");
+    revalidatePath("/day/[date]", "page");
+  });
 }
 
 // ---------------- symptoms ----------------
@@ -137,14 +149,14 @@ export interface SymptomInput {
   notes?: string;
 }
 
-export async function logSymptoms(input: SymptomInput) {
+export async function logSymptoms(input: SymptomInput, date?: string) {
   const { supabase, user } = await requireUser();
-  const today = todayInAppTz();
+  const day = date ?? todayInAppTz();
 
   const { error } = await supabase.from("symptom_logs").upsert(
     {
       user_id: user.id,
-      log_date: today,
+      log_date: day,
       bloating: input.bloating,
       energy: input.energy,
       mood: input.mood,
@@ -182,23 +194,30 @@ export async function logSymptoms(input: SymptomInput) {
       .from("symptom_logs")
       .update({ cloud_cover_pct: weather.cloudCoverPct, weather_condition: weather.condition })
       .eq("user_id", user.id)
-      .eq("log_date", today);
+      .eq("log_date", day);
   });
 
   after(() => {
     revalidatePath("/dashboard");
     revalidatePath("/progress");
+    revalidatePath("/day/[date]", "page");
   });
 }
 
 // ---------------- workouts ----------------
-export async function logWorkout(workoutId: string, workoutName: string, durationMin: number, intensity: "bajo" | "medio" | "alto") {
+export async function logWorkout(
+  workoutId: string,
+  workoutName: string,
+  durationMin: number,
+  intensity: "bajo" | "medio" | "alto",
+  date?: string,
+) {
   const { supabase, user } = await requireUser();
-  const today = todayInAppTz();
+  const day = date ?? todayInAppTz();
 
   const { error } = await supabase.from("workout_logs").insert({
     user_id: user.id,
-    log_date: today,
+    log_date: day,
     workout_id: workoutId,
     workout_name: workoutName,
     duration_min: durationMin,
@@ -209,4 +228,16 @@ export async function logWorkout(workoutId: string, workoutName: string, duratio
   await awardXp(supabase, user.id, XP_RULES.workout_done);
   revalidatePath("/dashboard");
   revalidatePath("/workouts");
+  revalidatePath("/day/[date]", "page");
+}
+
+export async function deleteWorkoutLog(id: string) {
+  const { supabase, user } = await requireUser();
+
+  const { error } = await supabase.from("workout_logs").delete().eq("id", id).eq("user_id", user.id);
+  if (error) throw error;
+
+  revalidatePath("/dashboard");
+  revalidatePath("/workouts");
+  revalidatePath("/day/[date]", "page");
 }

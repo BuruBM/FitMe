@@ -7,7 +7,16 @@ import { todayInAppTz } from "@/lib/date";
 import type { PetCareLog } from "@/lib/database.types";
 import { IconBadge } from "@/components/IconBadge";
 
-export function PetCareQuickLog({ today, pausedUntil }: { today: PetCareLog | null; pausedUntil: string | null }) {
+export function PetCareQuickLog({
+  today,
+  pausedUntil,
+  date,
+}: {
+  today: PetCareLog | null;
+  pausedUntil: string | null;
+  date?: string;
+}) {
+  const isToday = (date ?? todayInAppTz()) === todayInAppTz();
   const [miloMedication, setMiloMedication] = useState(today?.milo_medication ?? false);
   const [miloSupplement, setMiloSupplement] = useState(today?.milo_supplement ?? false);
   const [zoeMedication, setZoeMedication] = useState(today?.zoe_medication ?? false);
@@ -17,13 +26,13 @@ export function PetCareQuickLog({ today, pausedUntil }: { today: PetCareLog | nu
   const [pauseDateInput, setPauseDateInput] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  const isPaused = pauseUntil != null && pauseUntil >= todayInAppTz();
+  const isPaused = isToday && pauseUntil != null && pauseUntil >= todayInAppTz();
 
   function toggle(current: boolean, setter: (v: boolean) => void, field: keyof ReturnType<typeof snapshot>) {
     const next = !current;
     const state = { ...snapshot(), [field]: next };
     setter(next);
-    startTransition(() => logPetCare(state));
+    startTransition(() => logPetCare(state, date));
   }
 
   function snapshot() {
@@ -49,7 +58,7 @@ export function PetCareQuickLog({ today, pausedUntil }: { today: PetCareLog | nu
           <IconBadge icon={<Cat size={14} />} tint="var(--tint-pets)" color="var(--icon-pets)" size={26} />
           Milo y Zoe
         </div>
-        {!isPaused && !settingPause && (
+        {isToday && !isPaused && !settingPause && (
           <button
             onClick={() => setSettingPause(true)}
             className="flex items-center gap-1 rounded-full border border-card-border px-2.5 py-1 text-[11px] font-medium text-muted"

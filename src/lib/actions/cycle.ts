@@ -28,17 +28,20 @@ export async function logPeriodStart(dateStr?: string) {
   revalidatePath("/progress");
 }
 
-export async function setPillTaken(taken: boolean) {
+export async function setPillTaken(taken: boolean, date?: string) {
   const { supabase, user } = await requireUser();
-  const today = todayInAppTz();
+  const day = date ?? todayInAppTz();
 
   const { error } = await supabase
     .from("pill_logs")
-    .upsert({ user_id: user.id, log_date: today, taken }, { onConflict: "user_id,log_date" });
+    .upsert({ user_id: user.id, log_date: day, taken }, { onConflict: "user_id,log_date" });
   if (error) throw error;
 
   if (taken) await awardXp(supabase, user.id, XP_RULES.food_log);
-  after(() => revalidatePath("/dashboard"));
+  after(() => {
+    revalidatePath("/dashboard");
+    revalidatePath("/day/[date]", "page");
+  });
 }
 
 export async function updateCycleSettings(avgCycleLength: number, onBirthControl: boolean, pillStartedOn: string | null) {

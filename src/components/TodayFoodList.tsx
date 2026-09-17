@@ -19,7 +19,7 @@ export function TodayFoodList({ logs }: { logs: FoodLog[] }) {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   if (logs.length === 0) {
-    return <p className="text-sm text-muted text-center py-6">Todavía no registraste comidas hoy.</p>;
+    return <p className="text-sm text-muted text-center py-6">Todavía no hay comidas registradas este día.</p>;
   }
 
   const grouped = MEAL_ORDER.map((meal) => ({

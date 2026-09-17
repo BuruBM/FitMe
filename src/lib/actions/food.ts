@@ -24,16 +24,16 @@ export interface LogFoodInput {
   saveAsFavorite?: boolean;
 }
 
-export async function logFood(input: LogFoodInput) {
+export async function logFood(input: LogFoodInput, date?: string) {
   const user = await getCurrentUser();
   if (!user) throw new Error("No autenticada");
   const supabase = await createClient();
 
-  const today = todayInAppTz();
+  const day = date ?? todayInAppTz();
 
   const { error } = await supabase.from("food_logs").insert({
     user_id: user.id,
-    log_date: today,
+    log_date: day,
     meal_type: input.mealType,
     name: input.name,
     quantity: input.quantity,
@@ -71,6 +71,7 @@ export async function logFood(input: LogFoodInput) {
 
   revalidatePath("/dashboard");
   revalidatePath("/food");
+  revalidatePath("/day/[date]", "page");
 }
 
 export async function deleteFoodLog(id: string) {
@@ -83,6 +84,7 @@ export async function deleteFoodLog(id: string) {
 
   revalidatePath("/dashboard");
   revalidatePath("/food");
+  revalidatePath("/day/[date]", "page");
 }
 
 // Lets her change the portion or which meal something belongs to without
@@ -124,6 +126,7 @@ export async function updateFoodLog(id: string, quantity: number, mealType: Meal
 
   revalidatePath("/dashboard");
   revalidatePath("/food");
+  revalidatePath("/day/[date]", "page");
 }
 
 export interface RepeatMealItem {

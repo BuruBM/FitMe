@@ -14,24 +14,24 @@ export interface PetCareInput {
   zoeSupplement: boolean;
 }
 
-export async function logPetCare(input: PetCareInput) {
+export async function logPetCare(input: PetCareInput, date?: string) {
   const user = await getCurrentUser();
   if (!user) throw new Error("No autenticada");
   const supabase = await createClient();
 
-  const today = todayInAppTz();
+  const day = date ?? todayInAppTz();
 
   const { data: existing } = await supabase
     .from("pet_care_logs")
     .select("milo_medication, milo_supplement, zoe_medication, zoe_supplement")
     .eq("user_id", user.id)
-    .eq("log_date", today)
+    .eq("log_date", day)
     .maybeSingle();
 
   const { error } = await supabase.from("pet_care_logs").upsert(
     {
       user_id: user.id,
-      log_date: today,
+      log_date: day,
       milo_medication: input.miloMedication,
       milo_supplement: input.miloSupplement,
       zoe_medication: input.zoeMedication,
@@ -61,6 +61,7 @@ export async function logPetCare(input: PetCareInput) {
   after(() => {
     revalidatePath("/dashboard");
     revalidatePath("/progress");
+    revalidatePath("/day/[date]", "page");
   });
 }
 

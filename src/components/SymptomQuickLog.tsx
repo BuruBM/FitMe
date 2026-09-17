@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { logSymptoms } from "@/lib/actions/tracking";
+import { todayInAppTz } from "@/lib/date";
 import type { SymptomLog } from "@/lib/database.types";
 
 const BLOATING_LABELS = ["Nada", "Leve", "Moderado", "Mucho"];
@@ -13,7 +14,8 @@ const VALENCE_OPTIONS = [
   { value: 2, emoji: "😄", label: "Muy positivo" },
 ];
 
-export function SymptomQuickLog({ existing }: { existing: SymptomLog | null }) {
+export function SymptomQuickLog({ existing, date }: { existing: SymptomLog | null; date?: string }) {
+  const isToday = (date ?? todayInAppTz()) === todayInAppTz();
   const [loggedToday, setLoggedToday] = useState(existing != null);
   const [open, setOpen] = useState(false);
   const [bloating, setBloating] = useState<number | null>(existing?.bloating ?? null);
@@ -53,7 +55,7 @@ export function SymptomQuickLog({ existing }: { existing: SymptomLog | null }) {
         stressLevel,
         notesValence: notesValence ?? undefined,
         notes: notes || undefined,
-      });
+      }, date);
       setSaved(true);
       setLoggedToday(true);
       setOpen(false);
@@ -64,13 +66,17 @@ export function SymptomQuickLog({ existing }: { existing: SymptomLog | null }) {
   if (!open) {
     return (
       <section className="card p-4">
-        <h2 className="font-semibold text-sm mb-1">¿Cómo te sentís hoy?</h2>
+        <h2 className="font-semibold text-sm mb-1">{isToday ? "¿Cómo te sentís hoy?" : "¿Cómo te sentiste ese día?"}</h2>
         <p className="text-xs text-muted mb-2">
           {saved
             ? "Guardado ✓"
             : loggedToday
-              ? "Ya completaste tu check-in de hoy ✓ — podés editarlo si cambió algo."
-              : "Todavía no cargaste cómo te sentís hoy."}
+              ? isToday
+                ? "Ya completaste tu check-in de hoy ✓ — podés editarlo si cambió algo."
+                : "Ya hay datos cargados para este día ✓ — podés editarlos."
+              : isToday
+                ? "Todavía no cargaste cómo te sentís hoy."
+                : "Todavía no cargaste cómo te sentiste este día."}
         </p>
         <button
           onClick={() => setOpen(true)}
@@ -84,7 +90,7 @@ export function SymptomQuickLog({ existing }: { existing: SymptomLog | null }) {
 
   return (
     <section className="card p-4 space-y-3">
-      <h2 className="font-semibold text-sm">¿Cómo te sentís hoy?</h2>
+      <h2 className="font-semibold text-sm">{isToday ? "¿Cómo te sentís hoy?" : "¿Cómo te sentiste ese día?"}</h2>
 
       <div>
         <p className="text-xs font-medium text-foreground/85 mb-1.5">Hinchazón</p>

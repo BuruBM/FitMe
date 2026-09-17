@@ -25,11 +25,15 @@ function delta(latest: number | null, previous: number | null): string | null {
 export function MeasurementsQuickLog({
   latest,
   previous,
+  date,
 }: {
   latest: BodyMeasurement | null;
   previous: BodyMeasurement | null;
+  date?: string;
 }) {
-  const [loggedTodayLocal, setLoggedTodayLocal] = useState(latest?.log_date === todayInAppTz());
+  const targetDate = date ?? todayInAppTz();
+  const isToday = targetDate === todayInAppTz();
+  const [loggedTodayLocal, setLoggedTodayLocal] = useState(latest?.log_date === targetDate);
   const [savedWaist, setSavedWaist] = useState(latest?.waist_cm ?? null);
   const [savedAbdomen, setSavedAbdomen] = useState(latest?.abdomen_cm ?? null);
   const loggedToday = loggedTodayLocal;
@@ -59,7 +63,7 @@ export function MeasurementsQuickLog({
     const n = (v: string) => (v ? Number(v) : null);
     if (!waist && !abdomen && !hip && !thigh && !arm) return;
     startTransition(async () => {
-      await logMeasurements(n(waist), n(abdomen), n(hip), n(thigh), n(arm));
+      await logMeasurements(n(waist), n(abdomen), n(hip), n(thigh), n(arm), date);
       setLoggedTodayLocal(true);
       setSavedWaist(n(waist));
       setSavedAbdomen(n(abdomen));
@@ -76,7 +80,7 @@ export function MeasurementsQuickLog({
       <h2 className="font-semibold text-sm mb-1">Medidas corporales</h2>
       <p className="text-xs text-muted mb-2">
         {loggedToday
-          ? `Registraste medidas hoy ✓${waistDelta ? ` · Cintura: ${waistDelta}` : ""}`
+          ? `Registraste medidas${isToday ? " hoy" : " ese día"} ✓${waistDelta ? ` · Cintura: ${waistDelta}` : ""}`
           : latest
             ? `Última medición: cintura ${latest.waist_cm ?? "—"}cm el ${new Date(latest.log_date + "T00:00:00").toLocaleDateString("es-AR")}.`
             : "Todavía no cargaste medidas."}
@@ -87,12 +91,12 @@ export function MeasurementsQuickLog({
           onClick={startEditing}
           className="w-full rounded-lg border border-card-border text-xs py-1.5 font-medium hover:border-primary"
         >
-          {saved ? "Guardado ✓" : loggedToday ? "Editar" : "Registrar medidas de hoy"}
+          {saved ? "Guardado ✓" : loggedToday ? "Editar" : isToday ? "Registrar medidas de hoy" : "Registrar medidas"}
         </button>
       ) : (
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-muted">{loggedToday ? "Editando hoy" : "Nueva medición"}</span>
+            <span className="text-xs text-muted">{loggedToday ? (isToday ? "Editando hoy" : "Editando este día") : "Nueva medición"}</span>
             <button onClick={() => setShowExtra((v) => !v)} className="text-xs font-medium text-primary">
               {showExtra ? "Menos medidas" : "+ Muslo y brazo"}
             </button>

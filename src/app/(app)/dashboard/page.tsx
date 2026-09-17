@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { Cloud } from "lucide-react";
+import { Cloud, CalendarClock } from "lucide-react";
 import {
   getCurrentWeatherForUser,
   getCycleSummary,
@@ -11,6 +11,7 @@ import {
   getTodaySummary,
 } from "@/lib/queries";
 import { daysUntil } from "@/lib/nutrition";
+import { shiftDateStr, todayInAppTz } from "@/lib/date";
 import { challengeOfTheWeek } from "@/data/challenges";
 import { MacroTrio } from "@/components/MacroTrio";
 import { WaterQuickAdd } from "@/components/WaterQuickAdd";
@@ -70,6 +71,14 @@ export default async function DashboardPage() {
       {trip !== null && trip >= 0 && <BeachCountdown days={trip} />}
 
       <InsightsBanner insights={insights} />
+
+      <Link
+        href={`/day/${shiftDateStr(todayInAppTz(), -1)}`}
+        className="flex items-center gap-2 text-xs font-medium text-primary"
+      >
+        <CalendarClock size={14} />
+        ¿Te faltó cargar algo de ayer u otro día? Editá un día anterior →
+      </Link>
 
       <section className="card p-4" style={{ background: "var(--primary-tint)" }}>
         <div className="flex items-baseline justify-between">

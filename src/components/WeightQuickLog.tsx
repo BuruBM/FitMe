@@ -2,14 +2,18 @@
 
 import { useState, useTransition } from "react";
 import { logWeight } from "@/lib/actions/tracking";
+import { todayInAppTz } from "@/lib/date";
 
 export function WeightQuickLog({
   todayWeightKg,
   lastKnownWeightKg,
+  date,
 }: {
   todayWeightKg: number | null;
   lastKnownWeightKg: number | null;
+  date?: string;
 }) {
+  const isToday = (date ?? todayInAppTz()) === todayInAppTz();
   const [loggedTodayValue, setLoggedTodayValue] = useState(todayWeightKg);
   const loggedToday = loggedTodayValue != null;
   const [open, setOpen] = useState(false);
@@ -21,7 +25,7 @@ export function WeightQuickLog({
     const value = Number(weight);
     if (!value) return;
     startTransition(async () => {
-      await logWeight(value);
+      await logWeight(value, date);
       setLoggedTodayValue(value);
       setSaved(true);
       setOpen(false);
@@ -34,10 +38,12 @@ export function WeightQuickLog({
       <h2 className="font-semibold mb-1 text-sm">Peso</h2>
       <p className="text-xs text-muted mb-2">
         {loggedToday
-          ? `Registraste ${loggedTodayValue}kg hoy ✓`
-          : lastKnownWeightKg != null
+          ? `Registraste ${loggedTodayValue}kg${isToday ? " hoy" : " ese día"} ✓`
+          : isToday && lastKnownWeightKg != null
             ? `Última vez: ${lastKnownWeightKg}kg. Todavía no registraste hoy.`
-            : "Todavía no registraste tu peso."}
+            : isToday
+              ? "Todavía no registraste tu peso."
+              : "Todavía no registraste peso para este día."}
       </p>
 
       {!open ? (
@@ -48,7 +54,7 @@ export function WeightQuickLog({
           }}
           className="w-full rounded-lg border border-card-border text-xs py-1.5 font-medium hover:border-primary"
         >
-          {saved ? "Guardado ✓" : loggedToday ? "Editar" : "Registrar peso de hoy"}
+          {saved ? "Guardado ✓" : loggedToday ? "Editar" : isToday ? "Registrar peso de hoy" : "Registrar peso"}
         </button>
       ) : (
         <div className="flex gap-2">

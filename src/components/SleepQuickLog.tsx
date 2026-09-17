@@ -48,11 +48,13 @@ export function SleepQuickLog({
   targetHours,
   currentBedtime,
   currentWakeUps,
+  date,
 }: {
   currentHours: number | null;
   targetHours: number;
   currentBedtime: string | null;
   currentWakeUps: number | null;
+  date?: string;
 }) {
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
@@ -68,7 +70,7 @@ export function SleepQuickLog({
 
   function save() {
     startTransition(async () => {
-      await logSleep({ bedtime, wakeTime, wakeUps });
+      await logSleep({ bedtime, wakeTime, wakeUps }, date);
       setSaved({ hours, bedtime, wakeUps });
       setOpen(false);
     });

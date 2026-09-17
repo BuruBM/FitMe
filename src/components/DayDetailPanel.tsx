@@ -1,4 +1,5 @@
 import { X } from "lucide-react";
+import Link from "next/link";
 import { PHASE_LABELS } from "@/lib/cycle";
 import type { HistoryPoint } from "@/lib/queries";
 
@@ -82,6 +83,13 @@ export function DayDetailPanel({ point, onClose }: { point: HistoryPoint; onClos
           &quot;{point.notes}&quot;
         </p>
       )}
+
+      <Link
+        href={`/day/${point.date}`}
+        className="mt-2.5 pt-2.5 border-t border-card-border block text-xs font-medium text-primary"
+      >
+        Editar este día →
+      </Link>
     </div>
   );
 }
