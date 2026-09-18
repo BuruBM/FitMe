@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Compass, ChevronDown } from "lucide-react";
-import { computeFactors, type FactorComparison, type FactorDay } from "@/lib/factors";
+import { computeFactors, ALL_FACTOR_IDS, type FactorComparison, type FactorDay } from "@/lib/factors";
 import type { HistoryPoint } from "@/lib/queries";
 
 const MOOD_MAX = 5;
@@ -16,6 +16,10 @@ export function FactorsPanel({ history }: { history: HistoryPoint[] }) {
   const [period, setPeriod] = useState<Period>("semana");
 
   const factors = useMemo(() => computeFactors(history.slice(-PERIOD_DAYS[period])), [history, period]);
+  const missingLabels = useMemo(
+    () => ALL_FACTOR_IDS.filter((f) => !factors.some((r) => r.id === f.id)).map((f) => f.label),
+    [factors],
+  );
 
   return (
     <section className="card p-4">
@@ -54,6 +58,12 @@ export function FactorsPanel({ history }: { history: HistoryPoint[] }) {
               <FactorRow key={f.id} factor={f} />
             ))}
           </div>
+          {missingLabels.length > 0 && (
+            <p className="text-[11px] text-muted mt-3 pt-2 border-t border-card-border">
+              Todavía sin suficiente variedad de días para comparar: {missingLabels.join(", ")}. Necesitan al menos 2
+              días de cada lado (ej. con y sin entrenar) dentro del período elegido.
+            </p>
+          )}
         </>
       )}
     </section>

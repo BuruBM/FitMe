@@ -172,4 +172,18 @@ export function computeFactors(points: HistoryPoint[]): FactorComparison[] {
   return [...results].sort((a, b) => Math.abs(b.avgA - b.avgB) - Math.abs(a.avgA - a.avgB)).slice(0, 6);
 }
 
+// Every factor computeFactors can possibly produce — lets the UI say which
+// ones are still missing and why, instead of just silently not showing
+// them (each one needs at least MIN_DAYS_PER_GROUP days on both sides of
+// its split, with mood logged, inside the selected window).
+export const ALL_FACTOR_IDS: { id: string; label: string }[] = [
+  { id: "weather", label: "Clima" },
+  { id: "sleep", label: "Sueño" },
+  { id: "movement", label: "Movimiento" },
+  { id: "social", label: "Contacto social" },
+  { id: "screens", label: "Redes sociales" },
+  { id: "alcohol", label: "Alcohol" },
+  { id: "cycle", label: "Ciclo hormonal" },
+];
+
 export { MOOD_SCALE_MAX };
