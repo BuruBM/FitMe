@@ -209,7 +209,7 @@ export async function logWorkout(
   workoutId: string,
   workoutName: string,
   durationMin: number,
-  intensity: "bajo" | "medio" | "alto",
+  intensity: "bajo" | "medio" | "alto" | null,
   date?: string,
 ) {
   const { supabase, user } = await requireUser();

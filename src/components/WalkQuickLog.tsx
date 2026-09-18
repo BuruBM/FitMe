@@ -12,7 +12,9 @@ export function WalkQuickLog() {
 
   function save() {
     startTransition(async () => {
-      await logWorkout("caminata-libre", "Caminata", minutes, "bajo");
+      // No intensity/energy label here on purpose — a walk isn't necessarily
+      // a "low energy" choice, it just counts as movement on its own terms.
+      await logWorkout("caminata-libre", "Caminata", minutes, null);
       setDone(true);
       setTimeout(() => setDone(false), 2500);
     });
