@@ -47,7 +47,6 @@ export function MeasurementsHistory({ logs }: { logs: BodyMeasurement[] }) {
         </span>
         <span className="text-xs font-medium text-primary">{open ? "Ocultar" : "Ver historial"}</span>
       </button>
-      {!open && <p className="text-xs text-muted mt-1">Info sensible — oculta por defecto.</p>}
       {open && (
         <div className="space-y-2 max-h-80 overflow-y-auto mt-2">
           {logs.map((log, i) => {
