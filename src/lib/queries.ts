@@ -612,6 +612,7 @@ export interface HistoryPoint {
   notesValence: number | null;
   cyclePhase: CyclePhase | null;
   movedToday: boolean;
+  movementMinutes: number;
   workoutNames: string[];
   petCareItemsDone: number | null;
   pillTaken: boolean | null;
@@ -818,6 +819,7 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
       notesValence: symptom?.notes_valence ?? null,
       cyclePhase,
       movedToday,
+      movementMinutes,
       workoutNames: workoutNamesByDay.get(date) ?? [],
       petCareItemsDone,
       pillTaken: onBirthControl ? (pillByDay.get(date) ?? null) : null,

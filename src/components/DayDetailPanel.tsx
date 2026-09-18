@@ -6,12 +6,12 @@ import type { HistoryPoint } from "@/lib/queries";
 const BLOATING_LABELS = ["Nada", "Leve", "Moderado", "Mucho"];
 const VALENCE_EMOJI: Record<number, string> = { "-2": "😣", "-1": "🙁", "0": "😐", "1": "🙂", "2": "😄" };
 
-interface Stat {
+export interface Stat {
   label: string;
   value: string;
 }
 
-function buildStats(point: HistoryPoint): Stat[] {
+export function buildStats(point: HistoryPoint): Stat[] {
   const stats: (Stat | false | null)[] = [
     point.mood != null && { label: "Ánimo", value: `${point.mood}/5` },
     point.energy != null && { label: "Energía", value: `${point.energy}/5` },
@@ -28,7 +28,13 @@ function buildStats(point: HistoryPoint): Stat[] {
     point.weightKg != null && { label: "Peso", value: `${point.weightKg}kg` },
     point.calories > 0 && { label: "Calorías", value: `${Math.round(point.calories)} kcal` },
     point.proteinG > 0 && { label: "Proteína", value: `${Math.round(point.proteinG)}g` },
-    { label: "Movimiento", value: point.workoutNames.length > 0 ? point.workoutNames.join(", ") : "Sin registrar" },
+    {
+      label: "Movimiento",
+      value:
+        point.movementMinutes > 0
+          ? `${point.movementMinutes} min${point.workoutNames.length > 0 ? ` (${point.workoutNames.join(", ")})` : ""}`
+          : "Sin registrar",
+    },
     point.petCareItemsDone != null && { label: "Milo y Zoe", value: `${point.petCareItemsDone}/4 tareas` },
     point.alcoholUnits != null && {
       label: "Alcohol",
