@@ -84,7 +84,9 @@ export function DayFoodAdd({ date, onAdded }: { date: string; onAdded?: () => vo
                   className="w-full text-left rounded-lg border border-card-border px-3 py-2 text-xs hover:border-primary"
                 >
                   <p className="font-medium">{item.name}</p>
-                  <p className="text-muted mt-0.5">{Math.round(item.calories)} kcal</p>
+                  <p className="text-muted mt-0.5">
+                    {item.unit} ≈ {item.quantity}g · {Math.round(item.calories)} kcal
+                  </p>
                 </button>
               ))}
             </div>
@@ -95,7 +97,9 @@ export function DayFoodAdd({ date, onAdded }: { date: string; onAdded?: () => vo
         <div className="space-y-2">
           <p className="text-sm font-medium">{selected.name}</p>
           <div className="flex items-center gap-2">
-            <label className="text-xs text-muted">Cantidad (x{selected.unit})</label>
+            <label className="text-xs text-muted">
+              Cantidad (x{selected.unit} ≈ {selected.quantity}g)
+            </label>
             <input
               type="number"
               step="0.1"
@@ -106,7 +110,8 @@ export function DayFoodAdd({ date, onAdded }: { date: string; onAdded?: () => vo
             />
           </div>
           <p className="text-xs text-muted">
-            ≈ {Math.round(selected.calories * qty)} kcal · P{Math.round(selected.protein_g * qty * 10) / 10}g
+            ≈ {Math.round(selected.quantity * qty)}g en total · {Math.round(selected.calories * qty)} kcal · P
+            {Math.round(selected.protein_g * qty * 10) / 10}g
           </p>
           <select
             value={mealType}
