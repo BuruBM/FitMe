@@ -65,7 +65,7 @@ export function FactorsCard({
           </p>
           <div className="space-y-4">
             {factors.map((f) => (
-              <FactorRow key={f.id} factor={f} scaleMax={scaleMax} />
+              <FactorRow key={f.id} factor={f} scaleMax={scaleMax} kind={kind} />
             ))}
           </div>
         </>
@@ -74,7 +74,7 @@ export function FactorsCard({
   );
 }
 
-function FactorRow({ factor, scaleMax }: { factor: FactorComparison; scaleMax: number }) {
+function FactorRow({ factor, scaleMax, kind }: { factor: FactorComparison; scaleMax: number; kind: "mood" | "bloating" }) {
   const max = Math.max(...factor.groups.map((g) => g.avg));
   const min = Math.min(...factor.groups.map((g) => g.avg));
 
@@ -83,7 +83,14 @@ function FactorRow({ factor, scaleMax }: { factor: FactorComparison; scaleMax: n
       <p className="text-xs font-semibold mb-1.5">{factor.label}</p>
       <div className="space-y-1">
         {factor.groups.map((g) => (
-          <BarRow key={g.label} group={g} scaleMax={scaleMax} isHigh={g.avg === max} isLow={g.avg === min && max !== min} />
+          <BarRow
+            key={g.label}
+            group={g}
+            scaleMax={scaleMax}
+            kind={kind}
+            isHigh={g.avg === max}
+            isLow={g.avg === min && max !== min}
+          />
         ))}
       </div>
     </div>
@@ -93,16 +100,23 @@ function FactorRow({ factor, scaleMax }: { factor: FactorComparison; scaleMax: n
 function BarRow({
   group,
   scaleMax,
+  kind,
   isHigh,
   isLow,
 }: {
   group: FactorGroup;
   scaleMax: number;
+  kind: "mood" | "bloating";
   isHigh: boolean;
   isLow: boolean;
 }) {
   const pct = Math.min(100, Math.max(4, (group.avg / scaleMax) * 100));
-  const color = isHigh ? "var(--factor-high)" : isLow ? "var(--factor-low)" : "var(--muted)";
+  // Ánimo: higher is the good outcome, so it gets the "high" (green) color.
+  // Hinchazón is the opposite — higher is worse — and uses its own distinct
+  // pair so the two cards never share a color for opposite meanings.
+  const highColor = kind === "mood" ? "var(--factor-high)" : "var(--bloat-high)";
+  const lowColor = kind === "mood" ? "var(--factor-low)" : "var(--bloat-low)";
+  const color = isHigh ? highColor : isLow ? lowColor : "var(--muted)";
   return (
     <div className="flex items-center gap-2">
       <span className="text-[11px] text-muted w-28 shrink-0 truncate" title={group.label}>

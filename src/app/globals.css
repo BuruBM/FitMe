@@ -30,6 +30,10 @@
   --icon-workout: #2b6ea8;
   --factor-low: #dc9427;
   --factor-high: #2f8f86;
+  /* Hinchazón factors: distinct pair from ánimo's green/amber, and inverted
+     — here "high" means more hinchazón, which is the bad outcome. */
+  --bloat-high: #c9634a;
+  --bloat-low: #2b6ea8;
 }
 
 @theme inline {
@@ -87,6 +91,8 @@
     --icon-workout: #6fb0e6;
     --factor-low: #eeab3f;
     --factor-high: #4db8ac;
+    --bloat-high: #e28674;
+    --bloat-low: #6fb0e6;
   }
 }
 
@@ -119,6 +125,8 @@
   --icon-workout: #6fb0e6;
   --factor-low: #eeab3f;
   --factor-high: #4db8ac;
+  --bloat-high: #e28674;
+  --bloat-low: #6fb0e6;
 }
 
 * {
