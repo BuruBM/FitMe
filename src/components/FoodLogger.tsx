@@ -104,10 +104,12 @@ export function FoodLogger({
   favorites,
   hiddenDefaultIds,
   yesterdayLogs,
+  date,
 }: {
   favorites: CustomFood[];
   hiddenDefaultIds: string[];
   yesterdayLogs: FoodLog[];
+  date?: string;
 }) {
   const [tab, setTab] = useState<Tab>("buscar");
   const [hidden, setHidden] = useState(new Set(hiddenDefaultIds));
@@ -139,12 +141,18 @@ export function FoodLogger({
         <TabButton active={tab === "manual"} onClick={() => setTab("manual")} icon={<Pencil size={14} />} label="Manual" />
       </div>
 
-      {tab === "buscar" && <SearchTab yesterdayLogs={yesterdayLogs} />}
+      {tab === "buscar" && <SearchTab yesterdayLogs={yesterdayLogs} date={date} />}
       {tab === "favoritos" && (
-        <FavoritesTab favorites={favorites} hidden={hidden} onHideDefault={hideDefault} onUnhideDefault={unhideDefault} />
+        <FavoritesTab
+          favorites={favorites}
+          hidden={hidden}
+          onHideDefault={hideDefault}
+          onUnhideDefault={unhideDefault}
+          date={date}
+        />
       )}
-      {tab === "texto" && <TextTab />}
-      {tab === "manual" && <ManualTab />}
+      {tab === "texto" && <TextTab date={date} />}
+      {tab === "manual" && <ManualTab date={date} />}
       <GlobalStyles />
     </div>
   );
@@ -174,7 +182,7 @@ function TabButton({
   );
 }
 
-function SearchTab({ yesterdayLogs }: { yesterdayLogs: FoodLog[] }) {
+function SearchTab({ yesterdayLogs, date }: { yesterdayLogs: FoodLog[]; date?: string }) {
   const [query, setQuery] = useState("");
   const [offResults, setOffResults] = useState<OffResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -204,7 +212,7 @@ function SearchTab({ yesterdayLogs }: { yesterdayLogs: FoodLog[] }) {
     setOffResults([]);
   }
 
-  if (selected) return <AddItemPanel base={selected} onDone={done} />;
+  if (selected) return <AddItemPanel base={selected} onDone={done} date={date} />;
 
   return (
     <div className="space-y-3">
@@ -317,11 +325,13 @@ function FavoritesTab({
   hidden,
   onHideDefault,
   onUnhideDefault,
+  date,
 }: {
   favorites: CustomFood[];
   hidden: Set<string>;
   onHideDefault: (id: string) => void;
   onUnhideDefault: (id: string) => void;
+  date?: string;
 }) {
   const [selected, setSelected] = useState<Base | null>(null);
   const [removedCustomIds, setRemovedCustomIds] = useState<Set<string>>(new Set());
@@ -337,7 +347,7 @@ function FavoritesTab({
     startTransition(() => deleteFavoriteFood(id));
   }
 
-  if (selected) return <AddItemPanel base={selected} onDone={() => setSelected(null)} />;
+  if (selected) return <AddItemPanel base={selected} onDone={() => setSelected(null)} date={date} />;
 
   return (
     <div className="space-y-3">
@@ -446,7 +456,7 @@ function SaltShortcut({ label, mg, onPick }: { label: string; mg: number; onPick
   );
 }
 
-function AddItemPanel({ base, onDone }: { base: Base; onDone: () => void }) {
+function AddItemPanel({ base, onDone, date }: { base: Base; onDone: () => void; date?: string }) {
   const [multiplierInput, setMultiplierInput] = useState("1");
   const multiplier = Number(multiplierInput) || 0;
   const [mealType, setMealType] = useState<MealType>(guessMealType());
@@ -465,21 +475,24 @@ function AddItemPanel({ base, onDone }: { base: Base; onDone: () => void }) {
 
   function add() {
     startTransition(async () => {
-      await logFood({
-        mealType,
-        name: base.name,
-        quantity: Number((base.refQty * multiplier).toFixed(1)),
-        unit: base.unit,
-        calories: Math.round(scaled.calories),
-        proteinG: Math.round(scaled.protein_g * 10) / 10,
-        carbsG: Math.round(scaled.carbs_g * 10) / 10,
-        fatG: Math.round(scaled.fat_g * 10) / 10,
-        fiberG: Math.round(scaled.fiber_g * 10) / 10,
-        sodiumMg: Math.round(scaled.sodium_mg),
-        calciumMg: Math.round(scaled.calcium_mg),
-        source: base.source,
-        saveAsFavorite,
-      });
+      await logFood(
+        {
+          mealType,
+          name: base.name,
+          quantity: Number((base.refQty * multiplier).toFixed(1)),
+          unit: base.unit,
+          calories: Math.round(scaled.calories),
+          proteinG: Math.round(scaled.protein_g * 10) / 10,
+          carbsG: Math.round(scaled.carbs_g * 10) / 10,
+          fatG: Math.round(scaled.fat_g * 10) / 10,
+          fiberG: Math.round(scaled.fiber_g * 10) / 10,
+          sodiumMg: Math.round(scaled.sodium_mg),
+          calciumMg: Math.round(scaled.calcium_mg),
+          source: base.source,
+          saveAsFavorite,
+        },
+        date,
+      );
       onDone();
     });
   }
@@ -561,12 +574,12 @@ function AddItemPanel({ base, onDone }: { base: Base; onDone: () => void }) {
   );
 }
 
-function TextTab() {
+function TextTab({ date }: { date?: string }) {
   const [text, setText] = useState("");
   const [result, setResult] = useState<{ matched: FoodItem[]; unmatched: string[] } | null>(null);
   const [selected, setSelected] = useState<Base | null>(null);
 
-  if (selected) return <AddItemPanel base={selected} onDone={() => setSelected(null)} />;
+  if (selected) return <AddItemPanel base={selected} onDone={() => setSelected(null)} date={date} />;
 
   return (
     <div className="space-y-3">
@@ -615,7 +628,7 @@ function TextTab() {
   );
 }
 
-function ManualTab() {
+function ManualTab({ date }: { date?: string }) {
   const [mealType, setMealType] = useState<MealType>(guessMealType());
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -631,21 +644,24 @@ function ManualTab() {
   function submit() {
     if (!name || !calories) return;
     startTransition(async () => {
-      await logFood({
-        mealType,
-        name,
-        quantity,
-        unit,
-        calories: Number(calories) || 0,
-        proteinG: Number(protein) || 0,
-        carbsG: Number(carbs) || 0,
-        fatG: Number(fat) || 0,
-        fiberG: 0,
-        sodiumMg: Number(sodium) || 0,
-        calciumMg: 0,
-        source: "manual",
-        saveAsFavorite,
-      });
+      await logFood(
+        {
+          mealType,
+          name,
+          quantity,
+          unit,
+          calories: Number(calories) || 0,
+          proteinG: Number(protein) || 0,
+          carbsG: Number(carbs) || 0,
+          fatG: Number(fat) || 0,
+          fiberG: 0,
+          sodiumMg: Number(sodium) || 0,
+          calciumMg: 0,
+          source: "manual",
+          saveAsFavorite,
+        },
+        date,
+      );
       setName("");
       setCalories("");
       setProtein("");

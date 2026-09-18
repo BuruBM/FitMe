@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { todayInAppTz } from "@/lib/date";
-import { getDayEditorData } from "@/lib/queries";
+import { getDayEditorData, getHiddenDefaultFoodIds } from "@/lib/queries";
+import { getFavoriteFoods } from "@/lib/actions/food";
 import { DayNav } from "@/components/DayNav";
 import { WaterQuickAdd } from "@/components/WaterQuickAdd";
 import { SleepQuickLog } from "@/components/SleepQuickLog";
@@ -10,7 +11,7 @@ import { SymptomQuickLog } from "@/components/SymptomQuickLog";
 import { PetCareQuickLog } from "@/components/PetCareQuickLog";
 import { DayPillToggle } from "@/components/DayPillToggle";
 import { TodayFoodList } from "@/components/TodayFoodList";
-import { DayFoodAdd } from "@/components/DayFoodAdd";
+import { FoodLogger } from "@/components/FoodLogger";
 import { DayWorkoutEditor } from "@/components/DayWorkoutEditor";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -24,7 +25,11 @@ export default async function DayEditorPage({ params }: { params: Promise<{ date
     redirect(`/day/${today}`);
   }
 
-  const data = await getDayEditorData(date);
+  const [data, favorites, hiddenDefaultIds] = await Promise.all([
+    getDayEditorData(date),
+    getFavoriteFoods(),
+    getHiddenDefaultFoodIds(),
+  ]);
   if (!data) return null;
 
   const { profile } = data;
@@ -62,7 +67,7 @@ export default async function DayEditorPage({ params }: { params: Promise<{ date
         <h2 className="font-semibold mb-2 text-sm">Comida</h2>
         <TodayFoodList logs={data.foodLogs} />
       </section>
-      <DayFoodAdd date={date} />
+      <FoodLogger favorites={favorites} hiddenDefaultIds={hiddenDefaultIds} yesterdayLogs={[]} date={date} />
 
       <DayWorkoutEditor logs={data.workoutLogs} date={date} />
     </div>
