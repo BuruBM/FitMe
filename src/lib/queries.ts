@@ -464,6 +464,24 @@ export async function getMeasurementTrend(): Promise<MeasurementTrend> {
   return { latest: data?.[0] ?? null, previous: data?.[1] ?? null };
 }
 
+// Measurements aren't logged daily, so this is bounded by count rather
+// than a days-back window — otherwise a window with few/no entries would
+// look empty even though she has real history further back.
+export async function getMeasurementHistory(limit = 20): Promise<BodyMeasurement[]> {
+  const supabase = await createClient();
+  const user = await getCurrentUser();
+  if (!user) return [];
+
+  const { data } = await supabase
+    .from("body_measurements")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("log_date", { ascending: false })
+    .limit(limit);
+
+  return data ?? [];
+}
+
 export async function getRecentWorkoutLogs(days = 21): Promise<WorkoutLog[]> {
   const supabase = await createClient();
   const user = await getCurrentUser();

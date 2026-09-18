@@ -1,6 +1,7 @@
 import {
   getGamificationSummary,
   getHistory,
+  getMeasurementHistory,
   getMeasurementTrend,
   getProfile,
   getRecentSleepLogs,
@@ -12,19 +13,21 @@ import { BADGES } from "@/lib/gamification";
 import { ProgressCharts } from "@/components/ProgressCharts";
 import { WeightQuickLog } from "@/components/WeightQuickLog";
 import { MeasurementsQuickLog } from "@/components/MeasurementsQuickLog";
+import { MeasurementsHistory } from "@/components/MeasurementsHistory";
 import { SymptomQuickLog } from "@/components/SymptomQuickLog";
 import { SleepHistory } from "@/components/SleepHistory";
 import { WeeklyReviewCard } from "@/components/WeeklyReviewCard";
 import { FactorsPanel } from "@/components/FactorsPanel";
 
 export default async function ProgressPage() {
-  const [history, gamification, profile, sleepLogs, measurementTrend, todaySummary, todaySymptomLog] =
+  const [history, gamification, profile, sleepLogs, measurementTrend, measurementHistory, todaySummary, todaySymptomLog] =
     await Promise.all([
       getHistory(365),
       getGamificationSummary(),
       getProfile(),
       getRecentSleepLogs(14),
       getMeasurementTrend(),
+      getMeasurementHistory(20),
       getTodaySummary(),
       getTodaySymptomLog(),
     ]);
@@ -42,6 +45,7 @@ export default async function ProgressPage() {
       <SymptomQuickLog existing={todaySymptomLog} />
       <WeightQuickLog todayWeightKg={todaySummary.weightKg} lastKnownWeightKg={profile?.weight_kg ?? null} />
       <MeasurementsQuickLog latest={measurementTrend.latest} previous={measurementTrend.previous} />
+      <MeasurementsHistory logs={measurementHistory} />
       <SleepHistory logs={sleepLogs} />
 
       <section className="card p-4">

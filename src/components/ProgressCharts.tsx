@@ -26,10 +26,15 @@ interface MetricDef {
 const METRICS: MetricDef[] = [
   { key: "wellness", label: "Bienestar", domain: [0, 100], color: "var(--primary)", width: 30, formatValue: (v) => `${Math.round(v)}/100` },
   { key: "weightKg", label: "Peso", domain: ["auto", "auto"], color: "var(--primary)", width: 38, formatValue: (v) => `${v}kg` },
-  { key: "mood", label: "Ánimo", domain: [1, 5], color: "var(--primary)", width: 28, formatValue: (v) => `${v}/5` },
-  { key: "irritability", label: "Irritabilidad", domain: [1, 5], color: "var(--danger)", width: 28, formatValue: (v) => `${v}/5` },
+  // 0, not 1: the scale itself never goes below 1, but starting the axis at
+  // 1 pins the lowest real value to the baseline, making it look like "no
+  // data" instead of "the lowest it can be".
+  { key: "mood", label: "Ánimo", domain: [0, 5], color: "var(--primary)", width: 28, formatValue: (v) => `${v}/5` },
+  { key: "irritability", label: "Irritabilidad", domain: [0, 5], color: "var(--danger)", width: 28, formatValue: (v) => `${v}/5` },
   { key: "sleepHours", label: "Sueño", domain: ["auto", "auto"], color: "var(--icon-sleep)", width: 32, formatValue: (v) => `${v}h` },
-  { key: "calories", label: "Calorías", domain: ["auto", "auto"], color: "var(--accent)", width: 42, formatValue: (v) => `${Math.round(v)} kcal` },
+  // 0, not "auto": an auto-scaled lower bound exaggerates small day-to-day
+  // differences into what looks like "barely ate anything".
+  { key: "calories", label: "Calorías", domain: [0, "auto"], color: "var(--accent)", width: 42, formatValue: (v) => `${Math.round(v)} kcal` },
 ];
 
 function metricValue(p: HistoryPoint, key: MetricKey): number | null {
