@@ -18,6 +18,7 @@ import { SymptomQuickLog } from "@/components/SymptomQuickLog";
 import { SleepHistory } from "@/components/SleepHistory";
 import { WeeklyReviewCard } from "@/components/WeeklyReviewCard";
 import { FactorsPanel } from "@/components/FactorsPanel";
+import { BloatingFactorsPanel } from "@/components/BloatingFactorsPanel";
 
 export default async function ProgressPage() {
   const [history, gamification, profile, sleepLogs, measurementTrend, measurementHistory, todaySummary, todaySymptomLog] =
@@ -42,6 +43,7 @@ export default async function ProgressPage() {
       <WeeklyReviewCard review={weeklyReview} />
       <ProgressCharts history={history} />
       <FactorsPanel history={history} />
+      <BloatingFactorsPanel history={history} />
       <SymptomQuickLog existing={todaySymptomLog} />
       <WeightQuickLog todayWeightKg={todaySummary.weightKg} lastKnownWeightKg={profile?.weight_kg ?? null} />
       <MeasurementsQuickLog latest={measurementTrend.latest} previous={measurementTrend.previous} />
