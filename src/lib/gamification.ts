@@ -10,17 +10,24 @@ export const XP_RULES = {
   pet_care_item: 3,
 } as const;
 
+// A full, well-logged day (check-in, meals, water goal, sleep, pet care,
+// maybe a workout) earns roughly 50-100 XP — at 100 XP/level that meant a
+// level-up most days, which reads as "one day = one level", not a real
+// milestone. 500 XP/level makes a level take roughly a week of consistent
+// use instead, leaving day-to-day consistency to the streak, not the level.
+const XP_PER_LEVEL = 500;
+
 export function xpForLevel(level: number): number {
-  return (level - 1) * 100;
+  return (level - 1) * XP_PER_LEVEL;
 }
 
 export function levelFromXp(xp: number): number {
-  return Math.floor(xp / 100) + 1;
+  return Math.floor(xp / XP_PER_LEVEL) + 1;
 }
 
 export function xpProgressInLevel(xp: number): { current: number; needed: number; pct: number } {
-  const current = xp % 100;
-  return { current, needed: 100, pct: Math.round((current / 100) * 100) };
+  const current = xp % XP_PER_LEVEL;
+  return { current, needed: XP_PER_LEVEL, pct: Math.round((current / XP_PER_LEVEL) * 100) };
 }
 
 /**

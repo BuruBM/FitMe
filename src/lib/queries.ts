@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { shiftDateStr, todayInAppTz } from "@/lib/date";
-import { evaluateNewBadges, type BadgeContext } from "@/lib/gamification";
+import { evaluateNewBadges, levelFromXp, type BadgeContext } from "@/lib/gamification";
 import {
   daysUntilNextPeriod,
   estimateCycle,
@@ -240,6 +240,10 @@ export async function getGamificationSummary(): Promise<GamificationSummary | nu
   for (const d of foodDaySet) {
     if (sleepDaySet.has(d) && waterDaySet.has(d)) daysWithFullLog++;
   }
+
+  // Recompute rather than trust the stored column — it only gets refreshed
+  // inside awardXp, so it can lag behind if the leveling curve ever changes.
+  state.level = levelFromXp(state.xp);
 
   const ctx: BadgeContext = {
     state,

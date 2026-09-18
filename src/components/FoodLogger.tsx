@@ -461,6 +461,7 @@ function AddItemPanel({ base, onDone, date }: { base: Base; onDone: () => void; 
   const multiplier = Number(multiplierInput) || 0;
   const [mealType, setMealType] = useState<MealType>(guessMealType());
   const [saveAsFavorite, setSaveAsFavorite] = useState(false);
+  const [notes, setNotes] = useState("");
   const [isPending, startTransition] = useTransition();
 
   const scaled = {
@@ -490,6 +491,7 @@ function AddItemPanel({ base, onDone, date }: { base: Base; onDone: () => void; 
           calciumMg: Math.round(scaled.calcium_mg),
           source: base.source,
           saveAsFavorite,
+          notes: notes || undefined,
         },
         date,
       );
@@ -557,6 +559,17 @@ function AddItemPanel({ base, onDone, date }: { base: Base; onDone: () => void; 
         <span>Grasas: {scaled.fat_g.toFixed(1)}g</span>
         <span>Sodio: {Math.round(scaled.sodium_mg)}mg</span>
         <span>Calcio: {Math.round(scaled.calcium_mg)}mg</span>
+      </div>
+
+      <div>
+        <label className="text-xs text-muted">Comentario (ej: me cayó pesado, me hinchó) — opcional</label>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={2}
+          placeholder="¿Algo para aclarar sobre esta comida?"
+          className="mt-1 w-full rounded-lg border border-card-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+        />
       </div>
 
       {base.source !== "favorite" && (

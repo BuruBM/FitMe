@@ -92,7 +92,7 @@ export async function deleteFoodLog(id: string) {
 // quantity change, using the log's own current values as the "per current
 // quantity" baseline — works regardless of where the food originally came
 // from (local DB, Open Food Facts, manual, favorite).
-export async function updateFoodLog(id: string, quantity: number, mealType: MealType) {
+export async function updateFoodLog(id: string, quantity: number, mealType: MealType, notes?: string | null) {
   const user = await getCurrentUser();
   if (!user) throw new Error("No autenticada");
   const supabase = await createClient();
@@ -119,6 +119,7 @@ export async function updateFoodLog(id: string, quantity: number, mealType: Meal
       fiber_g: Math.round(existing.fiber_g * ratio * 10) / 10,
       sodium_mg: Math.round(existing.sodium_mg * ratio),
       calcium_mg: Math.round(existing.calcium_mg * ratio),
+      notes: notes === undefined ? undefined : notes || null,
     })
     .eq("id", id)
     .eq("user_id", user.id);

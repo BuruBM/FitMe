@@ -77,12 +77,15 @@ export function FoodHistory({ logs }: { logs: FoodLog[] }) {
               {open && (
                 <div className="pb-2.5 space-y-1.5">
                   {day.logs.map((log) => (
-                    <div key={log.id} className="flex justify-between text-xs pl-1">
-                      <span>{log.name}</span>
-                      <span className="text-muted">
-                        {log.quantity} {log.unit} · {Math.round(log.calories)} kcal · P{Math.round(log.protein_g)}g C
-                        {Math.round(log.carbs_g)}g G{Math.round(log.fat_g)}g
-                      </span>
+                    <div key={log.id} className="text-xs pl-1">
+                      <div className="flex justify-between">
+                        <span>{log.name}</span>
+                        <span className="text-muted">
+                          {log.quantity} {log.unit} · {Math.round(log.calories)} kcal · P{Math.round(log.protein_g)}g C
+                          {Math.round(log.carbs_g)}g G{Math.round(log.fat_g)}g
+                        </span>
+                      </div>
+                      {log.notes && <p className="italic text-muted mt-0.5">&quot;{log.notes}&quot;</p>}
                     </div>
                   ))}
                 </div>

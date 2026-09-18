@@ -63,6 +63,7 @@ function FoodLogRow({ log, onEdit }: { log: FoodLog; onEdit: () => void }) {
           {log.quantity} {log.unit} · {Math.round(log.calories)} kcal · P{Math.round(log.protein_g)}g C
           {Math.round(log.carbs_g)}g G{Math.round(log.fat_g)}g
         </p>
+        {log.notes && <p className="text-xs italic text-muted mt-0.5">&quot;{log.notes}&quot;</p>}
       </div>
       <div className="flex items-center gap-1 shrink-0">
         <button onClick={onEdit} className="text-muted hover:text-primary p-1" aria-label="Editar">
@@ -84,6 +85,7 @@ function FoodLogRow({ log, onEdit }: { log: FoodLog; onEdit: () => void }) {
 function EditFoodLogRow({ log, onDone }: { log: FoodLog; onDone: () => void }) {
   const [quantityInput, setQuantityInput] = useState(String(log.quantity));
   const [mealType, setMealType] = useState<MealType>(log.meal_type);
+  const [notes, setNotes] = useState(log.notes ?? "");
   const [isPending, startTransition] = useTransition();
 
   const quantity = Number(quantityInput) || 0;
@@ -92,7 +94,7 @@ function EditFoodLogRow({ log, onDone }: { log: FoodLog; onDone: () => void }) {
   function save() {
     if (quantity <= 0) return;
     startTransition(async () => {
-      await updateFoodLog(log.id, quantity, mealType);
+      await updateFoodLog(log.id, quantity, mealType, notes);
       onDone();
     });
   }
@@ -126,6 +128,16 @@ function EditFoodLogRow({ log, onDone }: { log: FoodLog; onDone: () => void }) {
         {Math.round(log.calories * ratio)} kcal · P{Math.round(log.protein_g * ratio * 10) / 10}g C
         {Math.round(log.carbs_g * ratio * 10) / 10}g G{Math.round(log.fat_g * ratio * 10) / 10}g
       </p>
+      <div>
+        <label className="text-xs text-muted">Comentario (ej: me cayó pesado, me hinchó) — opcional</label>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={2}
+          placeholder="¿Algo para aclarar sobre esta comida?"
+          className="mt-1 w-full rounded-lg border border-card-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+        />
+      </div>
       <div className="flex gap-2">
         <button
           onClick={save}
