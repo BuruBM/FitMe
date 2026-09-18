@@ -111,9 +111,9 @@ export function SymptomQuickLog({ existing, date }: { existing: SymptomLog | nul
 
       <RatingRow label="Energía" value={energy} onChange={setEnergy} />
       <RatingRow label="Ánimo" value={mood} onChange={setMood} />
-      <RatingRow label="Irritabilidad" value={irritability} onChange={setIrritability} />
+      <RatingRow label="Irritabilidad" value={irritability} onChange={setIrritability} min={0} />
       <RatingRow label="Sensibilidad (te afecta más de lo normal)" value={sensitivityLevel} onChange={setSensitivityLevel} />
-      <RatingRow label="Estrés" value={stressLevel} onChange={setStressLevel} />
+      <RatingRow label="Estrés" value={stressLevel} onChange={setStressLevel} min={0} />
       <RatingRow label="Contacto con gente querida" value={socialContact} onChange={setSocialContact} max={5} min={0} />
 
       <div className="grid grid-cols-2 gap-2 pt-1">

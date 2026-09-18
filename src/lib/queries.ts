@@ -751,8 +751,10 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
     const wellnessInputs: number[] = [];
     if (symptom?.mood != null) wellnessInputs.push(scale1to5(symptom.mood));
     if (symptom?.energy != null) wellnessInputs.push(scale1to5(symptom.energy));
-    if (symptom?.irritability != null) wellnessInputs.push(100 - scale1to5(symptom.irritability));
-    if (symptom?.stress_level != null) wellnessInputs.push(100 - scale1to5(symptom.stress_level));
+    // 0-5, not 1-5: unlike mood/energy/sensitivity (always some value),
+    // irritability and stress can genuinely be zero some days.
+    if (symptom?.irritability != null) wellnessInputs.push(100 - scale0to5(symptom.irritability));
+    if (symptom?.stress_level != null) wellnessInputs.push(100 - scale0to5(symptom.stress_level));
     if (symptom?.social_contact != null) wellnessInputs.push(scale0to5(symptom.social_contact));
     if (symptom?.social_media_minutes != null) wellnessInputs.push(scaleLessIsBetter(symptom.social_media_minutes, SOCIAL_MEDIA_CAP_MIN));
     // A note's mood tag: sad subtracts, happy adds, neutral (0) is left out

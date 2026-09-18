@@ -31,7 +31,10 @@ const METRICS: MetricDef[] = [
   // data" instead of "the lowest it can be".
   { key: "mood", label: "Ánimo", domain: [0, 5], color: "var(--primary)", width: 28, formatValue: (v) => `${v}/5` },
   { key: "irritability", label: "Irritabilidad", domain: [0, 5], color: "var(--danger)", width: 28, formatValue: (v) => `${v}/5` },
-  { key: "sleepHours", label: "Sueño", domain: ["auto", "auto"], color: "var(--icon-sleep)", width: 32, formatValue: (v) => `${v}h` },
+  // 0, not "auto": same exaggeration problem as calories — sleeping less
+  // one night could look like barely sleeping at all against an auto-scaled
+  // floor, when there's real room further down.
+  { key: "sleepHours", label: "Sueño", domain: [0, "auto"], color: "var(--icon-sleep)", width: 32, formatValue: (v) => `${v}h` },
   // 0, not "auto": an auto-scaled lower bound exaggerates small day-to-day
   // differences into what looks like "barely ate anything".
   { key: "calories", label: "Calorías", domain: [0, "auto"], color: "var(--accent)", width: 42, formatValue: (v) => `${Math.round(v)} kcal` },
@@ -183,7 +186,7 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
                 <p>Cada parte vale de 0 a 100, y el resultado es el promedio de las que tengas cargadas ese día (con al menos 2):</p>
                 <ul className="list-disc pl-4 space-y-0.5">
                   <li>Ánimo y energía: más alto tu número (1-5), más puntos.</li>
-                  <li>Irritabilidad y estrés: más bajo tu número, más puntos (se invierten).</li>
+                  <li>Irritabilidad y estrés: más bajo tu número (0-5, el 0 es &quot;nada&quot;), más puntos (se invierten).</li>
                   <li>Contacto social: más alto tu número (0-5), más puntos.</li>
                   <li>Redes: menos minutos, más puntos.</li>
                   <li>Carita de la nota: 😄/🙂 suma puntos, 😣/🙁 resta, 😐 neutra no afecta nada.</li>
