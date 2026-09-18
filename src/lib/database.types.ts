@@ -189,6 +189,7 @@ export interface GamificationState {
   longest_streak: number;
   last_activity_date: string | null;
   badges: string[];
+  last_celebrated_level: number;
   updated_at: string;
 }
 

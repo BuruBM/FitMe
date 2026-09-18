@@ -30,7 +30,7 @@ No usa reconocimiento de fotos por IA todavía: la carga de comida es por búsqu
 ### 1. Crear el proyecto de Supabase
 
 1. Entrá a [supabase.com](https://supabase.com) y creá un proyecto nuevo (el plan gratuito alcanza).
-2. En el SQL Editor del proyecto, pegá y ejecutá **en orden** el contenido de los archivos en [`supabase/migrations/`](supabase/migrations/) (`0001_init.sql` hasta `0012_irritability_stress_allow_zero.sql`). Entre todos crean las tablas, la seguridad por usuaria (RLS) y el trigger que arma tu perfil automáticamente al registrarte.
+2. En el SQL Editor del proyecto, pegá y ejecutá **en orden** el contenido de los archivos en [`supabase/migrations/`](supabase/migrations/) (`0001_init.sql` hasta `0013_gamification_celebration.sql`). Entre todos crean las tablas, la seguridad por usuaria (RLS) y el trigger que arma tu perfil automáticamente al registrarte.
 3. En **Project Settings → API**, copiá la **Project URL** y la **anon public key**.
 4. En **Authentication → Providers**, dejá habilitado "Email" (viene por defecto). Si no querés que pida confirmación por mail para empezar más rápido, podés desactivar "Confirm email" en Authentication → Settings.
 

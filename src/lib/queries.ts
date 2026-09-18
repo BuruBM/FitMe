@@ -176,6 +176,7 @@ export async function getDayEditorData(date: string): Promise<DayEditorData | nu
 export interface GamificationSummary {
   state: GamificationState;
   newlyEarned: string[];
+  leveledUpTo: number | null;
 }
 
 export async function getGamificationSummary(): Promise<GamificationSummary | null> {
@@ -245,6 +246,14 @@ export async function getGamificationSummary(): Promise<GamificationSummary | nu
   // inside awardXp, so it can lag behind if the leveling curve ever changes.
   state.level = levelFromXp(state.xp);
 
+  // A level she hasn't been celebrated for yet — shown once, then marked
+  // done, same idea as newlyEarned badges below.
+  const leveledUpTo = state.level > state.last_celebrated_level ? state.level : null;
+  if (leveledUpTo != null) {
+    await supabase.from("gamification_state").update({ last_celebrated_level: leveledUpTo }).eq("user_id", user.id);
+    state.last_celebrated_level = leveledUpTo;
+  }
+
   const ctx: BadgeContext = {
     state,
     totalFoodLogs: totalFoodLogs ?? 0,
@@ -262,7 +271,7 @@ export async function getGamificationSummary(): Promise<GamificationSummary | nu
     state.badges = updatedBadges;
   }
 
-  return { state, newlyEarned };
+  return { state, newlyEarned, leveledUpTo };
 }
 
 export interface CycleSummary {

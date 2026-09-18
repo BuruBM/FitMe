@@ -1,5 +1,5 @@
-import { TIPS, type Tip } from "@/data/tips";
 import { Lightbulb } from "lucide-react";
+import { getTodaysTip } from "@/lib/tips";
 
 export function TipOfTheDay({
   bloatingProne,
@@ -10,14 +10,7 @@ export function TipOfTheDay({
   osteopeniaRisk: boolean;
   pcos: boolean;
 }) {
-  const relevantCategories: Tip["category"][] = ["proteína", "trabajo", "social", "energía", "sueño", "hábitos", "hábitos"];
-  if (bloatingProne) relevantCategories.push("hinchazón", "hinchazón");
-  if (osteopeniaRisk) relevantCategories.push("huesos", "huesos");
-  if (pcos) relevantCategories.push("hormonas", "hormonas");
-
-  const pool = TIPS.filter((t) => relevantCategories.includes(t.category));
-  const dayIndex = new Date().getDate() + new Date().getMonth() * 31;
-  const tip = pool[dayIndex % pool.length];
+  const tip = getTodaysTip({ bloatingProne, osteopeniaRisk, pcos });
 
   return (
     <section className="card p-4">

@@ -136,6 +136,20 @@ export const BADGES: BadgeDef[] = [
     check: (c) => c.state.level >= 5,
   },
   {
+    id: "level_10",
+    title: "Nivel 10",
+    description: "Llegaste al nivel 10 en La Marea.",
+    icon: "🌟",
+    check: (c) => c.state.level >= 10,
+  },
+  {
+    id: "streak_60",
+    title: "Dos meses seguidos",
+    description: "60 días seguidos de racha.",
+    icon: "🎖️",
+    check: (c) => c.state.longest_streak >= 60,
+  },
+  {
     id: "cat_care_10",
     title: "Buena mamá de gatos",
     description: "10 días cuidando por completo a Milo y Zoe.",
