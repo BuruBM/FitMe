@@ -617,6 +617,13 @@ function scale0to5(value: number): number {
   return (value / 5) * 100;
 }
 
+// -2..2 → 0..100. Only called for a nonzero valence (see call site) — a
+// neutral note is deliberately left out of the average entirely, not
+// scored as a neutral 50.
+function scaleValence(value: number): number {
+  return ((value + 2) / 4) * 100;
+}
+
 const MOVEMENT_TARGET_MIN = 30;
 const SOCIAL_MEDIA_CAP_MIN = 120;
 
@@ -726,6 +733,11 @@ export async function getHistory(days = 14): Promise<HistoryPoint[]> {
     if (symptom?.stress_level != null) wellnessInputs.push(100 - scale1to5(symptom.stress_level));
     if (symptom?.social_contact != null) wellnessInputs.push(scale0to5(symptom.social_contact));
     if (symptom?.social_media_minutes != null) wellnessInputs.push(scaleLessIsBetter(symptom.social_media_minutes, SOCIAL_MEDIA_CAP_MIN));
+    // A note's mood tag: sad subtracts, happy adds, neutral (0) is left out
+    // of the average entirely rather than counted as a flat middle score.
+    if (symptom?.notes_valence != null && symptom.notes_valence !== 0) {
+      wellnessInputs.push(scaleValence(symptom.notes_valence));
+    }
     if (sleepHours != null) wellnessInputs.push(pct(sleepHours, sleepTarget));
     if (waterMl > 0) wellnessInputs.push(pct(waterMl, waterTarget));
     // Protein: only falling short of a healthy minimum costs points — going

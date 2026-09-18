@@ -167,8 +167,8 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
         {metricKey === "wellness" && (
           <div className="mb-2">
             <p className="text-xs text-muted">
-              Combina ánimo, energía, irritabilidad, estrés, contacto social, redes, sueño, agua, calorías,
-              proteína y movimiento.{" "}
+              Combina ánimo, energía, irritabilidad, estrés, contacto social, redes, la carita de tu nota, sueño,
+              agua, calorías, proteína y movimiento.{" "}
               <button onClick={() => setShowWellnessInfo((v) => !v)} className="text-primary font-medium">
                 {showWellnessInfo ? "Ocultar" : "¿Cómo se calcula?"}
               </button>
@@ -181,6 +181,7 @@ export function ProgressCharts({ history }: { history: HistoryPoint[] }) {
                   <li>Irritabilidad y estrés: más bajo tu número, más puntos (se invierten).</li>
                   <li>Contacto social: más alto tu número (0-5), más puntos.</li>
                   <li>Redes: menos minutos, más puntos.</li>
+                  <li>Carita de la nota: 😄/🙂 suma puntos, 😣/🙁 resta, 😐 neutra no afecta nada.</li>
                   <li>Sueño y agua: % de tu objetivo alcanzado ese día (tope 100%).</li>
                   <li>Calorías: más puntos cuanto más cerca de tu objetivo — llegar o quedarte un poco por debajo también suma, alejarte mucho (de más o de menos) resta.</li>
                   <li>Proteína: solo resta si consumís menos que un mínimo saludable para tu peso — pasarte de tu objetivo no resta.</li>
