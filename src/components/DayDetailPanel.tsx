@@ -24,7 +24,7 @@ function buildStats(point: HistoryPoint): Stat[] {
       value: `${point.sleepHours}h${point.sleepQuality ? ` · ${"★".repeat(point.sleepQuality)}` : ""}`,
     },
     point.sleepWakeUps != null && point.sleepWakeUps > 0 && { label: "Despertares", value: String(point.sleepWakeUps) },
-    point.waterMl > 0 && { label: "Agua", value: `${(point.waterMl / 1000).toFixed(1)}L` },
+    point.waterMl > 0 && { label: "Agua", value: `${point.waterMl}ml` },
     point.weightKg != null && { label: "Peso", value: `${point.weightKg}kg` },
     point.calories > 0 && { label: "Calorías", value: `${Math.round(point.calories)} kcal` },
     point.proteinG > 0 && { label: "Proteína", value: `${Math.round(point.proteinG)}g` },

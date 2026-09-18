@@ -32,7 +32,7 @@ export function WaterQuickAdd({
         Agua
       </div>
       <p className="text-xs text-muted mt-1">
-        {(total / 1000).toFixed(1)}L / {(targetMl / 1000).toFixed(1)}L ({pct}%)
+        {total}ml / {targetMl}ml ({pct}%)
       </p>
       <div className="h-2 rounded-full bg-card-border overflow-hidden mt-2">
         <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--icon-water)" }} />
