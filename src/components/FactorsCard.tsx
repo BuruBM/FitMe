@@ -2,29 +2,36 @@
 
 import { useMemo, useState } from "react";
 import { Compass } from "lucide-react";
-import type { FactorComparison, FactorGroup } from "@/lib/factors";
+import { computeMoodFactors, computeBloatingFactors, type FactorComparison, type FactorGroup } from "@/lib/factors";
 import type { HistoryPoint } from "@/lib/queries";
 
 type Period = "semana" | "mes";
 const PERIOD_DAYS: Record<Period, number> = { semana: 7, mes: 30 };
 const PERIOD_LABELS: Record<Period, string> = { semana: "Semana", mes: "Mes" };
 
+// "kind" instead of a function prop: FactorsPanel/BloatingFactorsPanel are
+// plain (server) components, and a function reference can't cross the
+// server/client boundary as a prop — passing one compiles fine locally but
+// throws at request time in production. A string is serializable either way.
 export function FactorsCard({
   title,
   history,
   scaleMax,
-  computeFn,
+  kind,
   emptyHint,
 }: {
   title: string;
   history: HistoryPoint[];
   scaleMax: number;
-  computeFn: (points: HistoryPoint[]) => FactorComparison[];
+  kind: "mood" | "bloating";
   emptyHint: string;
 }) {
   const [period, setPeriod] = useState<Period>("semana");
 
-  const factors = useMemo(() => computeFn(history.slice(-PERIOD_DAYS[period])), [history, period, computeFn]);
+  const factors = useMemo(() => {
+    const windowed = history.slice(-PERIOD_DAYS[period]);
+    return kind === "mood" ? computeMoodFactors(windowed) : computeBloatingFactors(windowed);
+  }, [history, period, kind]);
 
   return (
     <section className="card p-4">
