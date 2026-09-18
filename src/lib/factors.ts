@@ -58,7 +58,41 @@ function medianSplit(
   ];
 }
 
-const CYCLE_ORDER: CyclePhase[] = ["menstrual", "folicular", "ovulación", "lútea"];
+// Not chronological — best-expected-mood to worst, per the same general
+// hormonal pattern the app already describes elsewhere (PHASE_MOOD_INFO):
+// ovulación peaks energy/mood, folicular is rising, menstrual brings more
+// fatigue/sensitivity, lútea is where PMS/irritability is most common.
+const CYCLE_ORDER: CyclePhase[] = ["ovulación", "folicular", "menstrual", "lútea"];
+
+// For a "less is better" quantity that can genuinely be zero (movimiento,
+// redes, alcohol): the "menos" side is always the true floor she actually
+// had that period — 0 if any day was 0, otherwise whatever her smallest
+// logged amount was — never a median. "más" is everything above that floor.
+function floorSplit(
+  points: HistoryPoint[],
+  anchorOf: (p: HistoryPoint) => number | null,
+  factorOf: (p: HistoryPoint) => number | null,
+  betterLabel: string,
+  worseLabel: string,
+  betterIsHigh: boolean,
+): FactorGroup[] | null {
+  const pairs = points
+    .map((p) => ({ factor: factorOf(p), anchor: anchorOf(p) }))
+    .filter((x): x is { factor: number; anchor: number } => x.factor != null && x.anchor != null);
+  if (pairs.length < 2) return null;
+
+  const floor = Math.min(...pairs.map((p) => p.factor));
+  const atFloor = pairs.filter((p) => p.factor === floor);
+  const aboveFloor = pairs.filter((p) => p.factor > floor);
+  if (atFloor.length === 0 || aboveFloor.length === 0) return null; // everyone tied — no spread to compare
+
+  const betterGroup = betterIsHigh ? aboveFloor : atFloor;
+  const worseGroup = betterIsHigh ? atFloor : aboveFloor;
+  return [
+    { label: betterLabel, avg: avg(betterGroup.map((p) => p.anchor)), n: betterGroup.length },
+    { label: worseLabel, avg: avg(worseGroup.map((p) => p.anchor)), n: worseGroup.length },
+  ];
+}
 
 function cycleGroups(points: HistoryPoint[], anchorOf: (p: HistoryPoint) => number | null): FactorGroup[] | null {
   const byPhase = new Map<CyclePhase, number[]>();
@@ -104,7 +138,7 @@ export function computeMoodFactors(points: HistoryPoint[]): FactorComparison[] {
   add(
     "movement",
     "Movimiento",
-    medianSplit(points, anchorOf, (p) => (p.movementMinutes > 0 ? p.movementMinutes : null), "Más minutos", "Menos minutos", true),
+    floorSplit(points, anchorOf, (p) => p.movementMinutes, "Más minutos", "Menos minutos", true),
   );
   add(
     "social",
@@ -114,7 +148,7 @@ export function computeMoodFactors(points: HistoryPoint[]): FactorComparison[] {
   add(
     "screens",
     "Redes sociales",
-    medianSplit(points, anchorOf, (p) => p.socialMediaMinutes, "Menos tiempo", "Más tiempo", false),
+    floorSplit(points, anchorOf, (p) => p.socialMediaMinutes, "Menos tiempo", "Más tiempo", false),
   );
   add(
     "protein",
@@ -122,7 +156,7 @@ export function computeMoodFactors(points: HistoryPoint[]): FactorComparison[] {
     medianSplit(points, anchorOf, (p) => (p.proteinG > 0 ? p.proteinG : null), "Más proteína", "Menos proteína", true),
   );
   add("weather", "Clima", medianSplit(points, anchorOf, (p) => p.cloudCoverPct, "Más despejado", "Más nublado", false));
-  add("alcohol", "Alcohol", medianSplit(points, anchorOf, (p) => p.alcoholUnits, "Menos", "Más", false));
+  add("alcohol", "Alcohol", floorSplit(points, anchorOf, (p) => p.alcoholUnits, "Menos", "Más", false));
   add("cycle", "Ciclo hormonal", cycleGroups(points, anchorOf));
 
   return sortByGap(results);
@@ -153,9 +187,9 @@ export function computeBloatingFactors(points: HistoryPoint[]): FactorComparison
   add(
     "movement",
     "Movimiento",
-    medianSplit(points, anchorOf, (p) => (p.movementMinutes > 0 ? p.movementMinutes : null), "Más movimiento", "Menos movimiento", true),
+    floorSplit(points, anchorOf, (p) => p.movementMinutes, "Más movimiento", "Menos movimiento", true),
   );
-  add("alcohol", "Alcohol", medianSplit(points, anchorOf, (p) => p.alcoholUnits, "Menos", "Más", false));
+  add("alcohol", "Alcohol", floorSplit(points, anchorOf, (p) => p.alcoholUnits, "Menos", "Más", false));
   add("cycle", "Ciclo hormonal", cycleGroups(points, anchorOf));
 
   return sortByGap(results);
