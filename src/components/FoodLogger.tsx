@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { Search, Star, Sparkles, Pencil, UtensilsCrossed, X, Repeat } from "lucide-react";
+import { Search, Star, Sparkles, Pencil, UtensilsCrossed, X, Repeat, ScanLine } from "lucide-react";
 import { IconBadge } from "@/components/IconBadge";
 import { FOODS, searchLocalFoods, estimateFromText, type FoodItem } from "@/data/foods";
 import { logFood, deleteFavoriteFood, hideDefaultFood, unhideDefaultFood, repeatMeal } from "@/lib/actions/food";
 import type { MealType, CustomFood, FoodLog } from "@/lib/database.types";
 import type { OffResult } from "@/app/api/food-search/route";
+import { BarcodeScanner } from "@/components/BarcodeScanner";
 
 type Tab = "buscar" | "favoritos" | "texto" | "manual";
 
@@ -187,6 +188,8 @@ function SearchTab({ yesterdayLogs, date }: { yesterdayLogs: FoodLog[]; date?: s
   const [offResults, setOffResults] = useState<OffResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<Base | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [barcodeStatus, setBarcodeStatus] = useState<"idle" | "looking_up" | "not_found">("idle");
 
   const localResults = useMemo(() => (query ? searchLocalFoods(query) : []), [query]);
 
@@ -212,16 +215,52 @@ function SearchTab({ yesterdayLogs, date }: { yesterdayLogs: FoodLog[]; date?: s
     setOffResults([]);
   }
 
+  function onBarcodeDetected(code: string) {
+    setScanning(false);
+    setBarcodeStatus("looking_up");
+    fetch(`/api/food-barcode?code=${encodeURIComponent(code)}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.result) {
+          setBarcodeStatus("idle");
+          setSelected(fromOffResult(d.result));
+        } else {
+          setBarcodeStatus("not_found");
+        }
+      })
+      .catch(() => setBarcodeStatus("not_found"));
+  }
+
   if (selected) return <AddItemPanel base={selected} onDone={done} date={date} />;
 
   return (
     <div className="space-y-3">
-      <input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Buscá un alimento, ej: tofu, milanesa de soja..."
-        className="input"
-      />
+      {scanning && <BarcodeScanner onDetected={onBarcodeDetected} onClose={() => setScanning(false)} />}
+      <div className="flex gap-2">
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Buscá un alimento, ej: tofu, milanesa de soja..."
+          className="input"
+        />
+        <button
+          onClick={() => {
+            setBarcodeStatus("idle");
+            setScanning(true);
+          }}
+          aria-label="Escanear código de barras"
+          className="shrink-0 w-10 rounded-lg border border-card-border text-muted hover:border-primary hover:text-primary flex items-center justify-center"
+        >
+          <ScanLine size={16} />
+        </button>
+      </div>
+      {barcodeStatus === "looking_up" && <p className="text-xs text-muted px-1">Buscando el producto escaneado...</p>}
+      {barcodeStatus === "not_found" && (
+        <p className="text-xs text-muted px-1">
+          No encontramos ese código en Open Food Facts. Probá buscarlo por texto o cargalo en la pestaña
+          &quot;Manual&quot;.
+        </p>
+      )}
       {!query && <RepeatYesterday yesterdayLogs={yesterdayLogs} onDone={done} />}
       <div className="space-y-1.5 max-h-80 overflow-y-auto">
         {localResults.map((f) => (
