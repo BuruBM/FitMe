@@ -4,7 +4,14 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { Search, Star, Sparkles, Pencil, UtensilsCrossed, X, Repeat, ScanLine } from "lucide-react";
 import { IconBadge } from "@/components/IconBadge";
 import { FOODS, searchLocalFoods, estimateFromText, type FoodItem } from "@/data/foods";
-import { logFood, deleteFavoriteFood, hideDefaultFood, unhideDefaultFood, repeatMeal } from "@/lib/actions/food";
+import {
+  logFood,
+  deleteFavoriteFood,
+  hideDefaultFood,
+  unhideDefaultFood,
+  repeatMeal,
+  lookupFoodByBarcode,
+} from "@/lib/actions/food";
 import type { MealType, CustomFood, FoodLog } from "@/lib/database.types";
 import type { OffResult } from "@/app/api/food-search/route";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
@@ -189,7 +196,8 @@ function SearchTab({ yesterdayLogs, date }: { yesterdayLogs: FoodLog[]; date?: s
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<Base | null>(null);
   const [scanning, setScanning] = useState(false);
-  const [barcodeStatus, setBarcodeStatus] = useState<"idle" | "looking_up" | "not_found">("idle");
+  const [barcodeStatus, setBarcodeStatus] = useState<"idle" | "looking_up">("idle");
+  const [unresolvedBarcode, setUnresolvedBarcode] = useState<string | null>(null);
 
   const localResults = useMemo(() => (query ? searchLocalFoods(query) : []), [query]);
 
@@ -215,23 +223,55 @@ function SearchTab({ yesterdayLogs, date }: { yesterdayLogs: FoodLog[]; date?: s
     setOffResults([]);
   }
 
-  function onBarcodeDetected(code: string) {
+  async function onBarcodeDetected(code: string) {
     setScanning(false);
+    setUnresolvedBarcode(null);
     setBarcodeStatus("looking_up");
-    fetch(`/api/food-barcode?code=${encodeURIComponent(code)}`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.result) {
-          setBarcodeStatus("idle");
-          setSelected(fromOffResult(d.result));
-        } else {
-          setBarcodeStatus("not_found");
-        }
-      })
-      .catch(() => setBarcodeStatus("not_found"));
+
+    // Her own saved products first — free, instant, and exactly what she
+    // typed once. Only falls through to Open Food Facts if this is a
+    // package she hasn't loaded before.
+    const own = await lookupFoodByBarcode(code).catch(() => null);
+    if (own) {
+      setBarcodeStatus("idle");
+      setSelected(fromCustomFood(own));
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/food-barcode?code=${encodeURIComponent(code)}`);
+      const d = await res.json();
+      if (d.result) {
+        setBarcodeStatus("idle");
+        setSelected(fromOffResult(d.result));
+      } else {
+        setBarcodeStatus("idle");
+        setUnresolvedBarcode(code);
+      }
+    } catch {
+      setBarcodeStatus("idle");
+      setUnresolvedBarcode(code);
+    }
   }
 
   if (selected) return <AddItemPanel base={selected} onDone={done} date={date} />;
+
+  if (unresolvedBarcode) {
+    return (
+      <ManualEntryForm
+        date={date}
+        barcode={unresolvedBarcode}
+        onDone={() => {
+          setUnresolvedBarcode(null);
+          setBarcodeStatus("idle");
+        }}
+        onCancel={() => {
+          setUnresolvedBarcode(null);
+          setBarcodeStatus("idle");
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-3">
@@ -255,12 +295,6 @@ function SearchTab({ yesterdayLogs, date }: { yesterdayLogs: FoodLog[]; date?: s
         </button>
       </div>
       {barcodeStatus === "looking_up" && <p className="text-xs text-muted px-1">Buscando el producto escaneado...</p>}
-      {barcodeStatus === "not_found" && (
-        <p className="text-xs text-muted px-1">
-          No encontramos ese código en Open Food Facts. Probá buscarlo por texto o cargalo en la pestaña
-          &quot;Manual&quot;.
-        </p>
-      )}
       {!query && <RepeatYesterday yesterdayLogs={yesterdayLogs} onDone={done} />}
       <div className="space-y-1.5 max-h-80 overflow-y-auto">
         {localResults.map((f) => (
@@ -681,6 +715,25 @@ function TextTab({ date }: { date?: string }) {
 }
 
 function ManualTab({ date }: { date?: string }) {
+  return <ManualEntryForm date={date} />;
+}
+
+// Shared by the "Manual" tab and by the one-time barcode fallback: when
+// `barcode` is set (a scan that Open Food Facts didn't have), "Guardar como
+// favorito" defaults to checked and the entry is tagged with that barcode,
+// so scanning the same package again resolves instantly next time — no
+// re-typing, ever, for that product.
+function ManualEntryForm({
+  date,
+  barcode,
+  onDone,
+  onCancel,
+}: {
+  date?: string;
+  barcode?: string;
+  onDone?: () => void;
+  onCancel?: () => void;
+}) {
   const [mealType, setMealType] = useState<MealType>(guessMealType());
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -690,7 +743,7 @@ function ManualTab({ date }: { date?: string }) {
   const [carbs, setCarbs] = useState("");
   const [fat, setFat] = useState("");
   const [sodium, setSodium] = useState("");
-  const [saveAsFavorite, setSaveAsFavorite] = useState(false);
+  const [saveAsFavorite, setSaveAsFavorite] = useState(!!barcode);
   const [isPending, startTransition] = useTransition();
 
   function submit() {
@@ -711,6 +764,7 @@ function ManualTab({ date }: { date?: string }) {
           calciumMg: 0,
           source: "manual",
           saveAsFavorite,
+          barcode: saveAsFavorite ? barcode : undefined,
         },
         date,
       );
@@ -720,11 +774,25 @@ function ManualTab({ date }: { date?: string }) {
       setCarbs("");
       setFat("");
       setSodium("");
+      onDone?.();
     });
   }
 
   return (
     <div className="space-y-2.5">
+      {barcode && (
+        <div className="flex items-start justify-between gap-2 rounded-lg border border-card-border bg-background px-3 py-2">
+          <p className="text-xs text-muted">
+            No encontramos este código ({barcode}) en Open Food Facts. Cargalo una vez y la próxima que lo escanees
+            no vas a tener que tocar nada.
+          </p>
+          {onCancel && (
+            <button onClick={onCancel} className="text-xs text-muted shrink-0">
+              ← Volver
+            </button>
+          )}
+        </div>
+      )}
       <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre del alimento" className="input" />
       <div className="grid grid-cols-2 gap-2">
         <input
@@ -781,7 +849,9 @@ function ManualTab({ date }: { date?: string }) {
       </select>
       <label className="flex items-center gap-2 text-xs text-muted">
         <input type="checkbox" checked={saveAsFavorite} onChange={(e) => setSaveAsFavorite(e.target.checked)} />
-        Guardar como favorito para la próxima
+        {barcode
+          ? "Guardar y recordar este código de barras (recomendado)"
+          : "Guardar como favorito para la próxima"}
       </label>
       <button onClick={submit} disabled={isPending || !name || !calories} className="btn-primary disabled:opacity-50">
         {isPending ? "Agregando..." : "Agregar"}

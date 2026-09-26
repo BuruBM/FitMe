@@ -59,6 +59,7 @@ export interface CustomFood {
   sodium_mg: number;
   calcium_mg: number;
   is_favorite: boolean;
+  barcode: string | null;
   created_at: string;
 }
 

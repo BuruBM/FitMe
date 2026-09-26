@@ -5,7 +5,7 @@ import { todayInAppTz } from "@/lib/date";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { awardXp } from "@/lib/actions/gamification-helpers";
 import { XP_RULES } from "@/lib/gamification";
-import type { MealType, FoodSource } from "@/lib/database.types";
+import type { CustomFood, MealType, FoodSource } from "@/lib/database.types";
 
 export interface LogFoodInput {
   mealType: MealType;
@@ -22,6 +22,7 @@ export interface LogFoodInput {
   source: FoodSource;
   notes?: string;
   saveAsFavorite?: boolean;
+  barcode?: string;
 }
 
 export async function logFood(input: LogFoodInput, date?: string) {
@@ -64,6 +65,7 @@ export async function logFood(input: LogFoodInput, date?: string) {
       sodium_mg: input.sodiumMg,
       calcium_mg: input.calciumMg,
       is_favorite: true,
+      barcode: input.barcode ?? null,
     });
   }
 
@@ -177,6 +179,25 @@ export async function repeatMeal(mealType: MealType, items: RepeatMealItem[]) {
 
   revalidatePath("/dashboard");
   revalidatePath("/food");
+}
+
+// Checked before ever hitting Open Food Facts: a barcode she already loaded
+// once (via the manual-entry fallback) resolves instantly from here, with
+// no typing and no external lookup at all.
+export async function lookupFoodByBarcode(barcode: string): Promise<CustomFood | null> {
+  const user = await getCurrentUser();
+  if (!user) return null;
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("custom_foods")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("barcode", barcode)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  return data?.[0] ?? null;
 }
 
 export async function getFavoriteFoods() {
