@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Compass } from "lucide-react";
+import { ChevronDown, Compass } from "lucide-react";
 import { computeMoodFactors, computeBloatingFactors, type FactorComparison, type FactorGroup } from "@/lib/factors";
 import type { HistoryPoint } from "@/lib/queries";
 
@@ -19,14 +19,20 @@ export function FactorsCard({
   scaleMax,
   kind,
   emptyHint,
+  collapsible,
 }: {
   title: string;
   history: HistoryPoint[];
   scaleMax: number;
   kind: "mood" | "bloating";
   emptyHint: string;
+  collapsible?: boolean;
 }) {
   const [period, setPeriod] = useState<Period>("semana");
+  // Collapsed by default only when requested (the hinchazón card, whose
+  // bars made the Progress page scroll very long) — the ánimo card stays
+  // as it was, always expanded.
+  const [open, setOpen] = useState(!collapsible);
 
   const factors = useMemo(() => {
     const windowed = history.slice(-PERIOD_DAYS[period]);
@@ -36,40 +42,49 @@ export function FactorsCard({
   return (
     <section className="card p-4">
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 text-sm font-medium">
+        <button
+          onClick={collapsible ? () => setOpen((v) => !v) : undefined}
+          className="flex items-center gap-1.5 text-sm font-medium"
+        >
           <Compass size={16} className="text-primary" />
           {title}
-        </div>
-        <div className="flex gap-1 shrink-0">
-          {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={`rounded-full px-2.5 py-1 text-[11px] font-medium border ${
-                period === p ? "bg-primary text-primary-foreground border-primary" : "border-card-border text-muted"
-              }`}
-            >
-              {PERIOD_LABELS[p]}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {factors.length === 0 ? (
-        <p className="text-xs text-muted mt-2">{emptyHint}</p>
-      ) : (
-        <>
-          <p className="text-[11px] text-muted mt-1 mb-3">
-            Promedio (1 a {scaleMax}) de {period === "semana" ? "los últimos 7 días" : "los últimos 30 días"}, según
-            más o menos de cada cosa. El número entre paréntesis es cuántos días respaldan esa barra.
-          </p>
-          <div className="space-y-4">
-            {factors.map((f) => (
-              <FactorRow key={f.id} factor={f} scaleMax={scaleMax} kind={kind} />
+          {collapsible && (
+            <ChevronDown size={15} className={`text-muted transition-transform ${open ? "rotate-180" : ""}`} />
+          )}
+        </button>
+        {open && (
+          <div className="flex gap-1 shrink-0">
+            {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                className={`rounded-full px-2.5 py-1 text-[11px] font-medium border ${
+                  period === p ? "bg-primary text-primary-foreground border-primary" : "border-card-border text-muted"
+                }`}
+              >
+                {PERIOD_LABELS[p]}
+              </button>
             ))}
           </div>
-        </>
-      )}
+        )}
+      </div>
+
+      {open &&
+        (factors.length === 0 ? (
+          <p className="text-xs text-muted mt-2">{emptyHint}</p>
+        ) : (
+          <>
+            <p className="text-[11px] text-muted mt-1 mb-3">
+              Promedio (1 a {scaleMax}) de {period === "semana" ? "los últimos 7 días" : "los últimos 30 días"}, según
+              más o menos de cada cosa. El número entre paréntesis es cuántos días respaldan esa barra.
+            </p>
+            <div className="space-y-4">
+              {factors.map((f) => (
+                <FactorRow key={f.id} factor={f} scaleMax={scaleMax} kind={kind} />
+              ))}
+            </div>
+          </>
+        ))}
     </section>
   );
 }

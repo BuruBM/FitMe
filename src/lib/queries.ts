@@ -20,6 +20,7 @@ import type {
   Profile,
   SleepLog,
   SymptomLog,
+  WeightLog,
   WorkoutLog,
 } from "@/lib/database.types";
 
@@ -483,6 +484,24 @@ export async function getMeasurementHistory(limit = 20): Promise<BodyMeasurement
 
   const { data } = await supabase
     .from("body_measurements")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("log_date", { ascending: false })
+    .limit(limit);
+
+  return data ?? [];
+}
+
+// Same bounded-by-count reasoning as getMeasurementHistory: weight isn't
+// logged every day, so a days-back window could look empty even with real
+// history further back.
+export async function getWeightHistory(limit = 30): Promise<WeightLog[]> {
+  const supabase = await createClient();
+  const user = await getCurrentUser();
+  if (!user) return [];
+
+  const { data } = await supabase
+    .from("weight_logs")
     .select("*")
     .eq("user_id", user.id)
     .order("log_date", { ascending: false })

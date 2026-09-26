@@ -8,6 +8,7 @@ export function BloatingFactorsPanel({ history }: { history: HistoryPoint[] }) {
       history={history}
       scaleMax={3}
       kind="bloating"
+      collapsible
       emptyHint="Todavía no hay suficiente variación para comparar — necesitás al menos una hinchazón cargada y algo de esa variable en dos días distintos."
     />
   );

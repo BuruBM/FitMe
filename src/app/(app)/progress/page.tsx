@@ -8,10 +8,12 @@ import {
   getTodaySummary,
   getTodaySymptomLog,
   getWeeklyReview,
+  getWeightHistory,
 } from "@/lib/queries";
 import { BADGES } from "@/lib/gamification";
 import { ProgressCharts } from "@/components/ProgressCharts";
 import { WeightQuickLog } from "@/components/WeightQuickLog";
+import { WeightHistory } from "@/components/WeightHistory";
 import { MeasurementsQuickLog } from "@/components/MeasurementsQuickLog";
 import { MeasurementsHistory } from "@/components/MeasurementsHistory";
 import { SymptomQuickLog } from "@/components/SymptomQuickLog";
@@ -21,17 +23,27 @@ import { FactorsPanel } from "@/components/FactorsPanel";
 import { BloatingFactorsPanel } from "@/components/BloatingFactorsPanel";
 
 export default async function ProgressPage() {
-  const [history, gamification, profile, sleepLogs, measurementTrend, measurementHistory, todaySummary, todaySymptomLog] =
-    await Promise.all([
-      getHistory(365),
-      getGamificationSummary(),
-      getProfile(),
-      getRecentSleepLogs(14),
-      getMeasurementTrend(),
-      getMeasurementHistory(20),
-      getTodaySummary(),
-      getTodaySymptomLog(),
-    ]);
+  const [
+    history,
+    gamification,
+    profile,
+    sleepLogs,
+    measurementTrend,
+    measurementHistory,
+    weightHistory,
+    todaySummary,
+    todaySymptomLog,
+  ] = await Promise.all([
+    getHistory(365),
+    getGamificationSummary(),
+    getProfile(),
+    getRecentSleepLogs(14),
+    getMeasurementTrend(),
+    getMeasurementHistory(20),
+    getWeightHistory(30),
+    getTodaySummary(),
+    getTodaySymptomLog(),
+  ]);
   const weeklyReview = await getWeeklyReview(history.slice(-7));
 
   const earnedIds = new Set(gamification?.state.badges ?? []);
@@ -46,6 +58,7 @@ export default async function ProgressPage() {
       <BloatingFactorsPanel history={history} />
       <SymptomQuickLog existing={todaySymptomLog} />
       <WeightQuickLog todayWeightKg={todaySummary.weightKg} lastKnownWeightKg={profile?.weight_kg ?? null} />
+      <WeightHistory logs={weightHistory} />
       <MeasurementsQuickLog latest={measurementTrend.latest} previous={measurementTrend.previous} />
       <MeasurementsHistory logs={measurementHistory} />
       <SleepHistory logs={sleepLogs} />
